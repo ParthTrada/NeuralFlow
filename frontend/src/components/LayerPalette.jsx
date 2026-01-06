@@ -76,12 +76,12 @@ const templates = [
     color: '#22c55e',
     layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 100 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 128, returnSequences: true } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 50, features: 100 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 100, hiddenSize: 128, numLayers: 1 } } },
       { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 64, returnSequences: false } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 32, activation: 'relu' } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 128, hiddenSize: 64, numLayers: 1 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 64, units: 32, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 32, numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
