@@ -147,6 +147,27 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       return;
     }
 
+    // Check if network input size matches data
+    const firstLayer = nodes.find(n => n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D');
+    if (firstLayer && processedData.inputShape) {
+      const expectedInput = processedData.inputShape[0];
+      const configuredInput = firstLayer.data.config?.inputSize || 784;
+      if (configuredInput !== expectedInput) {
+        toast.error(`Input size mismatch! Your first layer expects ${configuredInput} features, but data has ${expectedInput}. Please update the Dense layer's Input Size to ${expectedInput}.`);
+        return;
+      }
+    }
+
+    // Check output layer matches number of classes
+    const outputLayer = nodes.find(n => n.data.layerType === 'Output');
+    if (outputLayer && processedData.numClasses > 1) {
+      const configuredClasses = outputLayer.data.config?.numClasses || 10;
+      if (configuredClasses !== processedData.numClasses) {
+        toast.error(`Output mismatch! Your Output layer has ${configuredClasses} classes, but data has ${processedData.numClasses}. Please update the Output layer's Num Classes to ${processedData.numClasses}.`);
+        return;
+      }
+    }
+
     setIsTraining(true);
     setTrainingHistory([]);
     setCurrentEpoch(0);
