@@ -4,6 +4,43 @@ import { motion } from 'framer-motion';
 import { getLayerConfig } from '../../utils/layerConfigs';
 import { cn } from '../../lib/utils';
 
+// Helper to format input shape for display
+const formatInputShape = (config) => {
+  const inputType = config?.inputType || 'flat';
+  if (inputType === 'flat') {
+    return `[${config?.inputSize || 784}]`;
+  } else if (inputType === 'image') {
+    return `[${config?.channels || 3}, ${config?.height || 224}, ${config?.width || 224}]`;
+  } else if (inputType === 'sequence') {
+    return `[${config?.seqLength || 32}, ${config?.features || 256}]`;
+  }
+  return `[${config?.inputSize || 784}]`;
+};
+
+// Helper to get display config for a layer
+const getDisplayConfig = (layerType, config) => {
+  if (!config) return {};
+  
+  // For Input layer, show formatted shape instead of individual fields
+  if (layerType === 'Input') {
+    const inputType = config.inputType || 'flat';
+    const typeLabels = { flat: 'Flat', image: 'Image', sequence: 'Sequence' };
+    return {
+      'Type': typeLabels[inputType] || 'Flat',
+      'Shape': formatInputShape(config)
+    };
+  }
+  
+  // For other layers, filter out internal fields and format nicely
+  const filtered = {};
+  Object.entries(config).forEach(([key, value]) => {
+    // Skip internal/technical fields
+    if (['inputType', 'inputShape'].includes(key)) return;
+    filtered[key] = value;
+  });
+  return filtered;
+};
+
 export const LayerNode = memo(({ data, selected, isConnectable }) => {
   const layerConfig = getLayerConfig(data.layerType);
   const Icon = layerConfig?.icon;
@@ -11,6 +48,8 @@ export const LayerNode = memo(({ data, selected, isConnectable }) => {
   
   const isInput = data.layerType === 'Input';
   const isOutput = data.layerType === 'Output';
+  
+  const displayConfig = getDisplayConfig(data.layerType, data.config);
 
   return (
     <motion.div
@@ -57,7 +96,7 @@ export const LayerNode = memo(({ data, selected, isConnectable }) => {
       
       {/* Body */}
       <div className="p-3 text-xs text-muted-foreground space-y-1">
-        {data.config && Object.entries(data.config).map(([key, value]) => (
+        {displayConfig && Object.entries(displayConfig).map(([key, value]) => (
           <div key={key} className="flex justify-between">
             <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
             <span className="text-foreground font-mono">
@@ -65,7 +104,7 @@ export const LayerNode = memo(({ data, selected, isConnectable }) => {
             </span>
           </div>
         ))}
-        {(!data.config || Object.keys(data.config).length === 0) && (
+        {(!displayConfig || Object.keys(displayConfig).length === 0) && (
           <span className="text-muted-foreground/60 italic">No parameters</span>
         )}
       </div>
