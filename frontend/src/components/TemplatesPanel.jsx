@@ -161,7 +161,7 @@ export const TemplatesPanel = ({ isOpen, onClose, onLoadTemplate }) => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ type: 'spring', damping: 25 }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-2xl max-h-[85vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+          className="fixed inset-4 sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:inset-auto w-auto sm:w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
           data-testid="templates-panel"
         >
@@ -182,8 +182,8 @@ export const TemplatesPanel = ({ isOpen, onClose, onLoadTemplate }) => {
           </div>
 
           {/* Templates Grid */}
-          <ScrollArea className="h-[calc(85vh-100px)]">
-            <div className="p-4 sm:p-6 grid gap-4">
+          <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="p-4 sm:p-6 grid gap-4 pb-8">
               {templates.map((template) => {
                 const Icon = template.icon;
                 return (
@@ -232,7 +232,7 @@ export const TemplatesPanel = ({ isOpen, onClose, onLoadTemplate }) => {
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
