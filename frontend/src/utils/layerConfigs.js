@@ -22,6 +22,7 @@ export const layerCategories = {
         icon: CircleDot,
         color: 'hsl(187, 95%, 42%)',
         description: 'Input layer - defines the shape of input data',
+        tip: 'The entry point of your network. Shape depends on your data: [784] for flattened 28×28 images, [3, 224, 224] for RGB images.',
         defaultConfig: {
           inputShape: [2],
         }
@@ -32,6 +33,7 @@ export const layerCategories = {
         icon: Grid3X3,
         color: 'hsl(263, 70%, 50%)',
         description: 'Fully connected layer',
+        tip: 'Every neuron connects to all neurons in the previous layer. Great for learning complex patterns. Use ReLU activation for hidden layers.',
         defaultConfig: {
           inputSize: 2,
           units: 16,
@@ -44,6 +46,7 @@ export const layerCategories = {
         icon: Layers,
         color: 'hsl(263, 70%, 50%)',
         description: '2D Convolutional layer for image data',
+        tip: 'Slides a small filter across the image to detect features like edges, textures, and shapes. Essential for image recognition.',
         defaultConfig: {
           inChannels: 1,
           outChannels: 32,
@@ -58,6 +61,7 @@ export const layerCategories = {
         icon: Maximize2,
         color: 'hsl(263, 70%, 50%)',
         description: 'Max pooling operation',
+        tip: 'Reduces spatial dimensions by taking the maximum value in each region. Makes the network more efficient and adds translation invariance.',
         defaultConfig: {
           kernelSize: 2,
           stride: 2
@@ -69,6 +73,7 @@ export const layerCategories = {
         icon: Scissors,
         color: 'hsl(38, 92%, 50%)',
         description: 'Regularization layer to prevent overfitting',
+        tip: 'Randomly "drops" neurons during training (sets to 0). Prevents overfitting by forcing the network to not rely on specific neurons. Use 0.2-0.5 rate.',
         defaultConfig: {
           rate: 0.5
         }
@@ -79,6 +84,7 @@ export const layerCategories = {
         icon: Minimize2,
         color: 'hsl(263, 70%, 50%)',
         description: 'Flatten multi-dimensional input to 1D',
+        tip: 'Converts 2D/3D feature maps into a 1D vector. Required before Dense layers when coming from Conv2D layers.',
         defaultConfig: {}
       },
       {
@@ -87,6 +93,7 @@ export const layerCategories = {
         icon: Target,
         color: 'hsl(158, 64%, 40%)',
         description: 'Output layer for predictions',
+        tip: 'Final layer producing predictions. Use Softmax for multi-class classification, Sigmoid for binary, or no activation for regression.',
         defaultConfig: {
           inputSize: 16,
           numClasses: 3,
@@ -102,18 +109,20 @@ export const layerCategories = {
         type: 'BatchNorm1D',
         label: 'BatchNorm1D',
         icon: BarChart3,
-        color: 'hsl(263, 70%, 50%)',
+        color: 'hsl(142, 71%, 45%)',
         description: 'Batch normalization for 1D data',
+        tip: 'Normalizes layer inputs to have zero mean and unit variance. Speeds up training and allows higher learning rates. Use after Dense layers.',
         defaultConfig: {
-          numFeatures: 128
+          numFeatures: 64
         }
       },
       {
         type: 'BatchNorm2D',
         label: 'BatchNorm2D',
         icon: BarChart3,
-        color: 'hsl(263, 70%, 50%)',
-        description: 'Batch normalization for 2D data (images)',
+        color: 'hsl(142, 71%, 45%)',
+        description: 'Batch normalization for 2D data',
+        tip: 'Same as BatchNorm1D but for convolutional layers. Place after Conv2D and before activation for best results.',
         defaultConfig: {
           numFeatures: 32
         }
@@ -122,11 +131,12 @@ export const layerCategories = {
         type: 'LSTM',
         label: 'LSTM',
         icon: Activity,
-        color: 'hsl(280, 70%, 50%)',
-        description: 'Long Short-Term Memory layer for sequences',
+        color: 'hsl(330, 81%, 60%)',
+        description: 'Long Short-Term Memory for sequences',
+        tip: 'Remembers long-term dependencies in sequential data. Has "gates" to control information flow. Great for text, time-series, and speech.',
         defaultConfig: {
-          inputSize: 128,
-          hiddenSize: 64,
+          inputSize: 64,
+          hiddenSize: 128,
           numLayers: 1,
           bidirectional: false
         }
@@ -135,22 +145,24 @@ export const layerCategories = {
         type: 'GRU',
         label: 'GRU',
         icon: GitBranch,
-        color: 'hsl(280, 70%, 50%)',
-        description: 'Gated Recurrent Unit layer',
+        color: 'hsl(280, 68%, 60%)',
+        description: 'Gated Recurrent Unit for sequences',
+        tip: 'Simpler alternative to LSTM with fewer parameters. Often performs similarly but trains faster. Good choice for smaller datasets.',
         defaultConfig: {
-          inputSize: 128,
-          hiddenSize: 64,
+          inputSize: 64,
+          hiddenSize: 128,
           numLayers: 1
         }
       },
       {
-        type: 'Attention',
+        type: 'MultiHeadAttention',
         label: 'Multi-Head Attention',
         icon: Zap,
-        color: 'hsl(45, 90%, 50%)',
-        description: 'Self-attention mechanism',
+        color: 'hsl(45, 93%, 47%)',
+        description: 'Transformer attention mechanism',
+        tip: 'Learns which parts of the input to focus on. Multiple "heads" capture different relationships. Core of modern NLP models like GPT and BERT.',
         defaultConfig: {
-          embedDim: 64,
+          embedDim: 256,
           numHeads: 8
         }
       }
