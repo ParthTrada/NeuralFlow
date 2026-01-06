@@ -10,7 +10,6 @@ import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
-import { TemplatesPanel } from '../components/TemplatesPanel';
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,7 +29,6 @@ export default function Builder() {
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isTrainingPanelOpen, setIsTrainingPanelOpen] = useState(false);
   const [isModelsOpen, setIsModelsOpen] = useState(false);
-  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
@@ -285,7 +283,6 @@ export default function Builder() {
         onClearCanvas={handleClearCanvas}
         onOpenTraining={handleOpenTraining}
         onOpenModels={() => setIsModelsOpen(true)}
-        onOpenTemplates={() => setIsTemplatesOpen(true)}
         isRunning={isRunning}
         nodeCount={nodes.length}
         isMobile={isMobile}
@@ -298,6 +295,7 @@ export default function Builder() {
         isOpen={showLayerPalette}
         onClose={() => setShowLayerPalette(false)}
         onAddLayer={handleAddLayer}
+        onLoadTemplate={handleLoadTemplate}
       />
 
       <NetworkCanvas
@@ -347,12 +345,6 @@ export default function Builder() {
         currentNodes={nodes}
         currentEdges={edges}
         trainedWeights={trainedWeights}
-      />
-
-      <TemplatesPanel
-        isOpen={isTemplatesOpen}
-        onClose={() => setIsTemplatesOpen(false)}
-        onLoadTemplate={handleLoadTemplate}
       />
     </div>
   );
