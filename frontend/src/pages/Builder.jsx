@@ -275,6 +275,7 @@ export default function Builder() {
         edges={edges}
         isOpen={isTrainingPanelOpen}
         onClose={() => setIsTrainingPanelOpen(false)}
+        onWeightsTrained={setTrainedWeights}
       />
 
       <SavedModelsPanel
@@ -283,6 +284,7 @@ export default function Builder() {
         onLoadModel={handleLoadModel}
         currentNodes={nodes}
         currentEdges={edges}
+        trainedWeights={trainedWeights}
       />
     </div>
   );
