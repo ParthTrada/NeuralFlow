@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { NetworkShowcase } from '../components/NetworkShowcase';
 
 // Animated neural network background
 const NeuralBackground = ({ isDark }) => {
