@@ -161,12 +161,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       const isClassification = processedData.numClasses > 1 || processedData.type === 'classification';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
-      // Compile model - always include accuracy for classification
+      // Compile model - use 'acc' which TensorFlow.js recognizes
       compileModel(modelRef.current, {
         optimizer,
         learningRate,
         loss,
-        metrics: ['accuracy'],  // Always use accuracy
+        metrics: ['acc'],
       });
 
       // Get training data
