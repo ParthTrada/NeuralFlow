@@ -1,5 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { GripVertical } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
 
 export const ResizablePanel = ({ 
@@ -13,11 +12,16 @@ export const ResizablePanel = ({
 }) => {
   const [width, setWidth] = useState(defaultWidth);
   const [isResizing, setIsResizing] = useState(false);
+  const panelRef = useRef(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
 
   const handleMouseDown = useCallback((e) => {
     e.preventDefault();
     setIsResizing(true);
-  }, []);
+    startXRef.current = e.clientX;
+    startWidthRef.current = width;
+  }, [width]);
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
@@ -26,11 +30,15 @@ export const ResizablePanel = ({
   const handleMouseMove = useCallback((e) => {
     if (!isResizing) return;
     
+    const deltaX = e.clientX - startXRef.current;
     let newWidth;
+    
     if (side === 'left') {
-      newWidth = e.clientX;
+      // For left panel, dragging right increases width
+      newWidth = startWidthRef.current + deltaX;
     } else {
-      newWidth = window.innerWidth - e.clientX;
+      // For right panel, dragging left increases width
+      newWidth = startWidthRef.current - deltaX;
     }
     
     // Clamp to min/max
@@ -56,6 +64,7 @@ export const ResizablePanel = ({
 
   return (
     <div 
+      ref={panelRef}
       className={cn("relative", className)} 
       style={{ width: `${width}px` }}
       {...props}
@@ -66,16 +75,16 @@ export const ResizablePanel = ({
       <div
         onMouseDown={handleMouseDown}
         className={cn(
-          "absolute top-0 bottom-0 w-4 cursor-col-resize z-50 group flex items-center justify-center",
-          side === 'left' ? '-right-2' : '-left-2',
-          isResizing && 'bg-primary/20'
+          "absolute top-0 bottom-0 w-5 cursor-col-resize z-50 group flex items-center justify-center",
+          side === 'left' ? '-right-2.5' : '-left-2.5',
+          isResizing && 'bg-primary/10'
         )}
         title="Drag to resize"
       >
         <div className={cn(
-          "h-12 w-1.5 rounded-full bg-muted-foreground/30 transition-all duration-200",
-          "group-hover:bg-primary group-hover:h-20 group-hover:w-2",
-          isResizing && "bg-primary h-20 w-2"
+          "h-16 w-1.5 rounded-full bg-muted-foreground/40 transition-all duration-200",
+          "group-hover:bg-primary group-hover:h-24 group-hover:w-2",
+          isResizing && "bg-primary h-24 w-2"
         )} />
       </div>
     </div>
