@@ -77,17 +77,50 @@ export default function Builder() {
     }
   };
 
-  // Load template
-  const handleLoadTemplate = useCallback((templateNodes, templateEdges) => {
-    setNodes(templateNodes);
-    setEdges(templateEdges);
-    setSelectedNode(null);
-    setTrainedWeights(null);
-    // Update nodeId counter
-    const maxId = Math.max(0, ...templateNodes.map(n => parseInt(n.id.replace('node_', '')) || 0));
-    nodeId = maxId + 1;
-    toast.success('Template loaded! You can now customize the layers.');
-  }, [setNodes, setEdges]);
+  // Load template - adds to existing canvas instead of replacing
+  const handleLoadTemplate = useCallback((templateNodes, templateEdges, templateName) => {
+    // Generate unique IDs for the new nodes
+    const timestamp = Date.now();
+    const idMap = {};
+    
+    // Calculate offset based on existing nodes
+    let offsetX = 250;
+    let offsetY = 50;
+    
+    if (nodes.length > 0) {
+      // Find the rightmost node position
+      const maxX = Math.max(...nodes.map(n => n.position.x));
+      offsetX = maxX + 300; // Place new template 300px to the right
+    }
+    
+    // Create new nodes with unique IDs and offset positions
+    const newNodes = templateNodes.map((node, index) => {
+      const newId = `node_${nodeId++}`;
+      idMap[node.id] = newId;
+      return {
+        ...node,
+        id: newId,
+        position: {
+          x: node.position.x + offsetX,
+          y: node.position.y + offsetY
+        }
+      };
+    });
+    
+    // Create new edges with updated source/target IDs
+    const newEdges = templateEdges.map((edge, index) => ({
+      ...edge,
+      id: `e_${timestamp}_${index}`,
+      source: idMap[edge.source],
+      target: idMap[edge.target]
+    }));
+    
+    // Add to existing nodes and edges
+    setNodes((nds) => [...nds, ...newNodes]);
+    setEdges((eds) => [...eds, ...newEdges]);
+    
+    toast.success(`Added ${templateName || 'template'} to canvas!`);
+  }, [nodes, setNodes, setEdges]);
 
   const handleLoadModel = useCallback((savedNodes, savedEdges, weights) => {
     setNodes(savedNodes || []);
