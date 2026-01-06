@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 export const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { processSessionId } = useAuth();
+  const { processGoogleCode } = useAuth();
   const hasProcessed = useRef(false);
 
   useEffect(() => {
@@ -15,20 +15,18 @@ export const AuthCallback = () => {
     hasProcessed.current = true;
 
     const processAuth = async () => {
-      // Extract session_id from URL fragment
-      const hash = location.hash;
-      const sessionIdMatch = hash.match(/session_id=([^&]+)/);
+      // Get code from URL query params (Google OAuth returns code in query string)
+      const urlParams = new URLSearchParams(location.search);
+      const code = urlParams.get('code');
       
-      if (!sessionIdMatch) {
-        console.error('No session_id in URL');
+      if (!code) {
+        console.error('No auth code in URL');
         navigate('/', { replace: true });
         return;
       }
 
-      const sessionId = sessionIdMatch[1];
-
       try {
-        const user = await processSessionId(sessionId);
+        const user = await processGoogleCode(code);
         // Navigate to main app with user data
         navigate('/', { replace: true, state: { user } });
       } catch (error) {
@@ -44,7 +42,7 @@ export const AuthCallback = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        <p className="text-muted-foreground">Signing you in...</p>
+        <p className="text-muted-foreground">Signing you in with Google...</p>
       </div>
     </div>
   );
