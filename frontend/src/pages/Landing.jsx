@@ -437,6 +437,44 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Interactive Network Showcase Section */}
+      <section className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-24 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-10 sm:mb-12"
+        >
+          <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-4 sm:mb-6 ${
+            isDark ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
+          }`}>
+            Live Preview
+          </span>
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
+            See It In Action
+          </h2>
+          <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+            Explore popular neural network architectures. Click "Try This Template" to start building instantly.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <NetworkShowcase 
+            isDark={isDark} 
+            onTryTemplate={(arch) => {
+              // Navigate to builder with template info
+              navigate('/builder', { state: { template: arch.name } });
+            }}
+          />
+        </motion.div>
+      </section>
+
       {/* CTA Section */}
       <section className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
         <motion.div
