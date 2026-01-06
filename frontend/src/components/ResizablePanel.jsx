@@ -70,11 +70,12 @@ export const ResizablePanel = ({
           side === 'left' ? '-right-2' : '-left-2',
           isResizing && 'bg-primary/20'
         )}
+        title="Drag to resize"
       >
         <div className={cn(
-          "h-8 w-1 rounded-full bg-border transition-colors",
-          "group-hover:bg-primary group-hover:h-16",
-          isResizing && "bg-primary h-16"
+          "h-12 w-1.5 rounded-full bg-muted-foreground/30 transition-all duration-200",
+          "group-hover:bg-primary group-hover:h-20 group-hover:w-2",
+          isResizing && "bg-primary h-20 w-2"
         )} />
       </div>
     </div>
