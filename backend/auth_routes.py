@@ -195,34 +195,6 @@ def create_auth_routes(db):
     async def create_session(request: SessionRequest, response: Response):
         """Exchange session_id for session_token (legacy)"""
         raise HTTPException(status_code=410, detail="Use /auth/google instead")
-            })
-        
-        # Create session
-        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-        await db.user_sessions.insert_one({
-            "user_id": user_id,
-            "session_token": session_token,
-            "expires_at": expires_at.isoformat(),
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-        
-        # Set cookie
-        response.set_cookie(
-            key="session_token",
-            value=session_token,
-            httponly=True,
-            secure=True,
-            samesite="none",
-            max_age=7 * 24 * 60 * 60,
-            path="/"
-        )
-        
-        return {
-            "user_id": user_id,
-            "email": email,
-            "name": name,
-            "picture": picture
-        }
     
     @router.get("/me")
     async def get_me(request: Request):
