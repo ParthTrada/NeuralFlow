@@ -165,6 +165,49 @@ export default function Builder() {
   const onDrop = useCallback((event) => {
     event.preventDefault();
 
+    // Check for template drop
+    const templateData = event.dataTransfer.getData('application/template');
+    if (templateData) {
+      const template = JSON.parse(templateData);
+      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+      const dropX = event.clientX - reactFlowBounds.left;
+      const dropY = event.clientY - reactFlowBounds.top;
+      
+      // Generate unique IDs for the new nodes
+      const timestamp = Date.now();
+      const idMap = {};
+      
+      // Create new nodes with unique IDs positioned at drop location
+      const newNodes = template.nodes.map((node, index) => {
+        const newId = `node_${nodeId++}`;
+        idMap[node.id] = newId;
+        return {
+          ...node,
+          id: newId,
+          position: {
+            x: node.position.x + dropX,
+            y: node.position.y + dropY
+          }
+        };
+      });
+      
+      // Create new edges with updated source/target IDs
+      const newEdges = template.edges.map((edge, index) => ({
+        ...edge,
+        id: `e_${timestamp}_${index}`,
+        source: idMap[edge.source],
+        target: idMap[edge.target]
+      }));
+      
+      // Add to existing nodes and edges
+      setNodes((nds) => [...nds, ...newNodes]);
+      setEdges((eds) => [...eds, ...newEdges]);
+      
+      toast.success(`Added ${template.name} template!`);
+      return;
+    }
+
+    // Regular layer drop
     const data = event.dataTransfer.getData('application/reactflow');
     if (!data) return;
 
@@ -193,7 +236,7 @@ export default function Builder() {
     if (isMobile) {
       setShowLayerPalette(false);
     }
-  }, [setNodes, isMobile]);
+  }, [setNodes, setEdges, isMobile]);
 
   // Add layer via tap (mobile)
   const handleAddLayer = useCallback((layer) => {
