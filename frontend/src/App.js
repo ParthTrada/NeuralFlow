@@ -9,9 +9,9 @@ import Builder from "./pages/Builder";
 function AppRouter() {
   const location = useLocation();
   
-  // Check URL fragment for session_id synchronously during render
-  // This prevents race conditions by processing new session_id FIRST
-  if (location.hash?.includes('session_id=')) {
+  // Check URL for Google OAuth code (comes as query param)
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.get('code')) {
     return <AuthCallback />;
   }
   
