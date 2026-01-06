@@ -29,6 +29,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
+import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
 import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
 
