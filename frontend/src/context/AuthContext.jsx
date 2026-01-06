@@ -16,22 +16,11 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [googleClientId, setGoogleClientId] = useState(null);
 
-  // Get Google Client ID and check auth status on mount
+  // Check auth status on mount
   useEffect(() => {
-    fetchGoogleClientId();
     checkAuth();
   }, []);
-
-  const fetchGoogleClientId = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/auth/google/client-id`);
-      setGoogleClientId(response.data.client_id);
-    } catch (error) {
-      console.error('Failed to get Google Client ID:', error);
-    }
-  };
 
   const checkAuth = async () => {
     try {
@@ -46,25 +35,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Direct Google OAuth login
+  // Emergent Google OAuth login
   const login = () => {
-    if (!googleClientId) {
-      console.error('Google Client ID not loaded');
-      return;
-    }
-
-    const redirectUri = window.location.origin + '/auth/callback';
-    const scope = 'openid email profile';
-    
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${googleClientId}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code` +
-      `&scope=${encodeURIComponent(scope)}` +
-      `&access_type=offline` +
-      `&prompt=consent`;
-    
-    window.location.href = googleAuthUrl;
+    const redirectUrl = window.location.origin + '/auth/callback';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const logout = async () => {
@@ -78,20 +52,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Process Google auth code
-  const processGoogleCode = async (code) => {
+  const processSessionId = async (sessionId) => {
     try {
-      const redirectUri = window.location.origin + '/auth/callback';
-      const response = await axios.post(`${API_URL}/auth/google`, {
-        code,
-        redirect_uri: redirectUri
+      const response = await axios.post(`${API_URL}/auth/session`, {
+        session_id: sessionId
       }, {
         withCredentials: true
       });
       setUser(response.data);
       return response.data;
     } catch (error) {
-      console.error('Google auth error:', error);
+      console.error('Session processing error:', error);
       throw error;
     }
   };
@@ -102,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       login,
       logout,
-      processGoogleCode,
+      processSessionId,
       checkAuth,
       isAuthenticated: !!user
     }}>
