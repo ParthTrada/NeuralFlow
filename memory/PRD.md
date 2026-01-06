@@ -83,3 +83,25 @@ Build a website where users can create neural networks through drag and drop, si
 - ✅ **NEW: Load Models** - Load previously saved networks
 - ✅ **NEW: Test Predictions** - After training, test model with custom inputs
 - ✅ **NEW: Data info tips** - Shows required input shape when loading data
+
+## Update (Jan 6, 2025) - Pre-Deployment Features
+
+### Model Versioning
+- ✅ Saving with same name auto-creates new version (v1, v2, v3...)
+- ✅ Version history panel shows all versions of a model
+- ✅ Version notes for documenting changes
+- ✅ Load any previous version
+
+### Export Trained Weights
+- ✅ After training, weights are captured as base64
+- ✅ "Include trained weights" checkbox when saving
+- ✅ Export button downloads JSON with full model + weights
+- ✅ Models show "Trained" badge when weights are included
+
+### Share Models via Link
+- ✅ Share button generates unique share link
+- ✅ Anyone with link can view the shared model
+- ✅ Clone shared models to your own account
+- ✅ Revoke share links anytime
+- ✅ Shared models show owner name
+- ✅ URL param ?shared={token} auto-loads shared model
