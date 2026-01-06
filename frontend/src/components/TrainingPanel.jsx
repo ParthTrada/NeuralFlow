@@ -680,19 +680,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="valAccuracy" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          name="Val Accuracy"
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
 
                   {/* Latest metrics */}
                   {trainingHistory.length > 0 && (
@@ -700,13 +687,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                       <div className="p-2 rounded-lg bg-secondary">
                         <span className="text-muted-foreground">Loss:</span>
                         <span className="ml-2 font-mono">
-                          {trainingHistory[trainingHistory.length - 1]?.loss}
+                          {trainingHistory[trainingHistory.length - 1]?.loss || 'N/A'}
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-secondary">
                         <span className="text-muted-foreground">Accuracy:</span>
                         <span className="ml-2 font-mono">
-                          {trainingHistory[trainingHistory.length - 1]?.accuracy}
+                          {trainingHistory[trainingHistory.length - 1]?.accuracy || 'N/A'}
                         </span>
                       </div>
                     </div>
