@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -15,6 +15,7 @@ export const Header = ({
   onRun, 
   onShowCode, 
   onClearCanvas,
+  onOpenTraining,
   isRunning,
   nodeCount 
 }) => {
@@ -96,6 +97,16 @@ export const Header = ({
         >
           <Code className="w-4 h-4 mr-2" />
           View Code
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={onOpenTraining}
+          className="hidden sm:flex"
+          data-testid="train-network-btn"
+        >
+          <GraduationCap className="w-4 h-4 mr-2" />
+          Train
         </Button>
 
         <Button
