@@ -370,8 +370,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             </Button>
           </div>
 
-          <ScrollArea className="h-[calc(100vh-60px)] sm:h-[calc(100vh-80px)]">
-            <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
+          <div className="h-[calc(100vh-60px)] sm:h-[calc(100vh-80px)] overflow-y-auto overscroll-contain">
+            <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-8">
               {/* Data Upload Section */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
@@ -801,7 +801,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                 </>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
