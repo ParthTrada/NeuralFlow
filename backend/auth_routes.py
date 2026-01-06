@@ -286,4 +286,136 @@ def create_auth_routes(db):
         
         return model
     
+    # Sharing endpoints
+    @router.post("/models/{model_id}/share")
+    async def create_share_link(model_id: str, request: Request):
+        """Generate a share link for a model"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        # Generate unique share token
+        share_token = secrets.token_urlsafe(16)
+        
+        result = await db.network_models.update_one(
+            {"model_id": model_id, "user_id": user.user_id},
+            {"$set": {
+                "is_public": True,
+                "share_token": share_token,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        return {"share_token": share_token}
+    
+    @router.delete("/models/{model_id}/share")
+    async def revoke_share_link(model_id: str, request: Request):
+        """Revoke share link for a model"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        result = await db.network_models.update_one(
+            {"model_id": model_id, "user_id": user.user_id},
+            {"$set": {
+                "is_public": False,
+                "share_token": None,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        return {"message": "Share link revoked"}
+    
+    @router.get("/shared/{share_token}")
+    async def get_shared_model(share_token: str):
+        """Get a shared model by share token (public, no auth required)"""
+        model = await db.network_models.find_one(
+            {"share_token": share_token, "is_public": True},
+            {"_id": 0, "user_id": 0}  # Don't expose user_id
+        )
+        
+        if not model:
+            raise HTTPException(status_code=404, detail="Shared model not found or link expired")
+        
+        # Get owner name
+        owner = await db.users.find_one(
+            {"user_id": model.get("user_id")},
+            {"_id": 0, "name": 1}
+        )
+        
+        model["owner_name"] = owner.get("name", "Unknown") if owner else "Unknown"
+        return model
+    
+    @router.post("/models/{model_id}/clone")
+    async def clone_shared_model(model_id: str, request: Request):
+        """Clone a shared model to your own account"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        # Find the original model (must be public)
+        original = await db.network_models.find_one(
+            {"model_id": model_id, "is_public": True},
+            {"_id": 0}
+        )
+        
+        if not original:
+            raise HTTPException(status_code=404, detail="Model not found or not shared")
+        
+        # Create a clone
+        new_model_id = f"model_{uuid.uuid4().hex[:12]}"
+        now = datetime.now(timezone.utc).isoformat()
+        
+        clone_doc = {
+            "model_id": new_model_id,
+            "user_id": user.user_id,
+            "name": f"{original['name']} (Clone)",
+            "nodes": original["nodes"],
+            "edges": original["edges"],
+            "trained_weights": original.get("trained_weights"),
+            "version": 1,
+            "version_note": f"Cloned from shared model",
+            "cloned_from": model_id,
+            "is_public": False,
+            "share_token": None,
+            "created_at": now,
+            "updated_at": now
+        }
+        
+        await db.network_models.insert_one(clone_doc)
+        clone_doc.pop("_id", None)
+        
+        return clone_doc
+    
+    # Get model versions
+    @router.get("/models/{model_id}/versions")
+    async def get_model_versions(model_id: str, request: Request):
+        """Get all versions of a model by name"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        # First get the model to find its name
+        model = await db.network_models.find_one(
+            {"model_id": model_id, "user_id": user.user_id},
+            {"_id": 0, "name": 1}
+        )
+        
+        if not model:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        # Get all versions with same name
+        versions = await db.network_models.find(
+            {"user_id": user.user_id, "name": model["name"]},
+            {"_id": 0}
+        ).sort("version", -1).to_list(50)
+        
+        return versions
+    
     return router
