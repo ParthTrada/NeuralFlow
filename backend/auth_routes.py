@@ -192,7 +192,7 @@ def create_auth_routes(db):
     
     @router.post("/models")
     async def save_model(request: Request, data: SaveNetworkRequest):
-        """Save a network model"""
+        """Save a network model (creates new version if model with same name exists)"""
         user = await get_current_user(request, db)
         if not user:
             raise HTTPException(status_code=401, detail="Not authenticated")
@@ -200,12 +200,27 @@ def create_auth_routes(db):
         model_id = f"model_{uuid.uuid4().hex[:12]}"
         now = datetime.now(timezone.utc).isoformat()
         
+        # Check if model with same name exists to determine version
+        existing_models = await db.network_models.find(
+            {"user_id": user.user_id, "name": data.name},
+            {"_id": 0, "version": 1}
+        ).sort("version", -1).to_list(1)
+        
+        version = 1
+        if existing_models:
+            version = (existing_models[0].get("version", 1)) + 1
+        
         model_doc = {
             "model_id": model_id,
             "user_id": user.user_id,
             "name": data.name,
             "nodes": data.nodes,
             "edges": data.edges,
+            "trained_weights": data.trained_weights,
+            "version": version,
+            "version_note": data.version_note or f"Version {version}",
+            "is_public": False,
+            "share_token": None,
             "created_at": now,
             "updated_at": now
         }
