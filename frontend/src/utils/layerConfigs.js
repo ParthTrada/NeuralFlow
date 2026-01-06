@@ -241,6 +241,12 @@ export const activationFunctions = [
   { value: 'silu', label: 'SiLU / Swish' }
 ];
 
+export const inputTypes = [
+  { value: 'flat', label: 'Flat (Vector)' },
+  { value: 'image', label: 'Image (C, H, W)' },
+  { value: 'sequence', label: 'Sequence (Len, Feat)' }
+];
+
 export const getLayerConfig = (layerType) => {
   for (const category of Object.values(layerCategories)) {
     const layer = category.layers.find(l => l.type === layerType);
@@ -249,11 +255,35 @@ export const getLayerConfig = (layerType) => {
   return null;
 };
 
-export const getConfigFields = (layerType) => {
+// Dynamic config fields based on layer type and current config
+export const getConfigFields = (layerType, config = {}) => {
+  // Input layer has dynamic fields based on inputType
+  if (layerType === 'Input') {
+    const inputType = config.inputType || 'flat';
+    const baseFields = [
+      { key: 'inputType', label: 'Input Type', type: 'select', options: inputTypes }
+    ];
+    
+    if (inputType === 'flat') {
+      return [...baseFields, { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 }];
+    } else if (inputType === 'image') {
+      return [
+        ...baseFields,
+        { key: 'channels', label: 'Channels', type: 'number', min: 1 },
+        { key: 'height', label: 'Height', type: 'number', min: 1 },
+        { key: 'width', label: 'Width', type: 'number', min: 1 }
+      ];
+    } else if (inputType === 'sequence') {
+      return [
+        ...baseFields,
+        { key: 'seqLength', label: 'Sequence Length', type: 'number', min: 1 },
+        { key: 'features', label: 'Features', type: 'number', min: 1 }
+      ];
+    }
+    return baseFields;
+  }
+
   const fields = {
-    Input: [
-      { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 }
-    ],
     Dense: [
       { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 },
       { key: 'units', label: 'Units', type: 'number', min: 1 },
