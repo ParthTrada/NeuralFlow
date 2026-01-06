@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -13,10 +13,18 @@ import { layerCategories } from '../utils/layerConfigs';
 import { cn } from '../lib/utils';
 import { ResizablePanel } from './ResizablePanel';
 
-export const LayerPalette = ({ isMobile, isOpen, onClose }) => {
+export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer }) => {
   const onDragStart = (event, layer) => {
     event.dataTransfer.setData('application/reactflow', JSON.stringify(layer));
     event.dataTransfer.effectAllowed = 'move';
+  };
+
+  // Handle tap to add on mobile
+  const handleLayerClick = (layer) => {
+    if (isMobile && onAddLayer) {
+      onAddLayer(layer);
+      onClose();
+    }
   };
 
   // Mobile slide-over panel
@@ -47,7 +55,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose }) => {
                 <div>
                   <h2 className="font-bold text-lg tracking-tight">Layers</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Drag layers to canvas
+                    Tap to add layer
                   </p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={onClose}>
@@ -71,13 +79,12 @@ export const LayerPalette = ({ isMobile, isOpen, onClose }) => {
                             return (
                               <motion.div
                                 key={layer.type}
-                                draggable
-                                onDragStart={(e) => onDragStart(e, layer)}
+                                onClick={() => handleLayerClick(layer)}
                                 whileTap={{ scale: 0.98 }}
                                 className={cn(
-                                  "flex items-center gap-3 p-3 rounded-lg cursor-grab active:cursor-grabbing",
+                                  "flex items-center gap-3 p-3 rounded-lg cursor-pointer",
                                   "bg-secondary/50 hover:bg-secondary border border-transparent",
-                                  "hover:border-border transition-all duration-200"
+                                  "hover:border-border active:border-primary transition-all duration-200"
                                 )}
                               >
                                 <div 
@@ -97,6 +104,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose }) => {
                                     {layer.description}
                                   </div>
                                 </div>
+                                <Plus className="w-4 h-4 text-muted-foreground" />
                               </motion.div>
                             );
                           })}

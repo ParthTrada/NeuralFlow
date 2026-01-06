@@ -11,7 +11,6 @@ import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
-import { getLayerConfig } from '../utils/layerConfigs';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -44,7 +43,7 @@ export default function Builder() {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       if (!mobile) {
-        setShowLayerPalette(false); // Reset on desktop
+        setShowLayerPalette(false);
       }
     };
     
@@ -150,6 +149,29 @@ export default function Builder() {
       setShowLayerPalette(false);
     }
   }, [setNodes, isMobile]);
+
+  // Add layer via tap (mobile)
+  const handleAddLayer = useCallback((layer) => {
+    // Position new node in center of visible area
+    const position = {
+      x: 150 + (nodes.length * 20) % 100,
+      y: 100 + (nodes.length * 50) % 200,
+    };
+
+    const newNode = {
+      id: getId(),
+      type: 'layerNode',
+      position,
+      data: {
+        label: layer.label,
+        layerType: layer.type,
+        config: { ...layer.defaultConfig },
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    toast.success(`Added ${layer.label} layer`);
+  }, [setNodes, nodes.length]);
 
   const handleUpdateNode = useCallback((nodeId, newData) => {
     setNodes((nds) =>
@@ -260,6 +282,7 @@ export default function Builder() {
         isMobile={isMobile}
         isOpen={showLayerPalette}
         onClose={() => setShowLayerPalette(false)}
+        onAddLayer={handleAddLayer}
       />
 
       <NetworkCanvas
