@@ -82,63 +82,32 @@ async def get_current_user(request: Request, db) -> Optional[User]:
     return User(**user_doc)
 
 def create_auth_routes(db):
-    import os
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-    
-    @router.post("/google")
-    async def google_auth(request: Request, response: Response):
-        """Exchange Google auth code for session"""
-        body = await request.json()
-        code = body.get('code')
-        redirect_uri = body.get('redirect_uri')
-        
-        if not code:
-            raise HTTPException(status_code=400, detail="Missing auth code")
-        
+    @router.post("/session")
+    async def create_session(request: SessionRequest, response: Response):
+        """Exchange session_id for session_token"""
         try:
-            # Exchange code for tokens
+            # Call Emergent auth API
             async with httpx.AsyncClient() as client:
-                token_response = await client.post(
-                    "https://oauth2.googleapis.com/token",
-                    data={
-                        "code": code,
-                        "client_id": GOOGLE_CLIENT_ID,
-                        "client_secret": GOOGLE_CLIENT_SECRET,
-                        "redirect_uri": redirect_uri,
-                        "grant_type": "authorization_code"
-                    }
+                auth_response = await client.get(
+                    "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                    headers={"X-Session-ID": request.session_id}
                 )
                 
-                if token_response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Failed to exchange code")
+                if auth_response.status_code != 200:
+                    raise HTTPException(status_code=401, detail="Invalid session_id")
                 
-                tokens = token_response.json()
-                access_token = tokens.get("access_token")
-                
-                # Get user info from Google
-                user_response = await client.get(
-                    "https://www.googleapis.com/oauth2/v2/userinfo",
-                    headers={"Authorization": f"Bearer {access_token}"}
-                )
-                
-                if user_response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Failed to get user info")
-                
-                google_user = user_response.json()
-        except httpx.RequestError as e:
-            raise HTTPException(status_code=500, detail=f"Auth service error: {str(e)}")
+                auth_data = auth_response.json()
+        except httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Auth service unavailable")
         
         # Extract user data
-        email = google_user.get("email")
-        name = google_user.get("name")
-        picture = google_user.get("picture")
+        email = auth_data.get("email")
+        name = auth_data.get("name")
+        picture = auth_data.get("picture")
+        session_token = auth_data.get("session_token")
         
-        if not email:
-            raise HTTPException(status_code=401, detail="No email from Google")
-        
-        # Generate session token
-        session_token = secrets.token_urlsafe(32)
+        if not email or not session_token:
+            raise HTTPException(status_code=401, detail="Invalid auth response")
         
         # Find or create user
         existing_user = await db.users.find_one({"email": email}, {"_id": 0})
@@ -185,16 +154,6 @@ def create_auth_routes(db):
             "name": name,
             "picture": picture
         }
-    
-    @router.get("/google/client-id")
-    async def get_google_client_id():
-        """Get Google Client ID for frontend"""
-        return {"client_id": GOOGLE_CLIENT_ID}
-    
-    @router.post("/session")
-    async def create_session(request: SessionRequest, response: Response):
-        """Exchange session_id for session_token (legacy)"""
-        raise HTTPException(status_code=410, detail="Use /auth/google instead")
     
     @router.get("/me")
     async def get_me(request: Request):
