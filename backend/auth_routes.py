@@ -85,19 +85,28 @@ def create_auth_routes(db):
     @router.post("/session")
     async def create_session(request: SessionRequest, response: Response):
         """Exchange session_id for session_token"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         try:
             # Call Emergent auth API
+            logger.info(f"Processing session_id: {request.session_id[:20]}...")
             async with httpx.AsyncClient() as client:
                 auth_response = await client.get(
                     "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
                     headers={"X-Session-ID": request.session_id}
                 )
                 
+                logger.info(f"Auth API response status: {auth_response.status_code}")
+                
                 if auth_response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Invalid session_id")
+                    logger.error(f"Auth API error: {auth_response.text}")
+                    raise HTTPException(status_code=401, detail=f"Invalid session_id: {auth_response.status_code}")
                 
                 auth_data = auth_response.json()
-        except httpx.RequestError:
+                logger.info(f"Auth successful for email: {auth_data.get('email', 'unknown')}")
+        except httpx.RequestError as e:
+            logger.error(f"Auth service request error: {str(e)}")
             raise HTTPException(status_code=500, detail="Auth service unavailable")
         
         # Extract user data
