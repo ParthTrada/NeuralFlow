@@ -26,9 +26,15 @@ export const layerCategories = {
         icon: CircleDot,
         color: 'hsl(187, 95%, 42%)',
         description: 'Input layer - defines the shape of input data',
-        tip: 'The entry point of your network. Shape depends on your data: 784 for flattened 28×28 images, 512 for sequence features.',
+        tip: 'The entry point of your network. Choose input type based on your data: Flat for vectors, Image for CNN, Sequence for RNN/Transformer.',
         defaultConfig: {
-          inputSize: 784
+          inputType: 'flat',
+          inputSize: 784,
+          channels: 3,
+          height: 224,
+          width: 224,
+          seqLength: 32,
+          features: 256
         }
       },
       {
