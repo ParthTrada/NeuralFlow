@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Lightbulb, BookOpen, Layers, Zap, Brain, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -17,21 +17,289 @@ import { Separator } from './ui/separator';
 import { getLayerConfig, getConfigFields } from '../utils/layerConfigs';
 import { ResizablePanel } from './ResizablePanel';
 
+// Learning content for the empty state
+const learningContent = {
+  intro: {
+    title: "Welcome to NeuralFlows",
+    description: "Build neural networks visually by dragging layers from the left panel onto the canvas."
+  },
+  quickTips: [
+    {
+      icon: Layers,
+      title: "Start with Input",
+      description: "Every network begins with an Input layer that defines your data shape."
+    },
+    {
+      icon: ArrowRight,
+      title: "Connect Layers",
+      description: "Drag from one layer's handle to another to create connections."
+    },
+    {
+      icon: Zap,
+      title: "End with Output",
+      description: "Finish with an Output layer. Use Softmax for classification, Linear for regression."
+    },
+    {
+      icon: Brain,
+      title: "Use Templates",
+      description: "Try pre-built architectures like CNN or Transformer from the Templates section."
+    }
+  ],
+  concepts: [
+    {
+      term: "Neurons",
+      definition: "Basic units that receive inputs, apply weights, and output a value through an activation function."
+    },
+    {
+      term: "Weights",
+      definition: "Learnable parameters that determine the strength of connections between neurons."
+    },
+    {
+      term: "Activation",
+      definition: "Functions like ReLU or Sigmoid that add non-linearity, enabling complex pattern learning."
+    },
+    {
+      term: "Loss Function",
+      definition: "Measures how wrong predictions are. Training minimizes this value."
+    },
+    {
+      term: "Backpropagation",
+      definition: "Algorithm that calculates gradients to update weights and improve the network."
+    }
+  ]
+};
+
+// Layer-specific detailed tips
+const layerTips = {
+  Input: {
+    title: "Input Layer",
+    description: "The entry point of your neural network. Defines the shape of incoming data.",
+    details: [
+      "Shape [784] = flattened 28×28 grayscale image",
+      "Shape [3, 224, 224] = RGB image (channels, height, width)",
+      "Shape [100] = sequence of 100 features"
+    ],
+    bestPractices: "Match input shape exactly to your data dimensions. Normalize inputs to [0,1] or [-1,1] range for better training."
+  },
+  Dense: {
+    title: "Dense / Fully Connected",
+    description: "Every neuron connects to all neurons in the previous layer. The workhorse of neural networks.",
+    details: [
+      "Units: Number of neurons (start with 128-512)",
+      "Activation: ReLU for hidden layers, varies for output",
+      "Learns complex combinations of input features"
+    ],
+    bestPractices: "Use decreasing units as you go deeper (e.g., 512→256→128). Add Dropout after Dense layers to prevent overfitting."
+  },
+  Conv2D: {
+    title: "2D Convolution",
+    description: "Slides small filters across images to detect local patterns like edges, textures, and shapes.",
+    details: [
+      "Filters: Number of feature detectors (32, 64, 128...)",
+      "Kernel Size: Filter size, typically 3×3 or 5×5",
+      "Padding: 'same' keeps dimensions, 'valid' shrinks"
+    ],
+    bestPractices: "Stack Conv2D layers, doubling filters each time. Always follow with MaxPool2D to reduce spatial dimensions."
+  },
+  MaxPool2D: {
+    title: "Max Pooling",
+    description: "Reduces spatial dimensions by taking the maximum value in each region, making the network more efficient.",
+    details: [
+      "Pool Size 2×2 halves width and height",
+      "Reduces computation and parameters",
+      "Provides translation invariance"
+    ],
+    bestPractices: "Place after Conv2D layers. Use 2×2 pooling with stride 2. Don't pool too aggressively—preserve important spatial info."
+  },
+  Dropout: {
+    title: "Dropout Regularization",
+    description: "Randomly 'drops' neurons during training by setting them to zero. Prevents overfitting.",
+    details: [
+      "Rate 0.2 = drop 20% of neurons",
+      "Rate 0.5 = drop 50% (typical for Dense layers)",
+      "Only active during training, not inference"
+    ],
+    bestPractices: "Use 0.2-0.3 after Conv2D, 0.4-0.5 after Dense layers. If model underfits, reduce dropout rate."
+  },
+  Flatten: {
+    title: "Flatten Layer",
+    description: "Converts multi-dimensional data (like images) into a 1D vector for Dense layers.",
+    details: [
+      "No learnable parameters",
+      "Shape [batch, 32, 7, 7] → [batch, 1568]",
+      "Required bridge between Conv and Dense"
+    ],
+    bestPractices: "Always place between your last Conv2D/Pool layer and first Dense layer. No configuration needed."
+  },
+  Output: {
+    title: "Output Layer",
+    description: "Final layer that produces predictions. Configuration depends on your task type.",
+    details: [
+      "Classification: Softmax activation, units = num classes",
+      "Binary: Sigmoid activation, 1 unit",
+      "Regression: No activation (Linear), units = outputs"
+    ],
+    bestPractices: "Match units to your target. For 10 classes, use 10 units with Softmax. For yes/no, use 1 unit with Sigmoid."
+  },
+  BatchNorm1D: {
+    title: "Batch Normalization (1D)",
+    description: "Normalizes layer inputs to have zero mean and unit variance. Dramatically speeds up training.",
+    details: [
+      "Reduces internal covariate shift",
+      "Allows higher learning rates",
+      "Has slight regularization effect"
+    ],
+    bestPractices: "Place after Dense layer, before activation. Use with caution in small batch sizes (<32)."
+  },
+  BatchNorm2D: {
+    title: "Batch Normalization (2D)",
+    description: "Same as BatchNorm1D but for convolutional layers. Normalizes across spatial dimensions.",
+    details: [
+      "Normalizes per feature map/channel",
+      "Essential for deep CNN training",
+      "Momentum controls running stats update"
+    ],
+    bestPractices: "Place after Conv2D, before ReLU. Standard in modern architectures like ResNet."
+  },
+  LSTM: {
+    title: "Long Short-Term Memory",
+    description: "Recurrent layer that can learn long-term dependencies in sequential data using memory gates.",
+    details: [
+      "Forget Gate: What to discard from memory",
+      "Input Gate: What new info to store",
+      "Output Gate: What to output from memory"
+    ],
+    bestPractices: "Use for text, time-series, audio. Stack 2-3 layers max. Consider bidirectional for better context."
+  },
+  GRU: {
+    title: "Gated Recurrent Unit",
+    description: "Simplified LSTM with fewer parameters. Often performs similarly but trains faster.",
+    details: [
+      "Reset Gate: How much past to forget",
+      "Update Gate: Balance of old vs new info",
+      "Fewer parameters than LSTM"
+    ],
+    bestPractices: "Try GRU first—if LSTM doesn't outperform, stick with GRU. Good for smaller datasets."
+  },
+  MultiHeadAttention: {
+    title: "Multi-Head Attention",
+    description: "Core mechanism of Transformers. Learns which parts of the input to focus on.",
+    details: [
+      "Query, Key, Value: Three projections of input",
+      "Multiple heads capture different relationships",
+      "Self-attention: Input attends to itself"
+    ],
+    bestPractices: "Use 8 heads as baseline. Embed dim should be divisible by num heads. Follow with LayerNorm."
+  }
+};
+
+const LearningPanel = () => (
+  <div className="p-4 space-y-6">
+    {/* Header */}
+    <div className="text-center pb-2">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
+        <BookOpen className="w-6 h-6 text-primary" />
+      </div>
+      <h2 className="font-bold text-lg">{learningContent.intro.title}</h2>
+      <p className="text-sm text-muted-foreground mt-1">
+        {learningContent.intro.description}
+      </p>
+    </div>
+
+    <Separator />
+
+    {/* Quick Tips */}
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Quick Start
+      </h3>
+      <div className="space-y-3">
+        {learningContent.quickTips.map((tip, index) => {
+          const Icon = tip.icon;
+          return (
+            <div key={index} className="flex gap-3 p-2 rounded-lg bg-secondary/30">
+              <div className="p-1.5 rounded-md bg-primary/10 h-fit">
+                <Icon className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{tip.title}</p>
+                <p className="text-xs text-muted-foreground">{tip.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    <Separator />
+
+    {/* Key Concepts */}
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Key Concepts
+      </h3>
+      <div className="space-y-3">
+        {learningContent.concepts.map((concept, index) => (
+          <div key={index} className="p-3 rounded-lg border border-border bg-card/50">
+            <p className="text-sm font-semibold text-primary">{concept.term}</p>
+            <p className="text-xs text-muted-foreground mt-1">{concept.definition}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const LayerTipsPanel = ({ layerType }) => {
+  const tips = layerTips[layerType];
+  if (!tips) return null;
+
+  return (
+    <div className="p-4 border-t border-border bg-secondary/20">
+      <div className="flex items-center gap-2 mb-3">
+        <Lightbulb className="w-4 h-4 text-amber-500" />
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Learn
+        </h4>
+      </div>
+      
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">{tips.description}</p>
+        
+        <div className="space-y-1.5">
+          {tips.details.map((detail, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-xs">
+              <span className="text-primary mt-0.5">•</span>
+              <span className="text-muted-foreground">{detail}</span>
+            </div>
+          ))}
+        </div>
+        
+        <div className="p-2 rounded-md bg-primary/5 border border-primary/10">
+          <p className="text-xs text-primary/80">
+            <span className="font-semibold">Tip:</span> {tips.bestPractices}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onClose, isMobile }) => {
-  // Empty state for desktop
+  // Empty state - show learning content (desktop only, not on mobile when nothing selected)
   if (!selectedNode && !isMobile) {
     return (
       <ResizablePanel
         side="right"
         defaultWidth={320}
-        minWidth={250}
+        minWidth={280}
         maxWidth={500}
         className="border-l border-border bg-card/50 backdrop-blur-xl fixed right-0 top-14 bottom-0 z-30 hidden md:block"
         data-testid="properties-panel-empty"
       >
-        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-          Select a layer to edit properties
-        </div>
+        <ScrollArea className="h-full">
+          <LearningPanel />
+        </ScrollArea>
       </ResizablePanel>
     );
   }
@@ -71,7 +339,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
       className="h-full flex flex-col"
     >
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           {Icon && (
             <div 
@@ -109,6 +377,8 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
               value={selectedNode.data.label || selectedNode.data.layerType}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder="Enter layer name"
+              className="text-base"
+              style={{ fontSize: '16px' }}
               data-testid="layer-name-input"
             />
           </div>
@@ -134,6 +404,8 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
                       step={field.step || 1}
                       value={selectedNode.data.config?.[field.key] ?? ''}
                       onChange={(e) => handleConfigChange(field.key, Number(e.target.value))}
+                      className="text-base"
+                      style={{ fontSize: '16px' }}
                       data-testid={`config-${field.key}`}
                     />
                   )}
@@ -145,6 +417,8 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
                       placeholder={field.placeholder}
                       value={selectedNode.data.config?.[field.key] ?? ''}
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                      className="text-base"
+                      style={{ fontSize: '16px' }}
                       data-testid={`config-${field.key}`}
                     />
                   )}
@@ -189,10 +463,13 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
             </p>
           )}
         </div>
+
+        {/* Layer-specific learning tips */}
+        <LayerTipsPanel layerType={selectedNode.data.layerType} />
       </ScrollArea>
 
       {/* Delete Button */}
-      <div className="p-4 border-t border-border bg-card/80 backdrop-blur-sm">
+      <div className="p-4 border-t border-border bg-card/80 backdrop-blur-sm flex-shrink-0">
         <Button
           variant="destructive"
           className="w-full"
@@ -246,7 +523,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
         key={selectedNode.id}
         side="right"
         defaultWidth={320}
-        minWidth={250}
+        minWidth={280}
         maxWidth={500}
         className="border-l border-border bg-card/50 backdrop-blur-xl fixed right-0 top-14 bottom-0 z-30 hidden md:block"
         data-testid="properties-panel"
