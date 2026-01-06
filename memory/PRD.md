@@ -75,3 +75,11 @@ Build a website where users can create neural networks through drag and drop, si
 1. Add local storage for saving network designs
 2. Implement undo/redo with Ctrl+Z/Y
 3. Add network templates for common architectures
+
+## Update (Jan 6, 2025) - Training & Auth Features
+- ✅ **Fixed**: Accuracy now shows in training chart (was only showing loss)
+- ✅ **NEW: Google OAuth** - Sign in with Google to save models
+- ✅ **NEW: Save Models** - Save network designs to your account
+- ✅ **NEW: Load Models** - Load previously saved networks
+- ✅ **NEW: Test Predictions** - After training, test model with custom inputs
+- ✅ **NEW: Data info tips** - Shows required input shape when loading data
