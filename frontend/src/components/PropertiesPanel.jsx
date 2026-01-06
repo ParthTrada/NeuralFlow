@@ -141,6 +141,16 @@ const layerTips = {
     ],
     bestPractices: "Match units to your target. For 10 classes, use 10 units with Softmax. For yes/no, use 1 unit with Sigmoid."
   },
+  Embedding: {
+    title: "Embedding Layer",
+    description: "Converts discrete tokens (words, characters) into dense continuous vectors for NLP tasks.",
+    details: [
+      "Vocab Size: Number of unique tokens in your data",
+      "Embed Dim: Size of output vectors (128-512 typical)",
+      "Learns semantic relationships between tokens"
+    ],
+    bestPractices: "Use pre-trained embeddings (Word2Vec, GloVe) when possible. Embed dim should be sqrt(vocab_size) as a starting point."
+  },
   BatchNorm1D: {
     title: "Batch Normalization (1D)",
     description: "Normalizes layer inputs to have zero mean and unit variance. Dramatically speeds up training.",
@@ -160,6 +170,16 @@ const layerTips = {
       "Momentum controls running stats update"
     ],
     bestPractices: "Place after Conv2D, before ReLU. Standard in modern architectures like ResNet."
+  },
+  LayerNorm: {
+    title: "Layer Normalization",
+    description: "Normalizes across features (not batch). Preferred in Transformers and RNNs.",
+    details: [
+      "Independent of batch size",
+      "Normalizes each sample individually",
+      "Standard in Transformer architectures"
+    ],
+    bestPractices: "Use in Transformers after attention and feed-forward layers. Works well with small batches and variable sequence lengths."
   },
   LSTM: {
     title: "Long Short-Term Memory",
@@ -190,6 +210,26 @@ const layerTips = {
       "Self-attention: Input attends to itself"
     ],
     bestPractices: "Use 8 heads as baseline. Embed dim should be divisible by num heads. Follow with LayerNorm."
+  },
+  TransformerEncoder: {
+    title: "Transformer Encoder",
+    description: "Complete encoder block with self-attention, feed-forward network, and layer normalization.",
+    details: [
+      "Self-attention captures global dependencies",
+      "Feed-forward processes each position",
+      "Residual connections prevent gradient vanishing"
+    ],
+    bestPractices: "Use 2-6 layers for most tasks. d_model typically 256-512. Used in BERT for understanding tasks."
+  },
+  TransformerDecoder: {
+    title: "Transformer Decoder",
+    description: "Decoder block with masked self-attention, cross-attention to encoder, and feed-forward network.",
+    details: [
+      "Masked attention: Can only see previous tokens",
+      "Cross-attention: Attends to encoder output",
+      "Used for generation tasks (GPT, translation)"
+    ],
+    bestPractices: "Match d_model with encoder. Use causal masking for autoregressive generation. 2-6 layers typical."
   }
 };
 
