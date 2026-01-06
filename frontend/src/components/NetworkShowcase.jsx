@@ -11,7 +11,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Play
+  Play,
+  ArrowDown
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -75,19 +76,19 @@ const architectures = [
   },
 ];
 
-// Single layer node component
+// Single layer node component - Vertical layout
 const LayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) => {
   const config = layerTypes[layer.type] || layerTypes.Dense;
   const Icon = config.icon;
   
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.3 }}
       className="relative flex flex-col items-center"
     >
-      {/* Layer node */}
+      {/* Layer card - horizontal layout with icon, label, and config */}
       <motion.div
         animate={isAnimating ? {
           boxShadow: [
@@ -102,7 +103,7 @@ const LayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) => {
           repeat: isAnimating ? Infinity : 0,
           repeatDelay: 0.5
         }}
-        className={`relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 min-w-[180px] sm:min-w-[220px] ${
           isDark 
             ? 'bg-zinc-900/80 border-zinc-700 hover:border-zinc-500' 
             : 'bg-white border-zinc-200 hover:border-zinc-400 shadow-sm'
@@ -111,20 +112,34 @@ const LayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) => {
           borderColor: isAnimating ? config.color : undefined,
         }}
       >
+        {/* Icon */}
         <div
-          className="absolute inset-0 rounded-xl opacity-20"
-          style={{ backgroundColor: config.color }}
-        />
-        <Icon 
-          className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative z-10" 
-          style={{ color: config.color }} 
-        />
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${config.color}20` }}
+        >
+          <Icon 
+            className="w-5 h-5 sm:w-6 sm:h-6" 
+            style={{ color: config.color }} 
+          />
+        </div>
+        
+        {/* Label and config */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm sm:text-base font-semibold ${isDark ? 'text-zinc-100' : 'text-zinc-800'}`}>
+            {config.label}
+          </p>
+          {layer.config && (
+            <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {layer.config}
+            </p>
+          )}
+        </div>
         
         {/* Pulse effect during animation */}
         {isAnimating && (
           <motion.div
             initial={{ scale: 1, opacity: 0.5 }}
-            animate={{ scale: 1.5, opacity: 0 }}
+            animate={{ scale: 1.1, opacity: 0 }}
             transition={{ 
               duration: 1, 
               delay: index * 0.15,
@@ -136,27 +151,15 @@ const LayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) => {
         )}
       </motion.div>
       
-      {/* Layer label */}
-      <div className="mt-1.5 sm:mt-2 text-center">
-        <p className={`text-[10px] sm:text-xs font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
-          {config.label}
-        </p>
-        {layer.config && (
-          <p className={`text-[9px] sm:text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            {layer.config}
-          </p>
-        )}
-      </div>
-      
-      {/* Connection line to next node */}
+      {/* Connection line to next node - vertical */}
       {index < totalLayers - 1 && (
-        <div className="absolute left-full top-1/2 -translate-y-1/2 w-4 sm:w-6 md:w-8 flex items-center" style={{ marginTop: '-12px' }}>
+        <div className="flex flex-col items-center py-1">
           <motion.div
             animate={isAnimating ? {
               background: [
-                `linear-gradient(90deg, ${config.color}40 0%, transparent 100%)`,
-                `linear-gradient(90deg, ${config.color} 0%, ${config.color}40 50%, transparent 100%)`,
-                `linear-gradient(90deg, transparent 0%, ${config.color}40 100%)`,
+                `linear-gradient(180deg, ${config.color}40 0%, transparent 100%)`,
+                `linear-gradient(180deg, ${config.color} 0%, ${config.color}40 50%, transparent 100%)`,
+                `linear-gradient(180deg, transparent 0%, ${config.color}40 100%)`,
               ],
             } : {}}
             transition={{ 
@@ -164,14 +167,14 @@ const LayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) => {
               delay: index * 0.15,
               repeat: isAnimating ? Infinity : 0,
             }}
-            className={`h-0.5 w-full ${isDark ? 'bg-zinc-600' : 'bg-zinc-300'}`}
+            className={`w-0.5 h-4 sm:h-6 ${isDark ? 'bg-zinc-600' : 'bg-zinc-300'}`}
           />
-          {/* Arrow */}
+          {/* Arrow pointing down */}
           <div 
-            className={`w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] ${
-              isDark ? 'border-l-zinc-600' : 'border-l-zinc-300'
+            className={`w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] ${
+              isDark ? 'border-t-zinc-600' : 'border-t-zinc-300'
             }`}
-            style={isAnimating ? { borderLeftColor: config.color } : {}}
+            style={isAnimating ? { borderTopColor: config.color } : {}}
           />
         </div>
       )}
@@ -279,7 +282,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
         </div>
       </div>
 
-      {/* Network visualization */}
+      {/* Network visualization - Vertical layout */}
       <div className={`relative rounded-2xl border p-4 sm:p-6 md:p-8 overflow-hidden ${
         isDark 
           ? 'bg-zinc-900/50 border-zinc-800' 
@@ -296,17 +299,17 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
           }}
         />
         
-        {/* Horizontal scrollable container for mobile */}
-        <div className="relative overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
-          <div className="flex items-start justify-start sm:justify-center gap-4 sm:gap-6 md:gap-8 min-w-max sm:min-w-0">
+        {/* Vertical scrollable container */}
+        <div className="relative max-h-[400px] sm:max-h-[500px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <div className="flex flex-col items-center py-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentArch}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-start gap-4 sm:gap-6 md:gap-8"
+                className="flex flex-col items-center"
               >
                 {architecture.layers.map((layer, idx) => (
                   <LayerNode
@@ -323,10 +326,11 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
           </div>
         </div>
         
-        {/* Scroll hint for mobile */}
-        <div className="sm:hidden flex justify-center mt-2">
-          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            ← Scroll to see all layers →
+        {/* Scroll hint */}
+        <div className="flex justify-center mt-2">
+          <p className={`text-xs flex items-center gap-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            <ArrowDown className="w-3 h-3" />
+            Scroll to see all layers
           </p>
         </div>
       </div>
