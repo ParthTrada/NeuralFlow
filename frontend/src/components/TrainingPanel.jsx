@@ -678,6 +678,101 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
                   </Button>
                 )}
               </div>
+
+              {/* Prediction Section - Show after training */}
+              {status === 'complete' && modelRef.current && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                      4. Test Your Model
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="prediction-input">
+                          Enter Input Values (comma-separated)
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="prediction-input"
+                            placeholder={processedData?.inputShape ? 
+                              `e.g., ${Array(processedData.inputShape[0]).fill('0.5').join(', ')}` : 
+                              'e.g., 0.5, 0.3, 0.8'
+                            }
+                            value={predictionInput}
+                            onChange={(e) => setPredictionInput(e.target.value)}
+                            data-testid="prediction-input"
+                          />
+                          <Button 
+                            onClick={handlePredict}
+                            disabled={isPredicting || !predictionInput.trim()}
+                            data-testid="predict-btn"
+                          >
+                            {isPredicting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Predict'
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Input shape: {processedData?.inputShape ? `[${processedData.inputShape.join(', ')}]` : 'unknown'}
+                        </p>
+                      </div>
+
+                      {/* Prediction Result */}
+                      {predictionResult && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-4 rounded-lg bg-primary/10 border border-primary/20"
+                          data-testid="prediction-result"
+                        >
+                          {predictionResult.type === 'classification' ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold">Predicted Class:</span>
+                                <span className="text-lg font-bold text-primary">
+                                  {predictionResult.predictedClass}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Confidence:</span>
+                                <span className="font-mono">{predictionResult.confidence}%</span>
+                              </div>
+                              
+                              {/* All probabilities */}
+                              <div className="space-y-1 pt-2 border-t border-border">
+                                <span className="text-xs text-muted-foreground">All Probabilities:</span>
+                                {predictionResult.allProbabilities.slice(0, 5).map((item, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                                      <div 
+                                        className="h-full bg-primary rounded-full transition-all"
+                                        style={{ width: `${item.probability}%` }}
+                                      />
+                                    </div>
+                                    <span className="w-20 text-xs">{item.class}</span>
+                                    <span className="w-12 text-xs font-mono text-right">{item.probability}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold">Predicted Value:</span>
+                              <span className="text-lg font-bold text-primary font-mono">
+                                {predictionResult.value}
+                              </span>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </ScrollArea>
         </motion.div>
