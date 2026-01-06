@@ -193,13 +193,20 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             return;
           }
           
+          // Debug: log all available metrics
+          console.log('Training logs:', logs);
+          
+          // TensorFlow.js returns 'acc' or 'accuracy' depending on version
+          const accuracy = logs.acc ?? logs.accuracy ?? null;
+          const valAccuracy = logs.val_acc ?? logs.val_accuracy ?? null;
+          
           setCurrentEpoch(epoch + 1);
           setTrainingHistory(prev => [...prev, {
             epoch: epoch + 1,
             loss: logs.loss?.toFixed(4),
-            accuracy: (logs.acc || logs.accuracy)?.toFixed(4),
+            accuracy: accuracy?.toFixed(4),
             valLoss: logs.val_loss?.toFixed(4),
-            valAccuracy: (logs.val_acc || logs.val_accuracy)?.toFixed(4),
+            valAccuracy: valAccuracy?.toFixed(4),
           }]);
         },
         onTrainEnd: async () => {
