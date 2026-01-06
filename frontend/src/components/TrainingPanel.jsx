@@ -239,6 +239,80 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
     setErrorMessage('');
     setColumns([]);
     setTargetColumn('');
+    setPredictionInput('');
+    setPredictionResult(null);
+  };
+
+  // Make prediction
+  const handlePredict = async () => {
+    if (!modelRef.current) {
+      toast.error('No trained model available');
+      return;
+    }
+
+    if (!predictionInput.trim()) {
+      toast.error('Please enter input values');
+      return;
+    }
+
+    setIsPredicting(true);
+    setPredictionResult(null);
+
+    try {
+      // Parse input - expect comma-separated values
+      const inputValues = predictionInput.split(',').map(v => parseFloat(v.trim()));
+      
+      if (inputValues.some(isNaN)) {
+        throw new Error('Invalid input - please enter comma-separated numbers');
+      }
+
+      // Create tensor from input
+      const inputTensor = tf.tensor2d([inputValues]);
+      
+      // Make prediction
+      const prediction = modelRef.current.predict(inputTensor);
+      const predictionData = await prediction.data();
+      
+      // Get class labels if available
+      const labels = processedData?.uniqueTargets || processedData?.uniqueLabels;
+      
+      // Format results
+      let result;
+      if (predictionData.length > 1) {
+        // Classification - find highest probability class
+        const maxIndex = predictionData.indexOf(Math.max(...predictionData));
+        const probabilities = Array.from(predictionData).map((prob, idx) => ({
+          class: labels ? labels[idx] : `Class ${idx}`,
+          probability: (prob * 100).toFixed(2)
+        })).sort((a, b) => b.probability - a.probability);
+        
+        result = {
+          type: 'classification',
+          predictedClass: labels ? labels[maxIndex] : `Class ${maxIndex}`,
+          confidence: (predictionData[maxIndex] * 100).toFixed(2),
+          allProbabilities: probabilities
+        };
+      } else {
+        // Regression - single value
+        result = {
+          type: 'regression',
+          value: predictionData[0].toFixed(4)
+        };
+      }
+      
+      setPredictionResult(result);
+      
+      // Cleanup tensors
+      inputTensor.dispose();
+      prediction.dispose();
+      
+      toast.success('Prediction complete!');
+    } catch (error) {
+      console.error('Prediction error:', error);
+      toast.error(`Prediction failed: ${error.message}`);
+    } finally {
+      setIsPredicting(false);
+    }
   };
 
   if (!isOpen) return null;
