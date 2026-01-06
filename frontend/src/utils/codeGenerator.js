@@ -35,9 +35,21 @@ export const generatePyTorchCode = (nodes, edges) => {
   // Track if we need special imports
   let needsTransformer = false;
 
-  // Find the Input layer to get its size
+  // Find the Input layer to get its configuration
   const inputLayerNode = sortedNodes.find(n => n.data.layerType === 'Input');
-  const networkInputSize = inputLayerNode?.data?.config?.inputSize || 784;
+  const inputConfig = inputLayerNode?.data?.config || {};
+  const inputType = inputConfig.inputType || 'flat';
+  
+  // Calculate network input size based on input type
+  let networkInputSize = 784;
+  if (inputType === 'flat') {
+    networkInputSize = inputConfig.inputSize || 784;
+  } else if (inputType === 'image') {
+    // For images, Dense after Flatten would receive C*H*W
+    networkInputSize = (inputConfig.channels || 3) * (inputConfig.height || 224) * (inputConfig.width || 224);
+  } else if (inputType === 'sequence') {
+    networkInputSize = inputConfig.features || 256;
+  }
 
   sortedNodes.forEach(node => {
     const layerName = `self.layer${layerIndex}`;
