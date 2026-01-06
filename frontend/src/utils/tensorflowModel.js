@@ -155,7 +155,7 @@ export const compileModel = (model, options = {}) => {
     optimizer = 'adam',
     learningRate = 0.001,
     loss = 'categoricalCrossentropy',
-    metrics = ['accuracy']
+    metrics = ['acc']  // TensorFlow.js uses 'acc' internally
   } = options;
 
   let optimizerInstance;
