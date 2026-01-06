@@ -41,6 +41,12 @@ Build a website where users can create neural networks through drag and drop, si
 - ✅ Dark/Light theme toggle
 - ✅ Network validation on "Run"
 - ✅ Responsive Control Room layout
+- ✅ **NEW: Browser-based Training with TensorFlow.js**
+- ✅ **NEW: CSV data upload and processing**
+- ✅ **NEW: Image folder upload for classification**
+- ✅ **NEW: Sample data generation (classification/regression)**
+- ✅ **NEW: Training config (epochs, batch size, learning rate, optimizer)**
+- ✅ **NEW: Real-time loss/accuracy charts during training**
 
 ## Prioritized Backlog
 
@@ -49,8 +55,9 @@ Build a website where users can create neural networks through drag and drop, si
 
 ### P1 (High Priority)
 - [ ] Save/Load network designs to local storage
-- [ ] TensorFlow/Keras code generation option
+- [ ] TensorFlow/Keras code generation option (in addition to PyTorch)
 - [ ] Undo/Redo functionality
+- [ ] Backend-based training for larger models (Python/PyTorch)
 
 ### P2 (Medium Priority)
 - [ ] User accounts and cloud save
