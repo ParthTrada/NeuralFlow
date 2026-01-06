@@ -169,6 +169,14 @@ def main():
     tester.test_auth_models_unauthenticated()
     tester.test_save_model_unauthenticated()
     
+    # Test new versioning and sharing endpoints (unauthenticated)
+    print("\n🔄 Testing New Versioning & Sharing Endpoints (Unauthenticated)...")
+    tester.test_share_model_unauthenticated()
+    tester.test_get_shared_model_invalid_token()
+    tester.test_get_model_versions_unauthenticated()
+    tester.test_revoke_share_unauthenticated()
+    tester.test_clone_model_unauthenticated()
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
