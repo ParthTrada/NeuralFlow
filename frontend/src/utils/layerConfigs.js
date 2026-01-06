@@ -23,7 +23,7 @@ export const layerCategories = {
         color: 'hsl(187, 95%, 42%)',
         description: 'Input layer - defines the shape of input data',
         defaultConfig: {
-          inputShape: [784],
+          inputShape: [2],
         }
       },
       {
@@ -33,8 +33,8 @@ export const layerCategories = {
         color: 'hsl(263, 70%, 50%)',
         description: 'Fully connected layer',
         defaultConfig: {
-          inputSize: 784,
-          units: 128,
+          inputSize: 2,
+          units: 16,
           activation: 'relu'
         }
       },
