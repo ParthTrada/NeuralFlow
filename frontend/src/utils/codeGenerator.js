@@ -194,7 +194,11 @@ export const generatePyTorchCode = (nodes, edges) => {
     : 'x';
 
   // Determine input example based on first layer
-  let inputExample = 'torch.randn(1, 784)  # Example: flattened 28x28 image';
+  // First, try to get inputSize from Input layer
+  const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
+  const inputSize = inputNode?.data?.config?.inputSize || 784;
+  
+  let inputExample = `torch.randn(1, ${inputSize})  # Example: (batch, features)`;
   const firstNonInput = sortedNodes.find(n => n.data.layerType !== 'Input');
   if (firstNonInput) {
     const config = firstNonInput.data.config || {};
@@ -203,11 +207,12 @@ export const generatePyTorchCode = (nodes, edges) => {
     } else if (firstNonInput.data.layerType === 'Conv2D') {
       inputExample = `torch.randn(1, ${config.inChannels || 1}, 28, 28)  # Example: (batch, channels, height, width)`;
     } else if (firstNonInput.data.layerType === 'LSTM' || firstNonInput.data.layerType === 'GRU') {
-      inputExample = `torch.randn(1, 32, ${config.inputSize || 256})  # Example: (batch, seq_len, features)`;
+      inputExample = `torch.randn(1, 32, ${config.inputSize || inputSize})  # Example: (batch, seq_len, features)`;
     } else if (firstNonInput.data.layerType === 'TransformerEncoder' || firstNonInput.data.layerType === 'MultiHeadAttention') {
       inputExample = `torch.randn(1, 32, ${config.dModel || config.embedDim || 256})  # Example: (batch, seq_len, d_model)`;
     } else if (firstNonInput.data.layerType === 'Dense') {
-      inputExample = `torch.randn(1, ${config.inputSize || 784})  # Example: (batch, features)`;
+      // Use Input layer's inputSize for consistency
+      inputExample = `torch.randn(1, ${inputSize})  # Example: (batch, features)`;
     }
   }
 
