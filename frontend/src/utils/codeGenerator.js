@@ -31,10 +31,14 @@ export const generatePyTorchCode = (nodes, edges) => {
   let layerIndex = 0;
 
   const processedNodes = new Map();
+  
+  // Track if we need special imports
+  let needsTransformer = false;
 
   sortedNodes.forEach(node => {
     const layerName = `self.layer${layerIndex}`;
     const config = node.data.config || {};
+    const label = node.data.label || node.data.layerType;
     let layerCode = '';
     let forwardCode = '';
     const varName = `x${layerIndex}`;
@@ -45,66 +49,127 @@ export const generatePyTorchCode = (nodes, edges) => {
         return; // Input is just the forward pass input
 
       case 'Dense':
-        layerCode = `${layerName} = nn.Linear(${config.inputSize || 784}, ${config.units || 128})`;
-        forwardCode = `${varName} = F.${config.activation || 'relu'}(${layerName}({{input}}))`;
+        const inSize = config.inputSize || 784;
+        const units = config.units || 128;
+        layerCode = `${layerName} = nn.Linear(${inSize}, ${units})  # ${label}`;
+        if (config.activation && config.activation !== 'none') {
+          forwardCode = `${varName} = F.${config.activation}(${layerName}({{input}}))`;
+        } else {
+          forwardCode = `${varName} = ${layerName}({{input}})`;
+        }
         break;
 
       case 'Conv2D':
-        layerCode = `${layerName} = nn.Conv2d(${config.inChannels || 1}, ${config.outChannels || 32}, kernel_size=${config.kernelSize || 3}, padding=${config.padding || 1})`;
-        forwardCode = `${varName} = F.${config.activation || 'relu'}(${layerName}({{input}}))`;
+        layerCode = `${layerName} = nn.Conv2d(${config.inChannels || 1}, ${config.outChannels || 32}, kernel_size=${config.kernelSize || 3}, padding=${config.padding || 1})  # ${label}`;
+        if (config.activation && config.activation !== 'none') {
+          forwardCode = `${varName} = F.${config.activation}(${layerName}({{input}}))`;
+        } else {
+          forwardCode = `${varName} = ${layerName}({{input}})`;
+        }
         break;
 
       case 'MaxPool2D':
-        layerCode = `${layerName} = nn.MaxPool2d(kernel_size=${config.kernelSize || 2}, stride=${config.stride || 2})`;
+        layerCode = `${layerName} = nn.MaxPool2d(kernel_size=${config.kernelSize || 2}, stride=${config.stride || 2})  # ${label}`;
         forwardCode = `${varName} = ${layerName}({{input}})`;
         break;
 
       case 'Dropout':
-        layerCode = `${layerName} = nn.Dropout(p=${config.rate || 0.5})`;
+        layerCode = `${layerName} = nn.Dropout(p=${config.rate || 0.5})  # ${label}`;
         forwardCode = `${varName} = ${layerName}({{input}})`;
         break;
 
       case 'Flatten':
-        layerCode = `${layerName} = nn.Flatten()`;
+        layerCode = `${layerName} = nn.Flatten()  # ${label}`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'Embedding':
+        layerCode = `${layerName} = nn.Embedding(${config.vocabSize || 10000}, ${config.embedDim || 256})  # ${label}`;
         forwardCode = `${varName} = ${layerName}({{input}})`;
         break;
 
       case 'BatchNorm1D':
-        layerCode = `${layerName} = nn.BatchNorm1d(${config.numFeatures || 128})`;
+        layerCode = `${layerName} = nn.BatchNorm1d(${config.numFeatures || 128})  # ${label}`;
         forwardCode = `${varName} = ${layerName}({{input}})`;
         break;
 
       case 'BatchNorm2D':
-        layerCode = `${layerName} = nn.BatchNorm2d(${config.numFeatures || 32})`;
+        layerCode = `${layerName} = nn.BatchNorm2d(${config.numFeatures || 32})  # ${label}`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'LayerNorm':
+        layerCode = `${layerName} = nn.LayerNorm(${config.normalizedShape || 256})  # ${label}`;
         forwardCode = `${varName} = ${layerName}({{input}})`;
         break;
 
       case 'LSTM':
-        layerCode = `${layerName} = nn.LSTM(input_size=${config.inputSize || 128}, hidden_size=${config.hiddenSize || 64}, num_layers=${config.numLayers || 1}, batch_first=True, bidirectional=${config.bidirectional || false})`;
+        const lstmBidir = config.bidirectional ? 'True' : 'False';
+        layerCode = `${layerName} = nn.LSTM(input_size=${config.inputSize || 256}, hidden_size=${config.hiddenSize || 128}, num_layers=${config.numLayers || 1}, batch_first=True, bidirectional=${lstmBidir})  # ${label}`;
         forwardCode = `${varName}, _ = ${layerName}({{input}})`;
         break;
 
       case 'GRU':
-        layerCode = `${layerName} = nn.GRU(input_size=${config.inputSize || 128}, hidden_size=${config.hiddenSize || 64}, num_layers=${config.numLayers || 1}, batch_first=True)`;
+        layerCode = `${layerName} = nn.GRU(input_size=${config.inputSize || 256}, hidden_size=${config.hiddenSize || 128}, num_layers=${config.numLayers || 1}, batch_first=True)  # ${label}`;
         forwardCode = `${varName}, _ = ${layerName}({{input}})`;
         break;
 
-      case 'Attention':
-        layerCode = `${layerName} = nn.MultiheadAttention(embed_dim=${config.embedDim || 64}, num_heads=${config.numHeads || 8})`;
+      case 'MultiHeadAttention':
+        layerCode = `${layerName} = nn.MultiheadAttention(embed_dim=${config.embedDim || 256}, num_heads=${config.numHeads || 8}, batch_first=True)  # ${label}`;
         forwardCode = `${varName}, _ = ${layerName}({{input}}, {{input}}, {{input}})`;
         break;
 
+      case 'TransformerEncoder':
+        needsTransformer = true;
+        const encDModel = config.dModel || 256;
+        const encNHead = config.nHead || 8;
+        const encDimFF = config.dimFeedforward || 1024;
+        const encNumLayers = config.numLayers || 2;
+        layerCode = `${layerName}_layer = nn.TransformerEncoderLayer(d_model=${encDModel}, nhead=${encNHead}, dim_feedforward=${encDimFF}, batch_first=True)
+        ${layerName} = nn.TransformerEncoder(${layerName}_layer, num_layers=${encNumLayers})  # ${label}`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'TransformerDecoder':
+        needsTransformer = true;
+        const decDModel = config.dModel || 256;
+        const decNHead = config.nHead || 8;
+        const decDimFF = config.dimFeedforward || 1024;
+        const decNumLayers = config.numLayers || 2;
+        layerCode = `${layerName}_layer = nn.TransformerDecoderLayer(d_model=${decDModel}, nhead=${decNHead}, dim_feedforward=${decDimFF}, batch_first=True)
+        ${layerName} = nn.TransformerDecoder(${layerName}_layer, num_layers=${decNumLayers})  # ${label}`;
+        // Decoder needs memory from encoder - use same input for simplicity
+        forwardCode = `${varName} = ${layerName}({{input}}, {{input}})  # (target, memory)`;
+        break;
+
       case 'Output':
-        layerCode = `${layerName} = nn.Linear(${config.inputSize || 128}, ${config.numClasses || 10})`;
+        const outInSize = config.inputSize || 128;
+        const numClasses = config.numClasses || 10;
+        layerCode = `${layerName} = nn.Linear(${outInSize}, ${numClasses})  # ${label}`;
         if (config.activation === 'softmax') {
-          forwardCode = `${varName} = F.log_softmax(${layerName}({{input}}), dim=1)`;
+          forwardCode = `${varName} = F.log_softmax(${layerName}({{input}}), dim=-1)`;
+        } else if (config.activation === 'sigmoid') {
+          forwardCode = `${varName} = torch.sigmoid(${layerName}({{input}}))`;
         } else {
           forwardCode = `${varName} = ${layerName}({{input}})`;
         }
         break;
 
       default:
-        return;
+        // Handle custom labeled layers (like "Encoder 1", "Decoder 1", etc.)
+        // These are usually Dense layers with custom names
+        if (label.toLowerCase().includes('encoder') || label.toLowerCase().includes('decoder') || label.toLowerCase().includes('latent')) {
+          const customUnits = config.units || 128;
+          const customInputSize = config.inputSize || 256;
+          layerCode = `${layerName} = nn.Linear(${customInputSize}, ${customUnits})  # ${label}`;
+          if (config.activation && config.activation !== 'none') {
+            forwardCode = `${varName} = F.${config.activation}(${layerName}({{input}}))`;
+          } else {
+            forwardCode = `${varName} = F.relu(${layerName}({{input}}))`;
+          }
+        } else {
+          return;
+        }
     }
 
     if (layerCode) {
@@ -128,13 +193,32 @@ export const generatePyTorchCode = (nodes, edges) => {
     ? Array.from(processedNodes.values()).pop() 
     : 'x';
 
+  // Determine input example based on first layer
+  let inputExample = 'torch.randn(1, 784)  # Example: flattened 28x28 image';
+  const firstNonInput = sortedNodes.find(n => n.data.layerType !== 'Input');
+  if (firstNonInput) {
+    const config = firstNonInput.data.config || {};
+    if (firstNonInput.data.layerType === 'Embedding') {
+      inputExample = 'torch.randint(0, 1000, (1, 32))  # Example: batch of token IDs (batch_size, seq_len)';
+    } else if (firstNonInput.data.layerType === 'Conv2D') {
+      inputExample = `torch.randn(1, ${config.inChannels || 1}, 28, 28)  # Example: (batch, channels, height, width)`;
+    } else if (firstNonInput.data.layerType === 'LSTM' || firstNonInput.data.layerType === 'GRU') {
+      inputExample = `torch.randn(1, 32, ${config.inputSize || 256})  # Example: (batch, seq_len, features)`;
+    } else if (firstNonInput.data.layerType === 'TransformerEncoder' || firstNonInput.data.layerType === 'MultiHeadAttention') {
+      inputExample = `torch.randn(1, 32, ${config.dModel || config.embedDim || 256})  # Example: (batch, seq_len, d_model)`;
+    } else if (firstNonInput.data.layerType === 'Dense') {
+      inputExample = `torch.randn(1, ${config.inputSize || 784})  # Example: (batch, features)`;
+    }
+  }
+
   const code = `import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 class NeuralNetwork(nn.Module):
     """
-    Neural Network generated by NeuralFlow Architect
+    Neural Network generated by NeuralFlows
+    Architecture: ${sortedNodes.map(n => n.data.label || n.data.layerType).join(' → ')}
     """
     def __init__(self):
         super(NeuralNetwork, self).__init__()
@@ -151,13 +235,19 @@ if __name__ == "__main__":
     model = NeuralNetwork()
     print(model)
     
-    # Example input (adjust dimensions based on your input layer)
-    # For image data: batch_size x channels x height x width
-    # For sequential data: batch_size x sequence_length x features
-    x = torch.randn(1, 784)  # Example: flattened 28x28 image
+    # Count parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total parameters: {total_params:,}")
+    print(f"Trainable parameters: {trainable_params:,}")
+    
+    # Example input
+    ${inputExample}
+    x = ${inputExample.split('  #')[0]}
     
     # Forward pass
     output = model(x)
+    print(f"Input shape: {x.shape}")
     print(f"Output shape: {output.shape}")
 `;
 
