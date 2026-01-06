@@ -1,5 +1,7 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState, addEdge } from 'reactflow';
+import { useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { Header } from '../components/Header';
 import { LayerPalette } from '../components/LayerPalette';
@@ -12,11 +14,14 @@ import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { getLayerConfig } from '../utils/layerConfigs';
 import { useAuth } from '../context/AuthContext';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
 
 export default function Builder() {
   const { isAuthenticated } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const reactFlowRef = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -27,14 +32,44 @@ export default function Builder() {
   const [isModelsOpen, setIsModelsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+  const [trainedWeights, setTrainedWeights] = useState(null);
+
+  // Check for shared model on load
+  useEffect(() => {
+    const sharedToken = searchParams.get('shared');
+    if (sharedToken) {
+      loadSharedModel(sharedToken);
+    }
+  }, [searchParams]);
+
+  const loadSharedModel = async (shareToken) => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/shared/${shareToken}`);
+      const model = response.data;
+      setNodes(model.nodes || []);
+      setEdges(model.edges || []);
+      if (model.trained_weights) {
+        setTrainedWeights(model.trained_weights);
+      }
+      toast.success(`Loaded shared model: ${model.name}`);
+      // Clear the URL param
+      setSearchParams({});
+    } catch (error) {
+      toast.error('Failed to load shared model');
+      setSearchParams({});
+    }
+  };
 
   // Load model from saved
-  const handleLoadModel = useCallback((savedNodes, savedEdges) => {
+  const handleLoadModel = useCallback((savedNodes, savedEdges, weights) => {
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
     setSelectedNode(null);
+    if (weights) {
+      setTrainedWeights(weights);
+    }
     // Update nodeId counter
-    const maxId = Math.max(0, ...savedNodes.map(n => parseInt(n.id.replace('node_', '')) || 0));
+    const maxId = Math.max(0, ...(savedNodes || []).map(n => parseInt(n.id.replace('node_', '')) || 0));
     nodeId = maxId + 1;
   }, [setNodes, setEdges]);
 
