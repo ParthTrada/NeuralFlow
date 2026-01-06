@@ -613,8 +613,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                           fontSize={12}
                         />
                         <YAxis 
-                          stroke="hsl(var(--muted-foreground))"
+                          yAxisId="left"
+                          stroke="hsl(var(--destructive))"
                           fontSize={12}
+                          domain={[0, 'auto']}
+                          label={{ value: 'Loss', angle: -90, position: 'insideLeft', fontSize: 10 }}
+                        />
+                        <YAxis 
+                          yAxisId="right"
+                          orientation="right"
+                          stroke="hsl(var(--primary))"
+                          fontSize={12}
+                          domain={[0, 1]}
+                          label={{ value: 'Accuracy', angle: 90, position: 'insideRight', fontSize: 10 }}
                         />
                         <Tooltip 
                           contentStyle={{ 
@@ -625,22 +636,27 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                         />
                         <Legend />
                         <Line 
+                          yAxisId="left"
                           type="monotone" 
                           dataKey="loss" 
                           stroke="hsl(var(--destructive))" 
                           strokeWidth={2}
                           dot={false}
                           name="Loss"
+                          connectNulls
                         />
                         <Line 
+                          yAxisId="right"
                           type="monotone" 
                           dataKey="accuracy" 
                           stroke="hsl(var(--primary))" 
                           strokeWidth={2}
                           dot={false}
                           name="Accuracy"
+                          connectNulls
                         />
                         <Line 
+                          yAxisId="left"
                           type="monotone" 
                           dataKey="valLoss" 
                           stroke="hsl(var(--destructive))" 
@@ -648,6 +664,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                           strokeDasharray="5 5"
                           dot={false}
                           name="Val Loss"
+                          connectNulls
+                        />
+                        <Line 
+                          yAxisId="right"
+                          type="monotone" 
+                          dataKey="valAccuracy" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          name="Val Accuracy"
+                          connectNulls
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                         />
                         <Line 
                           type="monotone" 
