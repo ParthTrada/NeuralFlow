@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, User } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -27,32 +27,48 @@ export const Header = ({
   onOpenTraining,
   onOpenModels,
   isRunning,
-  nodeCount 
+  nodeCount,
+  isMobile,
+  onToggleLayers,
+  showLayerPalette
 }) => {
   const { user, login, logout, isAuthenticated } = useAuth();
 
   return (
     <header 
-      className="h-14 border-b border-border bg-background/80 backdrop-blur-md fixed top-0 w-full z-40 flex items-center px-6 justify-between"
+      className="h-14 border-b border-border bg-background/80 backdrop-blur-md fixed top-0 w-full z-40 flex items-center px-3 sm:px-6 justify-between"
       data-testid="header"
     >
       {/* Logo & Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile layers toggle */}
+        {isMobile && (
+          <Button
+            variant={showLayerPalette ? "secondary" : "ghost"}
+            size="icon"
+            onClick={onToggleLayers}
+            className="mr-1"
+            data-testid="mobile-layers-btn"
+          >
+            <Layers className="w-5 h-5" />
+          </Button>
+        )}
+        
         <motion.div
           whileHover={{ rotate: 180 }}
           transition={{ duration: 0.5 }}
-          className="p-2 rounded-lg bg-primary/10"
+          className="p-1.5 sm:p-2 rounded-lg bg-primary/10 hidden sm:flex"
         >
-          <Cpu className="w-5 h-5 text-primary" />
+          <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
         </motion.div>
         <a href="/" className="hover:opacity-80 transition-opacity">
-          <h1 className="font-bold text-lg tracking-tight">NeuralFlows</h1>
-          <p className="text-xs text-muted-foreground">Builder</p>
+          <h1 className="font-bold text-base sm:text-lg tracking-tight">NeuralFlows</h1>
+          <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Builder</p>
         </a>
       </div>
 
-      {/* Stats */}
-      <div className="hidden md:flex items-center gap-6 text-sm">
+      {/* Stats - Desktop only */}
+      <div className="hidden lg:flex items-center gap-6 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="font-mono">{nodeCount}</span>
           <span>layers</span>
@@ -60,7 +76,15 @@ export const Header = ({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Mobile: Compact stats */}
+        {isMobile && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">
+            <span className="font-mono">{nodeCount}</span>
+            <Layers className="w-3 h-3" />
+          </div>
+        )}
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -68,12 +92,13 @@ export const Header = ({
                 variant="ghost"
                 size="icon"
                 onClick={onToggleTheme}
+                className="w-8 h-8 sm:w-9 sm:h-9"
                 data-testid="theme-toggle-btn"
               >
                 {isDarkMode ? (
-                  <Sun className="w-5 h-5" />
+                  <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <Moon className="w-5 h-5" />
+                  <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -90,9 +115,10 @@ export const Header = ({
                 variant="ghost"
                 size="icon"
                 onClick={onClearCanvas}
+                className="w-8 h-8 sm:w-9 sm:h-9"
                 data-testid="clear-canvas-btn"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -110,9 +136,10 @@ export const Header = ({
                   variant="ghost"
                   size="icon"
                   onClick={onOpenModels}
+                  className="w-8 h-8 sm:w-9 sm:h-9"
                   data-testid="my-models-btn"
                 >
-                  <FolderOpen className="w-5 h-5" />
+                  <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -122,10 +149,11 @@ export const Header = ({
           </TooltipProvider>
         )}
 
+        {/* Desktop action buttons */}
         <Button
           variant="outline"
           onClick={onShowCode}
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           data-testid="show-code-btn"
         >
           <Code className="w-4 h-4 mr-2" />
@@ -135,31 +163,52 @@ export const Header = ({
         <Button
           variant="outline"
           onClick={onOpenTraining}
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           data-testid="train-network-btn"
         >
           <GraduationCap className="w-4 h-4 mr-2" />
           Train
         </Button>
 
+        {/* Mobile dropdown for extra actions */}
+        {isMobile && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="w-8 h-8" data-testid="mobile-actions-btn">
+                <Menu className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onShowCode}>
+                <Code className="w-4 h-4 mr-2" />
+                View Code
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onOpenTraining}>
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Train Model
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <Button
           onClick={onRun}
           disabled={isRunning || nodeCount === 0}
-          className="glow-primary"
+          className="glow-primary text-xs sm:text-sm px-2 sm:px-4"
           data-testid="run-network-btn"
         >
-          <Play className={`w-4 h-4 mr-2 ${isRunning ? 'animate-pulse' : ''}`} />
-          {isRunning ? 'Running...' : 'Run'}
+          <Play className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isRunning ? 'animate-pulse' : ''}`} />
+          {isRunning ? (isMobile ? '...' : 'Running...') : 'Run'}
         </Button>
 
         {/* User Menu */}
         {isAuthenticated ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full" data-testid="user-menu-btn">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full" data-testid="user-menu-btn">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                   <AvatarImage src={user?.picture} alt={user?.name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-xs">
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -183,9 +232,15 @@ export const Header = ({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button variant="outline" onClick={login} data-testid="login-btn">
-            <LogIn className="w-4 h-4 mr-2" />
-            Sign In
+          <Button 
+            variant="outline" 
+            onClick={login} 
+            size={isMobile ? "sm" : "default"}
+            className="text-xs sm:text-sm"
+            data-testid="login-btn"
+          >
+            <LogIn className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            {isMobile ? 'Sign In' : 'Sign In'}
           </Button>
         )}
       </div>

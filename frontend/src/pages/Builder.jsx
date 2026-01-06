@@ -33,6 +33,25 @@ export default function Builder() {
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
+  
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+  const [showLayerPalette, setShowLayerPalette] = useState(false);
+
+  // Check screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setShowLayerPalette(false); // Reset on desktop
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Check for shared model on load
   useEffect(() => {
@@ -52,7 +71,6 @@ export default function Builder() {
         setTrainedWeights(model.trained_weights);
       }
       toast.success(`Loaded shared model: ${model.name}`);
-      // Clear the URL param
       setSearchParams({});
     } catch (error) {
       toast.error('Failed to load shared model');
@@ -60,7 +78,6 @@ export default function Builder() {
     }
   };
 
-  // Load model from saved
   const handleLoadModel = useCallback((savedNodes, savedEdges, weights) => {
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
@@ -68,12 +85,10 @@ export default function Builder() {
     if (weights) {
       setTrainedWeights(weights);
     }
-    // Update nodeId counter
     const maxId = Math.max(0, ...(savedNodes || []).map(n => parseInt(n.id.replace('node_', '')) || 0));
     nodeId = maxId + 1;
   }, [setNodes, setEdges]);
 
-  // Toggle theme
   const handleToggleTheme = useCallback(() => {
     setIsDarkMode(prev => {
       const newMode = !prev;
@@ -82,7 +97,6 @@ export default function Builder() {
     });
   }, []);
 
-  // Handle node connection
   const onConnect = useCallback((params) => {
     setEdges((eds) => addEdge({
       ...params,
@@ -92,18 +106,18 @@ export default function Builder() {
     toast.success('Layers connected!');
   }, [setEdges, isDarkMode]);
 
-  // Handle node click
   const onNodeClick = useCallback((event, node) => {
     setSelectedNode(node);
-  }, []);
+    if (isMobile) {
+      setShowLayerPalette(false);
+    }
+  }, [isMobile]);
 
-  // Handle drag over
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  // Handle drop
   const onDrop = useCallback((event) => {
     event.preventDefault();
 
@@ -112,7 +126,6 @@ export default function Builder() {
 
     const layer = JSON.parse(data);
     
-    // Get the position where the node was dropped
     const reactFlowBounds = event.currentTarget.getBoundingClientRect();
     const position = {
       x: event.clientX - reactFlowBounds.left - 90,
@@ -132,9 +145,12 @@ export default function Builder() {
 
     setNodes((nds) => [...nds, newNode]);
     toast.success(`Added ${layer.label} layer`);
-  }, [setNodes]);
+    
+    if (isMobile) {
+      setShowLayerPalette(false);
+    }
+  }, [setNodes, isMobile]);
 
-  // Update node data
   const handleUpdateNode = useCallback((nodeId, newData) => {
     setNodes((nds) =>
       nds.map((node) =>
@@ -146,7 +162,6 @@ export default function Builder() {
     setSelectedNode(prev => prev?.id === nodeId ? { ...prev, data: newData } : prev);
   }, [setNodes]);
 
-  // Delete node
   const handleDeleteNode = useCallback((nodeId) => {
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
@@ -154,12 +169,10 @@ export default function Builder() {
     toast.success('Layer deleted');
   }, [setNodes, setEdges]);
 
-  // Close properties panel
   const handleCloseProperties = useCallback(() => {
     setSelectedNode(null);
   }, []);
 
-  // Clear canvas
   const handleClearCanvas = useCallback(() => {
     if (nodes.length === 0) {
       toast.info('Canvas is already empty');
@@ -172,20 +185,17 @@ export default function Builder() {
     toast.success('Canvas cleared');
   }, [nodes.length, setNodes, setEdges]);
 
-  // Show code
   const handleShowCode = useCallback(() => {
     const code = generatePyTorchCode(nodes, edges);
     setGeneratedCode(code);
     setIsCodeModalOpen(true);
   }, [nodes, edges]);
 
-  // Download code
   const handleDownloadCode = useCallback(() => {
     downloadCode(generatedCode);
     toast.success('Code downloaded!');
   }, [generatedCode]);
 
-  // Run network (simulation)
   const handleRun = useCallback(() => {
     if (nodes.length === 0) {
       toast.error('Add some layers first!');
@@ -194,7 +204,6 @@ export default function Builder() {
 
     setIsRunning(true);
     
-    // Animate nodes
     setNodes((nds) =>
       nds.map((node) => ({
         ...node,
@@ -202,7 +211,6 @@ export default function Builder() {
       }))
     );
 
-    // Simulate running
     setTimeout(() => {
       setIsRunning(false);
       setNodes((nds) =>
@@ -216,7 +224,6 @@ export default function Builder() {
     }, 2000);
   }, [nodes.length, setNodes, handleShowCode]);
 
-  // Open training panel
   const handleOpenTraining = useCallback(() => {
     if (nodes.length === 0) {
       toast.error('Add some layers first!');
@@ -224,6 +231,13 @@ export default function Builder() {
     }
     setIsTrainingPanelOpen(true);
   }, [nodes.length]);
+
+  const toggleLayerPalette = useCallback(() => {
+    setShowLayerPalette(prev => !prev);
+    if (selectedNode) {
+      setSelectedNode(null);
+    }
+  }, [selectedNode]);
 
   return (
     <div className={`h-screen overflow-hidden ${!isDarkMode ? 'light' : ''}`} data-testid="builder-page">
@@ -237,9 +251,16 @@ export default function Builder() {
         onOpenModels={() => setIsModelsOpen(true)}
         isRunning={isRunning}
         nodeCount={nodes.length}
+        isMobile={isMobile}
+        onToggleLayers={toggleLayerPalette}
+        showLayerPalette={showLayerPalette}
       />
 
-      <LayerPalette />
+      <LayerPalette 
+        isMobile={isMobile}
+        isOpen={showLayerPalette}
+        onClose={() => setShowLayerPalette(false)}
+      />
 
       <NetworkCanvas
         ref={reactFlowRef}
@@ -253,6 +274,8 @@ export default function Builder() {
         onDragOver={onDragOver}
         selectedNodeId={selectedNode?.id}
         isDarkMode={isDarkMode}
+        isMobile={isMobile}
+        showLayerPalette={showLayerPalette}
       />
 
       <PropertiesPanel
@@ -260,6 +283,7 @@ export default function Builder() {
         onUpdateNode={handleUpdateNode}
         onDeleteNode={handleDeleteNode}
         onClose={handleCloseProperties}
+        isMobile={isMobile}
       />
 
       <CodePreviewModal
