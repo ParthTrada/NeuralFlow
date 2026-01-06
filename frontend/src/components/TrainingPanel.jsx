@@ -50,7 +50,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
   const [isTraining, setIsTraining] = useState(false);
   const [trainingHistory, setTrainingHistory] = useState([]);
   const [currentEpoch, setCurrentEpoch] = useState(0);
-  const [status, setStatus] = useState('idle'); // idle, loading, ready, training, complete, error
+  const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
   
   // Prediction state
@@ -80,7 +80,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       
       const cols = Object.keys(data[0]);
       setColumns(cols);
-      setTargetColumn(cols[cols.length - 1]); // Default to last column
+      setTargetColumn(cols[cols.length - 1]);
       setProcessedData({ raw: data, type: 'csv' });
       setStatus('ready');
       toast.success(`Loaded ${data.length} rows from CSV`);
@@ -128,7 +128,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
         type: 'sample'
       });
       setStatus('ready');
-      toast.success(`Generated ${type} sample dataset (input shape: [${data.inputShape.join(', ')}], ${data.numClasses} classes)`);
+      toast.success(`Generated ${type} sample dataset`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
@@ -147,23 +147,21 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       return;
     }
 
-    // Check if network input size matches data
     const firstLayer = nodes.find(n => n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D');
     if (firstLayer && processedData.inputShape) {
       const expectedInput = processedData.inputShape[0];
       const configuredInput = firstLayer.data.config?.inputSize || 784;
       if (configuredInput !== expectedInput) {
-        toast.error(`Input size mismatch! Your first layer expects ${configuredInput} features, but data has ${expectedInput}. Please update the Dense layer's Input Size to ${expectedInput}.`);
+        toast.error(`Input size mismatch! Layer expects ${configuredInput}, data has ${expectedInput}.`);
         return;
       }
     }
 
-    // Check output layer matches number of classes
     const outputLayer = nodes.find(n => n.data.layerType === 'Output');
     if (outputLayer && processedData.numClasses > 1) {
       const configuredClasses = outputLayer.data.config?.numClasses || 10;
       if (configuredClasses !== processedData.numClasses) {
-        toast.error(`Output mismatch! Your Output layer has ${configuredClasses} classes, but data has ${processedData.numClasses}. Please update the Output layer's Num Classes to ${processedData.numClasses}.`);
+        toast.error(`Output mismatch! Layer has ${configuredClasses} classes, data has ${processedData.numClasses}.`);
         return;
       }
     }
@@ -175,14 +173,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     stopTrainingRef.current = false;
 
     try {
-      // Build model from nodes
       modelRef.current = buildTFModel(nodes, edges);
       
-      // Determine loss function based on task - always use accuracy for classification
       const isClassification = processedData.numClasses > 1 || processedData.type === 'classification';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
-      // Compile model - use 'acc' which TensorFlow.js recognizes
       compileModel(modelRef.current, {
         optimizer,
         learningRate,
@@ -190,7 +185,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
         metrics: ['acc'],
       });
 
-      // Get training data
       let xTrain, yTrain;
       
       if (processedData.type === 'csv' && processedData.raw) {
@@ -202,7 +196,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
         yTrain = processedData.yTrain;
       }
 
-      // Train model
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
         batchSize,
@@ -213,10 +206,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             modelRef.current.stopTraining = true;
             return;
           }
-          
-          // Debug: log raw values
-          console.log('Raw logs:', JSON.stringify(logs));
-          console.log('acc value:', logs.acc, 'val_acc value:', logs.val_acc);
           
           setCurrentEpoch(epoch + 1);
           setTrainingHistory(prev => [...prev, {
@@ -231,7 +220,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
           setIsTraining(false);
           setStatus('complete');
           
-          // Export weights as base64
           if (modelRef.current && onWeightsTrained) {
             try {
               const weightsData = await modelRef.current.getWeights();
@@ -263,14 +251,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     }
   };
 
-  // Stop training
   const handleStopTraining = () => {
     stopTrainingRef.current = true;
     setIsTraining(false);
     toast.info('Training stopped');
   };
 
-  // Reset
   const handleReset = () => {
     if (modelRef.current) {
       disposeModel(modelRef.current);
@@ -288,7 +274,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     setPredictionResult(null);
   };
 
-  // Make prediction
   const handlePredict = async () => {
     if (!modelRef.current) {
       toast.error('No trained model available');
@@ -304,27 +289,20 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     setPredictionResult(null);
 
     try {
-      // Parse input - expect comma-separated values
       const inputValues = predictionInput.split(',').map(v => parseFloat(v.trim()));
       
       if (inputValues.some(isNaN)) {
         throw new Error('Invalid input - please enter comma-separated numbers');
       }
 
-      // Create tensor from input
       const inputTensor = tf.tensor2d([inputValues]);
-      
-      // Make prediction
       const prediction = modelRef.current.predict(inputTensor);
       const predictionData = await prediction.data();
       
-      // Get class labels if available
       const labels = processedData?.uniqueTargets || processedData?.uniqueLabels;
       
-      // Format results
       let result;
       if (predictionData.length > 1) {
-        // Classification - find highest probability class
         const maxIndex = predictionData.indexOf(Math.max(...predictionData));
         const probabilities = Array.from(predictionData).map((prob, idx) => ({
           class: labels ? labels[idx] : `Class ${idx}`,
@@ -338,7 +316,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
           allProbabilities: probabilities
         };
       } else {
-        // Regression - single value
         result = {
           type: 'regression',
           value: predictionData[0].toFixed(4)
@@ -346,11 +323,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       }
       
       setPredictionResult(result);
-      
-      // Cleanup tensors
       inputTensor.dispose();
       prediction.dispose();
-      
       toast.success('Prediction complete!');
     } catch (error) {
       console.error('Prediction error:', error);
@@ -376,19 +350,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25 }}
-          className="absolute right-0 top-0 bottom-0 w-[500px] bg-card border-l border-border shadow-2xl"
+          className="absolute right-0 top-0 bottom-0 w-full sm:w-[500px] bg-card border-l border-border shadow-2xl"
           onClick={(e) => e.stopPropagation()}
           data-testid="training-panel"
         >
           {/* Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-primary/10">
-                <TrendingUp className="w-5 h-5 text-primary" />
+              <div className="p-1.5 sm:p-2 rounded-md bg-primary/10">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-bold text-lg">Train Network</h2>
-                <p className="text-xs text-muted-foreground">Browser-based training with TensorFlow.js</p>
+                <h2 className="font-bold text-base sm:text-lg">Train Network</h2>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">TensorFlow.js</p>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} data-testid="close-training-btn">
@@ -396,31 +370,31 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             </Button>
           </div>
 
-          <ScrollArea className="h-[calc(100vh-80px)]">
-            <div className="p-4 space-y-6">
+          <ScrollArea className="h-[calc(100vh-60px)] sm:h-[calc(100vh-80px)]">
+            <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
               {/* Data Upload Section */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
                   1. Load Data
                 </h3>
                 
                 <Tabs value={dataType} onValueChange={setDataType}>
-                  <TabsList className="grid grid-cols-3 w-full">
-                    <TabsTrigger value="csv" data-testid="tab-csv">
-                      <FileSpreadsheet className="w-4 h-4 mr-1" />
+                  <TabsList className="grid grid-cols-3 w-full h-9 sm:h-10">
+                    <TabsTrigger value="csv" className="text-xs sm:text-sm" data-testid="tab-csv">
+                      <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       CSV
                     </TabsTrigger>
-                    <TabsTrigger value="images" data-testid="tab-images">
-                      <Image className="w-4 h-4 mr-1" />
+                    <TabsTrigger value="images" className="text-xs sm:text-sm" data-testid="tab-images">
+                      <Image className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Images
                     </TabsTrigger>
-                    <TabsTrigger value="sample" data-testid="tab-sample">
-                      <Sparkles className="w-4 h-4 mr-1" />
+                    <TabsTrigger value="sample" className="text-xs sm:text-sm" data-testid="tab-sample">
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Sample
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="csv" className="space-y-3 mt-4">
+                  <TabsContent value="csv" className="space-y-3 mt-3 sm:mt-4">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -430,26 +404,26 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                     />
                     <Button 
                       variant="outline" 
-                      className="w-full h-20 border-dashed"
+                      className="w-full h-16 sm:h-20 border-dashed text-xs sm:text-sm"
                       onClick={() => fileInputRef.current?.click()}
                       data-testid="upload-csv-btn"
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <Upload className="w-5 h-5" />
-                        <span>{file ? file.name : 'Upload CSV File'}</span>
+                        <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="truncate max-w-[200px]">{file ? file.name : 'Upload CSV File'}</span>
                       </div>
                     </Button>
                     
                     {columns.length > 0 && (
                       <div className="space-y-2">
-                        <Label>Target Column (Label)</Label>
+                        <Label className="text-xs sm:text-sm">Target Column</Label>
                         <Select value={targetColumn} onValueChange={setTargetColumn}>
-                          <SelectTrigger data-testid="select-target-column">
-                            <SelectValue placeholder="Select target column" />
+                          <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-target-column">
+                            <SelectValue placeholder="Select target" />
                           </SelectTrigger>
                           <SelectContent>
                             {columns.map(col => (
-                              <SelectItem key={col} value={col}>{col}</SelectItem>
+                              <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -457,7 +431,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                     )}
                   </TabsContent>
 
-                  <TabsContent value="images" className="space-y-3 mt-4">
+                  <TabsContent value="images" className="space-y-3 mt-3 sm:mt-4">
                     <input
                       ref={imageInputRef}
                       type="file"
@@ -469,22 +443,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                     />
                     <Button 
                       variant="outline" 
-                      className="w-full h-20 border-dashed"
+                      className="w-full h-16 sm:h-20 border-dashed text-xs sm:text-sm"
                       onClick={() => imageInputRef.current?.click()}
                       data-testid="upload-images-btn"
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <Upload className="w-5 h-5" />
+                        <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                         <span>Upload Image Folder</span>
-                        <span className="text-xs text-muted-foreground">Organize by class folders</span>
                       </div>
                     </Button>
                   </TabsContent>
 
-                  <TabsContent value="sample" className="space-y-3 mt-4">
+                  <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
                     <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline"
+                        className="text-xs sm:text-sm h-9 sm:h-10"
                         onClick={() => handleGenerateSample('classification')}
                         data-testid="generate-classification-btn"
                       >
@@ -492,37 +466,38 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                       </Button>
                       <Button 
                         variant="outline"
+                        className="text-xs sm:text-sm h-9 sm:h-10"
                         onClick={() => handleGenerateSample('regression')}
                         data-testid="generate-regression-btn"
                       >
                         Regression
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Generate synthetic data for testing your network
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      Generate synthetic data for testing
                     </p>
                   </TabsContent>
                 </Tabs>
 
                 {/* Status indicator */}
                 {status !== 'idle' && (
-                  <div className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
+                  <div className={`flex items-center gap-2 p-2 rounded-lg text-xs sm:text-sm ${
                     status === 'ready' ? 'bg-green-500/10 text-green-500' :
                     status === 'loading' ? 'bg-blue-500/10 text-blue-500' :
                     status === 'training' ? 'bg-primary/10 text-primary' :
                     status === 'complete' ? 'bg-green-500/10 text-green-500' :
                     status === 'error' ? 'bg-red-500/10 text-red-500' : ''
                   }`}>
-                    {status === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {status === 'ready' && <CheckCircle2 className="w-4 h-4" />}
-                    {status === 'training' && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {status === 'complete' && <CheckCircle2 className="w-4 h-4" />}
-                    {status === 'error' && <AlertCircle className="w-4 h-4" />}
-                    <span>
-                      {status === 'loading' && 'Processing data...'}
-                      {status === 'ready' && 'Data ready for training'}
-                      {status === 'training' && `Training... Epoch ${currentEpoch}/${epochs}`}
-                      {status === 'complete' && 'Training complete!'}
+                    {status === 'loading' && <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />}
+                    {status === 'ready' && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
+                    {status === 'training' && <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />}
+                    {status === 'complete' && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
+                    {status === 'error' && <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
+                    <span className="truncate">
+                      {status === 'loading' && 'Processing...'}
+                      {status === 'ready' && 'Data ready'}
+                      {status === 'training' && `Epoch ${currentEpoch}/${epochs}`}
+                      {status === 'complete' && 'Complete!'}
                       {status === 'error' && errorMessage}
                     </span>
                   </div>
@@ -530,10 +505,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                 
                 {/* Data info hint */}
                 {status === 'ready' && processedData && (
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 text-xs">
-                    <p><strong>Tip:</strong> Configure your first layer's input size to match: <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.inputShape?.[0] || 'N/A'}</code></p>
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] sm:text-xs">
+                    <p><strong>Input size:</strong> <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.inputShape?.[0] || 'N/A'}</code></p>
                     {processedData.numClasses > 1 && (
-                      <p className="mt-1">Output layer should have <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.numClasses}</code> classes</p>
+                      <p className="mt-1"><strong>Classes:</strong> <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.numClasses}</code></p>
                     )}
                   </div>
                 )}
@@ -542,16 +517,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
               <Separator />
 
               {/* Training Config */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                  2. Training Config
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
+                  2. Config
                 </h3>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <Label>Epochs</Label>
-                      <span className="text-sm text-muted-foreground">{epochs}</span>
+                      <span className="text-muted-foreground">{epochs}</span>
                     </div>
                     <Slider
                       value={[epochs]}
@@ -565,9 +540,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <Label>Batch Size</Label>
-                      <span className="text-sm text-muted-foreground">{batchSize}</span>
+                      <span className="text-muted-foreground">{batchSize}</span>
                     </div>
                     <Slider
                       value={[batchSize]}
@@ -581,9 +556,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <Label>Learning Rate</Label>
-                      <span className="text-sm text-muted-foreground">{learningRate}</span>
+                      <span className="text-muted-foreground">{learningRate}</span>
                     </div>
                     <Slider
                       value={[Math.log10(learningRate) + 4]}
@@ -597,15 +572,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Optimizer</Label>
+                    <Label className="text-xs sm:text-sm">Optimizer</Label>
                     <Select value={optimizer} onValueChange={setOptimizer} disabled={isTraining}>
-                      <SelectTrigger data-testid="select-optimizer">
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-optimizer">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="adam">Adam</SelectItem>
-                        <SelectItem value="sgd">SGD</SelectItem>
-                        <SelectItem value="rmsprop">RMSprop</SelectItem>
+                        <SelectItem value="adam" className="text-xs sm:text-sm">Adam</SelectItem>
+                        <SelectItem value="sgd" className="text-xs sm:text-sm">SGD</SelectItem>
+                        <SelectItem value="rmsprop" className="text-xs sm:text-sm">RMSprop</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -616,43 +591,45 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
 
               {/* Training Progress */}
               {trainingHistory.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                    3. Training Progress
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
+                    3. Progress
                   </h3>
                   
-                  <div className="h-48 w-full">
+                  <div className="h-36 sm:h-48 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trainingHistory}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis 
                           dataKey="epoch" 
                           stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
+                          fontSize={10}
+                          tickMargin={5}
                         />
                         <YAxis 
                           yAxisId="left"
                           stroke="hsl(var(--destructive))"
-                          fontSize={12}
+                          fontSize={10}
                           domain={[0, 'auto']}
-                          label={{ value: 'Loss', angle: -90, position: 'insideLeft', fontSize: 10 }}
+                          width={35}
                         />
                         <YAxis 
                           yAxisId="right"
                           orientation="right"
                           stroke="hsl(var(--primary))"
-                          fontSize={12}
+                          fontSize={10}
                           domain={[0, 1]}
-                          label={{ value: 'Accuracy', angle: 90, position: 'insideRight', fontSize: 10 }}
+                          width={35}
                         />
                         <Tooltip 
                           contentStyle={{ 
                             backgroundColor: 'hsl(var(--card))',
                             border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
+                            borderRadius: '8px',
+                            fontSize: '11px'
                           }}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: '10px' }} />
                         <Line 
                           yAxisId="left"
                           type="monotone" 
@@ -670,29 +647,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                           stroke="hsl(var(--primary))" 
                           strokeWidth={2}
                           dot={false}
-                          name="Accuracy"
-                          connectNulls
-                        />
-                        <Line 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="valLoss" 
-                          stroke="hsl(var(--destructive))" 
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          name="Val Loss"
-                          connectNulls
-                        />
-                        <Line 
-                          yAxisId="right"
-                          type="monotone" 
-                          dataKey="valAccuracy" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          name="Val Accuracy"
+                          name="Acc"
                           connectNulls
                         />
                       </LineChart>
@@ -701,16 +656,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
 
                   {/* Latest metrics */}
                   {trainingHistory.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                       <div className="p-2 rounded-lg bg-secondary">
                         <span className="text-muted-foreground">Loss:</span>
-                        <span className="ml-2 font-mono">
+                        <span className="ml-1 sm:ml-2 font-mono">
                           {trainingHistory[trainingHistory.length - 1]?.loss || 'N/A'}
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-secondary">
-                        <span className="text-muted-foreground">Accuracy:</span>
-                        <span className="ml-2 font-mono">
+                        <span className="text-muted-foreground">Acc:</span>
+                        <span className="ml-1 sm:ml-2 font-mono">
                           {trainingHistory[trainingHistory.length - 1]?.accuracy || 'N/A'}
                         </span>
                       </div>
@@ -720,21 +675,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-2 sm:pt-4">
                 {!isTraining ? (
                   <>
                     <Button 
-                      className="flex-1 glow-primary"
+                      className="flex-1 glow-primary text-xs sm:text-sm h-9 sm:h-10"
                       onClick={handleStartTraining}
                       disabled={status !== 'ready' && status !== 'complete'}
                       data-testid="start-training-btn"
                     >
-                      <Play className="w-4 h-4 mr-2" />
-                      Start Training
+                      <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      Train
                     </Button>
                     <Button 
                       variant="outline"
                       onClick={handleReset}
+                      className="text-xs sm:text-sm h-9 sm:h-10"
                       data-testid="reset-training-btn"
                     >
                       Reset
@@ -743,56 +699,54 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                 ) : (
                   <Button 
                     variant="destructive"
-                    className="flex-1"
+                    className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
                     onClick={handleStopTraining}
                     data-testid="stop-training-btn"
                   >
-                    <Square className="w-4 h-4 mr-2" />
-                    Stop Training
+                    <Square className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Stop
                   </Button>
                 )}
               </div>
 
-              {/* Prediction Section - Show after training */}
+              {/* Prediction Section */}
               {status === 'complete' && modelRef.current && (
                 <>
                   <Separator />
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                      4. Test Your Model
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
+                      4. Test Model
                     </h3>
                     
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="prediction-input">
-                          Enter Input Values (comma-separated)
+                        <Label className="text-xs sm:text-sm">
+                          Input (comma-separated)
                         </Label>
                         <div className="flex gap-2">
                           <Input
-                            id="prediction-input"
                             placeholder={processedData?.inputShape ? 
-                              `e.g., ${Array(processedData.inputShape[0]).fill('0.5').join(', ')}` : 
-                              'e.g., 0.5, 0.3, 0.8'
+                              `${processedData.inputShape[0]} values` : 
+                              'e.g., 0.5, 0.3'
                             }
                             value={predictionInput}
                             onChange={(e) => setPredictionInput(e.target.value)}
+                            className="text-xs sm:text-sm h-9 sm:h-10"
                             data-testid="prediction-input"
                           />
                           <Button 
                             onClick={handlePredict}
                             disabled={isPredicting || !predictionInput.trim()}
+                            className="text-xs sm:text-sm h-9 sm:h-10 px-3"
                             data-testid="predict-btn"
                           >
                             {isPredicting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                             ) : (
-                              'Predict'
+                              'Go'
                             )}
                           </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Input shape: {processedData?.inputShape ? `[${processedData.inputShape.join(', ')}]` : 'unknown'}
-                        </p>
                       </div>
 
                       {/* Prediction Result */}
@@ -800,43 +754,42 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-4 rounded-lg bg-primary/10 border border-primary/20"
+                          className="p-3 sm:p-4 rounded-lg bg-primary/10 border border-primary/20"
                           data-testid="prediction-result"
                         >
                           {predictionResult.type === 'classification' ? (
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <span className="font-semibold">Predicted Class:</span>
-                                <span className="text-lg font-bold text-primary">
+                            <div className="space-y-2 sm:space-y-3">
+                              <div className="flex items-center justify-between text-xs sm:text-sm">
+                                <span className="font-semibold">Predicted:</span>
+                                <span className="font-bold text-primary">
                                   {predictionResult.predictedClass}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center justify-between text-xs sm:text-sm">
                                 <span className="text-muted-foreground">Confidence:</span>
                                 <span className="font-mono">{predictionResult.confidence}%</span>
                               </div>
                               
-                              {/* All probabilities */}
+                              {/* Top probabilities */}
                               <div className="space-y-1 pt-2 border-t border-border">
-                                <span className="text-xs text-muted-foreground">All Probabilities:</span>
-                                {predictionResult.allProbabilities.slice(0, 5).map((item, idx) => (
-                                  <div key={idx} className="flex items-center gap-2 text-sm">
-                                    <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                                {predictionResult.allProbabilities.slice(0, 3).map((item, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-xs">
+                                    <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                                       <div 
-                                        className="h-full bg-primary rounded-full transition-all"
+                                        className="h-full bg-primary rounded-full"
                                         style={{ width: `${item.probability}%` }}
                                       />
                                     </div>
-                                    <span className="w-20 text-xs">{item.class}</span>
-                                    <span className="w-12 text-xs font-mono text-right">{item.probability}%</span>
+                                    <span className="w-14 truncate">{item.class}</span>
+                                    <span className="w-10 font-mono text-right">{item.probability}%</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold">Predicted Value:</span>
-                              <span className="text-lg font-bold text-primary font-mono">
+                            <div className="flex items-center justify-between text-xs sm:text-sm">
+                              <span className="font-semibold">Value:</span>
+                              <span className="font-bold text-primary font-mono">
                                 {predictionResult.value}
                               </span>
                             </div>
