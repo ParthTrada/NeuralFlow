@@ -69,7 +69,7 @@ export const AuthCallback = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        <p className="text-muted-foreground">Signing you in...</p>
+        <p className="text-muted-foreground">{status}</p>
       </div>
     </div>
   );
