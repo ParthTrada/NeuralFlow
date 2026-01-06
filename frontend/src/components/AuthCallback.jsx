@@ -21,7 +21,7 @@ export const AuthCallback = () => {
       
       if (!sessionIdMatch) {
         console.error('No session_id in URL');
-        navigate('/', { replace: true });
+        navigate('/builder', { replace: true });
         return;
       }
 
@@ -29,11 +29,14 @@ export const AuthCallback = () => {
 
       try {
         const user = await processSessionId(sessionId);
-        // Navigate to main app with user data
-        navigate('/', { replace: true, state: { user } });
+        // Get the stored return path or default to builder
+        const returnPath = sessionStorage.getItem('authReturnPath') || '/builder';
+        sessionStorage.removeItem('authReturnPath');
+        // Navigate back to where user was
+        navigate(returnPath, { replace: true, state: { user } });
       } catch (error) {
         console.error('Auth callback error:', error);
-        navigate('/', { replace: true });
+        navigate('/builder', { replace: true });
       }
     };
 
