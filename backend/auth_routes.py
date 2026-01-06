@@ -152,7 +152,8 @@ def create_auth_routes(db):
             "user_id": user_id,
             "email": email,
             "name": name,
-            "picture": picture
+            "picture": picture,
+            "session_token": session_token  # Return token for localStorage backup
         }
     
     @router.get("/me")
