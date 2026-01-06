@@ -35,6 +35,10 @@ export const generatePyTorchCode = (nodes, edges) => {
   // Track if we need special imports
   let needsTransformer = false;
 
+  // Find the Input layer to get its size
+  const inputLayerNode = sortedNodes.find(n => n.data.layerType === 'Input');
+  const networkInputSize = inputLayerNode?.data?.config?.inputSize || 784;
+
   sortedNodes.forEach(node => {
     const layerName = `self.layer${layerIndex}`;
     const config = node.data.config || {};
@@ -49,7 +53,18 @@ export const generatePyTorchCode = (nodes, edges) => {
         return; // Input is just the forward pass input
 
       case 'Dense':
-        const inSize = config.inputSize || 784;
+        // Check if this Dense layer is connected to Input layer
+        const incomingEdgeForDense = edges.find(e => e.target === node.id);
+        let inSize = config.inputSize || 784;
+        
+        // If connected to Input layer, use Input layer's size
+        if (incomingEdgeForDense) {
+          const sourceNode = sortedNodes.find(n => n.id === incomingEdgeForDense.source);
+          if (sourceNode?.data?.layerType === 'Input') {
+            inSize = networkInputSize;
+          }
+        }
+        
         const units = config.units || 128;
         layerCode = `${layerName} = nn.Linear(${inSize}, ${units})  # ${label}`;
         if (config.activation && config.activation !== 'none') {
