@@ -149,6 +149,12 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  // Drag start for templates
+  const onTemplateDragStart = (event, template) => {
+    event.dataTransfer.setData('application/template', JSON.stringify(template));
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
   // Handle tap to add on mobile
   const handleLayerClick = (layer) => {
     if (isMobile && onAddLayer) {
@@ -157,10 +163,10 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
     }
   };
 
-  // Handle template selection
+  // Handle template selection (tap on mobile, click on desktop adds to canvas)
   const handleTemplateClick = (template) => {
     if (onLoadTemplate) {
-      onLoadTemplate(template.nodes, template.edges);
+      onLoadTemplate(template.nodes, template.edges, template.name);
       if (isMobile) {
         onClose();
       }
@@ -234,15 +240,22 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
             </span>
           </AccordionTrigger>
           <AccordionContent className="space-y-1 px-1">
+            <p className="text-xs text-muted-foreground px-2 pb-2">
+              {isMobile ? 'Tap to add' : 'Drag to canvas or click to add'}
+            </p>
             {templates.map((template) => {
               const Icon = template.icon;
               return (
                 <motion.div
                   key={template.id}
+                  draggable={!isMobile}
+                  onDragStart={(e) => !isMobile && onTemplateDragStart(e, template)}
                   onClick={() => handleTemplateClick(template)}
+                  whileHover={!isMobile ? { scale: 1.02, x: 4 } : undefined}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg cursor-pointer",
+                    "flex items-center gap-3 p-3 rounded-lg",
+                    isMobile ? "cursor-pointer" : "cursor-grab",
                     "bg-secondary/50 hover:bg-secondary border border-transparent",
                     "hover:border-primary/30 transition-all duration-200"
                   )}
