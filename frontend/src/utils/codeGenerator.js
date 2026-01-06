@@ -220,26 +220,33 @@ export const generatePyTorchCode = (nodes, edges) => {
     ? Array.from(processedNodes.values()).pop() 
     : 'x';
 
-  // Determine input example based on first layer
-  // First, try to get inputSize from Input layer
-  const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
-  const inputSize = inputNode?.data?.config?.inputSize || 784;
+  // Determine input example based on Input layer's type
+  let inputExample = `torch.randn(1, ${networkInputSize})  # Example: (batch, features)`;
   
-  let inputExample = `torch.randn(1, ${inputSize})  # Example: (batch, features)`;
+  if (inputType === 'flat') {
+    inputExample = `torch.randn(1, ${inputConfig.inputSize || 784})  # Example: (batch, features)`;
+  } else if (inputType === 'image') {
+    const c = inputConfig.channels || 3;
+    const h = inputConfig.height || 224;
+    const w = inputConfig.width || 224;
+    inputExample = `torch.randn(1, ${c}, ${h}, ${w})  # Example: (batch, channels, height, width)`;
+  } else if (inputType === 'sequence') {
+    const seqLen = inputConfig.seqLength || 32;
+    const feat = inputConfig.features || 256;
+    inputExample = `torch.randn(1, ${seqLen}, ${feat})  # Example: (batch, seq_len, features)`;
+  }
+  
+  // Override based on first non-input layer if needed
   const firstNonInput = sortedNodes.find(n => n.data.layerType !== 'Input');
   if (firstNonInput) {
     const config = firstNonInput.data.config || {};
     if (firstNonInput.data.layerType === 'Embedding') {
-      inputExample = 'torch.randint(0, 1000, (1, 32))  # Example: batch of token IDs (batch_size, seq_len)';
-    } else if (firstNonInput.data.layerType === 'Conv2D') {
+      const vocabSize = config.vocabSize || 10000;
+      const seqLen = inputConfig.seqLength || 32;
+      inputExample = `torch.randint(0, ${vocabSize}, (1, ${seqLen}))  # Example: (batch, seq_len) token IDs`;
+    } else if (firstNonInput.data.layerType === 'Conv2D' && inputType !== 'image') {
+      // If Conv2D is first but input is not image type, use Conv2D's inChannels
       inputExample = `torch.randn(1, ${config.inChannels || 1}, 28, 28)  # Example: (batch, channels, height, width)`;
-    } else if (firstNonInput.data.layerType === 'LSTM' || firstNonInput.data.layerType === 'GRU') {
-      inputExample = `torch.randn(1, 32, ${config.inputSize || inputSize})  # Example: (batch, seq_len, features)`;
-    } else if (firstNonInput.data.layerType === 'TransformerEncoder' || firstNonInput.data.layerType === 'MultiHeadAttention') {
-      inputExample = `torch.randn(1, 32, ${config.dModel || config.embedDim || 256})  # Example: (batch, seq_len, d_model)`;
-    } else if (firstNonInput.data.layerType === 'Dense') {
-      // Use Input layer's inputSize for consistency
-      inputExample = `torch.randn(1, ${inputSize})  # Example: (batch, features)`;
     }
   }
 
