@@ -157,16 +157,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       // Build model from nodes
       modelRef.current = buildTFModel(nodes, edges);
       
-      // Determine loss function based on task
-      const isClassification = processedData.numClasses > 1 && processedData.type !== 'regression';
+      // Determine loss function based on task - always use accuracy for classification
+      const isClassification = processedData.numClasses > 1 || processedData.type === 'classification';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
-      // Compile model
+      // Compile model - always include accuracy for classification
       compileModel(modelRef.current, {
         optimizer,
         learningRate,
         loss,
-        metrics: isClassification ? ['accuracy'] : ['mse'],
+        metrics: ['accuracy'],  // Always use accuracy
       });
 
       // Get training data
