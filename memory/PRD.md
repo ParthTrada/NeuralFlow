@@ -95,6 +95,16 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - ✅ Tap-to-add layers on mobile
 - ✅ Fixed header overflow and input auto-zoom issues on mobile
 
+### Jan 6, 2025 - Input Layer Type System
+- ✅ Added Input Type dropdown with 3 options: Flat (Vector), Image (C, H, W), Sequence (Len, Feat)
+- ✅ Dynamic configuration fields based on input type:
+  - Flat: Input Size (e.g., 784)
+  - Image: Channels, Height, Width (e.g., 3, 224, 224)
+  - Sequence: Sequence Length, Features (e.g., 32, 256)
+- ✅ Node card displays formatted shape (e.g., [3, 224, 224] for images)
+- ✅ PyTorch code generator uses input type for correct example inputs
+- ✅ Updated all templates with proper inputType configurations
+
 ## Prioritized Backlog
 
 ### P0 (Critical)
