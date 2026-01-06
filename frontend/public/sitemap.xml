@@ -6,7 +6,7 @@
     
     <!-- Homepage / Landing Page -->
     <url>
-        <loc>https://neuralflow-2.preview.emergentagent.com/</loc>
+        <loc>https://quick-preview-70.preview.emergentagent.com/</loc>
         <lastmod>2025-01-06</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
@@ -14,7 +14,7 @@
     
     <!-- Builder Page - Main Application -->
     <url>
-        <loc>https://neuralflow-2.preview.emergentagent.com/builder</loc>
+        <loc>https://quick-preview-70.preview.emergentagent.com/builder</loc>
         <lastmod>2025-01-06</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>

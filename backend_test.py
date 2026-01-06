@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 
 class NeuralFlowAPITester:
-    def __init__(self, base_url="https://neuralflow-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://quick-preview-70.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_token = None
         self.tests_run = 0

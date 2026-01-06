@@ -1,5 +1,5 @@
 # Robots.txt for NeuralFlows
-# https://neuralflow-2.preview.emergentagent.com
+# https://quick-preview-70.preview.emergentagent.com
 
 User-agent: *
 Allow: /
@@ -8,7 +8,7 @@ Disallow: /auth/callback
 Disallow: /api/
 
 # Sitemaps
-Sitemap: https://neuralflow-2.preview.emergentagent.com/sitemap.xml
+Sitemap: https://quick-preview-70.preview.emergentagent.com/sitemap.xml
 
 # Crawl-delay for politeness
 Crawl-delay: 1
