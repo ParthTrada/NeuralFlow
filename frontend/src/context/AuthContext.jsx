@@ -24,11 +24,24 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
+      // First try to get user from localStorage as backup
+      const storedUser = localStorage.getItem('neuralflow_user');
+      const storedToken = localStorage.getItem('neuralflow_token');
+      
+      // Try API call with token in header
+      const headers = storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {};
+      
       const response = await axios.get(`${API_URL}/auth/me`, {
-        withCredentials: true
+        withCredentials: true,
+        headers
       });
       setUser(response.data);
+      // Update localStorage
+      localStorage.setItem('neuralflow_user', JSON.stringify(response.data));
     } catch (error) {
+      // Clear localStorage on auth failure
+      localStorage.removeItem('neuralflow_user');
+      localStorage.removeItem('neuralflow_token');
       setUser(null);
     } finally {
       setLoading(false);
@@ -45,12 +58,19 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      const storedToken = localStorage.getItem('neuralflow_token');
+      const headers = storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {};
+      
       await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true
+        withCredentials: true,
+        headers
       });
     } catch (error) {
       console.error('Logout error:', error);
     }
+    // Clear localStorage
+    localStorage.removeItem('neuralflow_user');
+    localStorage.removeItem('neuralflow_token');
     setUser(null);
   };
 
@@ -61,6 +81,13 @@ export const AuthProvider = ({ children }) => {
       }, {
         withCredentials: true
       });
+      
+      // Store user and token in localStorage for mobile browsers that block cookies
+      localStorage.setItem('neuralflow_user', JSON.stringify(response.data));
+      if (response.data.session_token) {
+        localStorage.setItem('neuralflow_token', response.data.session_token);
+      }
+      
       setUser(response.data);
       return response.data;
     } catch (error) {
