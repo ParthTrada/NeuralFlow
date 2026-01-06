@@ -1,130 +1,129 @@
 {
   "identity": {
-    "name": "NeuralFlow Architect",
-    "persona": "E1 - The Anti-AI Designer",
-    "vibe": "Control Room / Cyber-Physical / Precision",
-    "emotional_tone": "Empowering, Technical, Limitless"
+    "name": "E1",
+    "role": "The Anti-AI Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is king",
+      "Zoom in",
+      "Negative Space",
+      "Contrast"
+    ],
+    "anti_patterns": [
+      "Purple/Teal for CTA (Use Electric Green or White instead)",
+      "Inter everywhere",
+      "Center-Everything Disease",
+      "Gradient Overload"
+    ]
   },
   "typography": {
-    "font_family": {
-      "headings": "Manrope, sans-serif",
-      "body": "IBM Plex Sans, sans-serif",
-      "code": "JetBrains Mono, monospace"
+    "fonts": {
+      "heading": "Manrope",
+      "body": "IBM Plex Sans",
+      "code": "JetBrains Mono"
     },
-    "weights": {
-      "headings": "700 (Bold) or 800 (ExtraBold)",
-      "body": "400 (Regular) and 500 (Medium)",
-      "code": "400 (Regular)"
-    },
-    "usage_rules": [
-      "Headings must be tight (tracking-tight).",
-      "Labels (uppercase) must be wide (tracking-widest).",
-      "Code blocks must use JetBrains Mono with ligatures enabled if possible."
+    "rules": [
+      "Headings (>32px) MUST use tracking-tight",
+      "Overlines MUST be Uppercase + tracking-[0.2em] + text-xs",
+      "Line height: leading-none for headers, leading-relaxed for body",
+      "Do not use bold for everything. Use font-light for large display text."
     ]
   },
   "colors": {
-    "palette_name": "Neon Void",
-    "mode": "dark",
-    "base": {
-      "background": "#09090b",
-      "surface": "#18181b",
-      "surface_highlight": "#27272a",
+    "theme": "dark",
+    "palette": {
+      "background": "#0a0a0a",
+      "surface": "#121212",
+      "primary": "hsl(263, 70%, 50%)",
+      "accent_glow": "#00ff9d",
+      "text_primary": "#ffffff",
+      "text_secondary": "#a1a1aa",
       "border": "#27272a"
     },
-    "primary": {
-      "main": "#8b5cf6",
-      "hover": "#7c3aed",
-      "glow": "0 0 20px rgba(139, 92, 246, 0.5)"
-    },
-    "accents": {
-      "input_node": "#06b6d4",
-      "hidden_node": "#8b5cf6",
-      "output_node": "#10b981",
-      "error": "#ef4444",
-      "warning": "#f59e0b"
-    },
-    "text": {
-      "primary": "#f4f4f5",
-      "secondary": "#a1a1aa",
-      "muted": "#52525b"
+    "usage": {
+      "hero_bg": "Deep Void Black (#050505) with subtle purple radial glow",
+      "cta_primary": "White text on Primary Purple bg, OR Black text on Electric Green bg (for contrast)",
+      "borders": "1px solid rgba(255,255,255,0.1)"
     }
   },
   "layout": {
-    "structure": "The Control Room Grid",
-    "areas": {
-      "sidebar": "w-64 border-r border-border bg-card/50 backdrop-blur-xl fixed left-0 top-14 bottom-0 z-30",
-      "header": "h-14 border-b border-border bg-background/80 backdrop-blur-md fixed top-0 w-full z-40 flex items-center px-6 justify-between",
-      "canvas": "fixed inset-0 top-14 left-64 right-80 bg-background",
-      "properties": "w-80 border-l border-border bg-card/50 backdrop-blur-xl fixed right-0 top-14 bottom-0 z-30"
-    },
     "spacing": {
-      "container_padding": "p-6",
-      "element_gap": "gap-4"
+      "base": "Use 2-3x more spacing than typical.",
+      "container_padding": "p-6 or p-8 for bordered containers",
+      "section_gap": "gap-24 or gap-32"
+    },
+    "grid_system": {
+      "marketing": "Mode A: The Tetris Grid (Asymmetrical)",
+      "dashboard": "Mode B: The Control Room Grid (Dense)"
     }
   },
   "components": {
-    "nodes": {
-      "style": "Rounded-xl border border-border bg-card shadow-lg hover:shadow-primary/20 transition-all duration-300",
-      "header": "px-4 py-2 border-b border-border/50 font-bold text-sm flex items-center gap-2",
-      "body": "p-4 text-xs text-muted-foreground"
+    "hero": {
+      "style": "Tracing Beam or Grid Borders",
+      "elements": [
+        "Large Display Text (text-6xl+)",
+        "Animated 'Neural' background (particles or connecting lines)",
+        "High contrast CTA"
+      ]
     },
-    "buttons": {
-      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(139,92,246,0.3)]",
-      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    "features": {
+      "style": "Bento Grid (Mode A)",
+      "cards": "Glassmorphism or Neumorphism (Clay & Crisp)",
+      "content": [
+        "Drag & Drop Builder (Hero span)",
+        "Train in Browser (Square)",
+        "Export PyTorch (Tall)",
+        "Share & Collaborate (Filler)"
+      ]
     },
-    "panels": {
-      "glass": "bg-black/40 backdrop-blur-xl border border-white/10"
+    "cta_section": {
+      "style": "Minimalist, centered but with massive scale",
+      "text": "Start Building (Free)"
     }
-  },
-  "visual_enhancers": {
-    "background_pattern": "Dot Grid (bg-dot-white/[0.1]) or Grid (bg-grid-white/[0.05])",
-    "connections": "Animated SVG edges with flowing particles (stroke-dasharray animation)",
-    "glassmorphism": "Used on Sidebar and Properties panel to allow canvas to bleed through slightly.",
-    "shadows": "Layered shadows for depth. Nodes float above the grid."
-  },
-  "motion": {
-    "transitions": "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-    "hover_lift": "transform: translateY(-2px)",
-    "panel_slide": "framer-motion slide in from sides"
-  },
-  "libraries": {
-    "diagram": "reactflow",
-    "ui": "shadcn/ui (radix-ui)",
-    "icons": "lucide-react",
-    "animations": "framer-motion",
-    "syntax_highlight": "react-syntax-highlighter"
   },
   "assets": {
-    "icons": {
-      "input": "ArrowRightCircle",
-      "dense": "Grid",
-      "conv2d": "Layers",
-      "dropout": "Scissors",
-      "flatten": "Minimize",
-      "output": "CheckCircle",
-      "play": "Play",
-      "code": "Code",
-      "settings": "Settings"
-    }
+    "images": [
+      {
+        "category": "hero_abstract",
+        "url": "https://images.pexels.com/photos/17485657/pexels-photo-17485657.png",
+        "description": "Abstract network nodes for background or hero visual"
+      },
+      {
+        "category": "feature_brain",
+        "url": "https://images.pexels.com/photos/17483869/pexels-photo-17483869.jpeg",
+        "description": "AI Brain concept for 'Train in Browser' feature"
+      },
+      {
+        "category": "tech_server",
+        "url": "https://images.pexels.com/photos/17489163/pexels-photo-17489163.jpeg",
+        "description": "Dark server room for 'Export Code' or infrastructure feature"
+      }
+    ],
+    "icons": "Use lucide-react or @radix-ui/react-icons"
   },
-  "instructions_to_main_agent": [
-    "Implement the 'Control Room' layout with fixed sidebar, header, and properties panel.",
-    "Use React Flow for the main canvas area.",
-    "Ensure the 'Run' button triggers a visual flow animation on the edges.",
-    "The Code Preview should be a modal or a toggleable bottom panel using a dark syntax highlighter theme.",
-    "Use the 'Neon Void' color palette. Do not use default gray backgrounds.",
-    "Ensure all interactive elements have data-testid attributes.",
-    "Default to Dark Mode. The 'Light Mode' should be a 'Lab Mode' (clean white/gray/blue).",
-    "For the 'Layer Palette', use an Accordion component to group layers (Basic, Advanced, etc.).",
-    "For the 'Properties Panel', use dynamic form generation based on the selected node's type."
+  "motion": {
+    "library": "framer-motion",
+    "rules": [
+      "Use spring animations for interactions",
+      "Stagger children for lists/grids",
+      "Micro-interactions on ALL hover states",
+      "NO 'transition: all'"
+    ]
+  },
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all",
+    "You MUST NOT center align the app container",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations",
+    "NEVER: use AI assistant Emoji characters",
+    "Every interaction needs micro-animations",
+    "Use 2-3x more spacing than feels comfortable",
+    "Subtle grain textures, noise overlays, custom cursors",
+    "All interactive elements MUST include data-testid attribute"
   ],
-  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
-    "Avoid generic centered layouts. Use the full screen width.",
-    "Use 2-3x more spacing than typical designs.",
-    "Every interaction needs micro-animations.",
-    "Do not use 'Inter' for headings. Use 'Manrope'.",
-    "Use 'sonner' for toasts.",
-    "Components MUST use named exports.",
-    "Pages MUST use default exports."
-  ]
+  "instructions_to_main_agent": "Implement the Landing Page at '/' using the design system above. Use the existing 'Manrope' and 'IBM Plex Sans' fonts. Ensure the 'Start Building' CTA links to '/builder'. The design should feel like a 'Control Room' for AI - dark, precise, and powerful. Use the provided image URLs for feature cards where appropriate, or use CSS-based abstract visuals (preferred for this technical audience)."
 }
