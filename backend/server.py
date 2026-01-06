@@ -1,15 +1,14 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
 import uuid
 from datetime import datetime, timezone
-
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,52 +18,130 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Create the main app
+app = FastAPI(title="NeuralFlow Architect API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Models
+class LayerConfig(BaseModel):
+    layerType: str
+    label: str
+    config: Dict[str, Any] = {}
+    position: Dict[str, float] = {"x": 0, "y": 0}
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class NetworkCreate(BaseModel):
+    name: str
+    layers: List[LayerConfig]
+    edges: List[Dict[str, str]]
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class NetworkResponse(BaseModel):
+    id: str
+    name: str
+    layers: List[LayerConfig]
+    edges: List[Dict[str, str]]
+    created_at: str
 
-# Add your routes to the router instead of directly to app
+class CodeGenerationRequest(BaseModel):
+    layers: List[Dict[str, Any]]
+    edges: List[Dict[str, str]]
+
+class ValidationRequest(BaseModel):
+    layers: List[Dict[str, Any]]
+    edges: List[Dict[str, str]]
+
+class ValidationResponse(BaseModel):
+    valid: bool
+    errors: List[str] = []
+    warnings: List[str] = []
+
+# Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "NeuralFlow Architect API", "version": "1.0.0"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.post("/validate", response_model=ValidationResponse)
+async def validate_network(request: ValidationRequest):
+    """Validate the neural network architecture"""
+    errors = []
+    warnings = []
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    layers = request.layers
+    edges = request.edges
     
-    return status_checks
+    if len(layers) == 0:
+        errors.append("Network must have at least one layer")
+        return ValidationResponse(valid=False, errors=errors, warnings=warnings)
+    
+    # Check for input layer
+    input_layers = [l for l in layers if l.get('data', {}).get('layerType') == 'Input']
+    if len(input_layers) == 0:
+        warnings.append("Network has no Input layer - consider adding one for clarity")
+    
+    # Check for output layer
+    output_layers = [l for l in layers if l.get('data', {}).get('layerType') == 'Output']
+    if len(output_layers) == 0:
+        warnings.append("Network has no Output layer - consider adding one")
+    
+    # Check for disconnected nodes
+    connected_nodes = set()
+    for edge in edges:
+        connected_nodes.add(edge.get('source'))
+        connected_nodes.add(edge.get('target'))
+    
+    all_node_ids = {l.get('id') for l in layers}
+    disconnected = all_node_ids - connected_nodes
+    
+    if len(disconnected) > 0 and len(layers) > 1:
+        warnings.append(f"Found {len(disconnected)} disconnected layer(s)")
+    
+    # Check layer configurations
+    for layer in layers:
+        layer_type = layer.get('data', {}).get('layerType')
+        config = layer.get('data', {}).get('config', {})
+        
+        if layer_type == 'Dense':
+            if config.get('units', 0) <= 0:
+                errors.append(f"Dense layer must have positive units")
+        
+        if layer_type == 'Dropout':
+            rate = config.get('rate', 0)
+            if rate < 0 or rate > 1:
+                errors.append(f"Dropout rate must be between 0 and 1")
+        
+        if layer_type == 'Conv2D':
+            if config.get('kernelSize', 0) <= 0:
+                errors.append(f"Conv2D kernel size must be positive")
+    
+    return ValidationResponse(
+        valid=len(errors) == 0,
+        errors=errors,
+        warnings=warnings
+    )
+
+@api_router.post("/generate-code")
+async def generate_code(request: CodeGenerationRequest):
+    """Generate PyTorch code from network definition"""
+    layers = request.layers
+    edges = request.edges
+    
+    # Simple validation
+    if len(layers) == 0:
+        return {"code": "# No layers defined", "success": False}
+    
+    # The actual code generation is done on frontend for immediate feedback
+    # This endpoint can be used for server-side generation if needed
+    return {
+        "success": True,
+        "message": "Code generation handled on client for instant preview",
+        "layer_count": len(layers),
+        "edge_count": len(edges)
+    }
 
 # Include the router in the main app
 app.include_router(api_router)

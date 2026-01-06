@@ -1,0 +1,177 @@
+// PyTorch Code Generator for Neural Network
+
+export const generatePyTorchCode = (nodes, edges) => {
+  if (!nodes || nodes.length === 0) {
+    return `# No layers defined yet
+# Drag layers from the sidebar to build your network
+`;
+  }
+
+  // Sort nodes by position (top to bottom, left to right)
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const yDiff = a.position.y - b.position.y;
+    if (Math.abs(yDiff) > 50) return yDiff;
+    return a.position.x - b.position.x;
+  });
+
+  // Build adjacency list from edges
+  const adjacency = {};
+  edges.forEach(edge => {
+    if (!adjacency[edge.source]) adjacency[edge.source] = [];
+    adjacency[edge.source].push(edge.target);
+  });
+
+  // Find input nodes (nodes with no incoming edges)
+  const hasIncoming = new Set(edges.map(e => e.target));
+  const inputNodes = sortedNodes.filter(n => !hasIncoming.has(n.id));
+
+  // Generate layer definitions
+  const layerDefs = [];
+  const forwardSteps = [];
+  let layerIndex = 0;
+
+  const processedNodes = new Map();
+
+  sortedNodes.forEach(node => {
+    const layerName = `self.layer${layerIndex}`;
+    const config = node.data.config || {};
+    let layerCode = '';
+    let forwardCode = '';
+    const varName = `x${layerIndex}`;
+
+    switch (node.data.layerType) {
+      case 'Input':
+        processedNodes.set(node.id, 'x');
+        return; // Input is just the forward pass input
+
+      case 'Dense':
+        layerCode = `${layerName} = nn.Linear(${config.inputSize || 784}, ${config.units || 128})`;
+        forwardCode = `${varName} = F.${config.activation || 'relu'}(${layerName}({{input}}))`;
+        break;
+
+      case 'Conv2D':
+        layerCode = `${layerName} = nn.Conv2d(${config.inChannels || 1}, ${config.outChannels || 32}, kernel_size=${config.kernelSize || 3}, padding=${config.padding || 1})`;
+        forwardCode = `${varName} = F.${config.activation || 'relu'}(${layerName}({{input}}))`;
+        break;
+
+      case 'MaxPool2D':
+        layerCode = `${layerName} = nn.MaxPool2d(kernel_size=${config.kernelSize || 2}, stride=${config.stride || 2})`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'Dropout':
+        layerCode = `${layerName} = nn.Dropout(p=${config.rate || 0.5})`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'Flatten':
+        layerCode = `${layerName} = nn.Flatten()`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'BatchNorm1D':
+        layerCode = `${layerName} = nn.BatchNorm1d(${config.numFeatures || 128})`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'BatchNorm2D':
+        layerCode = `${layerName} = nn.BatchNorm2d(${config.numFeatures || 32})`;
+        forwardCode = `${varName} = ${layerName}({{input}})`;
+        break;
+
+      case 'LSTM':
+        layerCode = `${layerName} = nn.LSTM(input_size=${config.inputSize || 128}, hidden_size=${config.hiddenSize || 64}, num_layers=${config.numLayers || 1}, batch_first=True, bidirectional=${config.bidirectional || false})`;
+        forwardCode = `${varName}, _ = ${layerName}({{input}})`;
+        break;
+
+      case 'GRU':
+        layerCode = `${layerName} = nn.GRU(input_size=${config.inputSize || 128}, hidden_size=${config.hiddenSize || 64}, num_layers=${config.numLayers || 1}, batch_first=True)`;
+        forwardCode = `${varName}, _ = ${layerName}({{input}})`;
+        break;
+
+      case 'Attention':
+        layerCode = `${layerName} = nn.MultiheadAttention(embed_dim=${config.embedDim || 64}, num_heads=${config.numHeads || 8})`;
+        forwardCode = `${varName}, _ = ${layerName}({{input}}, {{input}}, {{input}})`;
+        break;
+
+      case 'Output':
+        layerCode = `${layerName} = nn.Linear(${config.inputSize || 128}, ${config.numClasses || 10})`;
+        if (config.activation === 'softmax') {
+          forwardCode = `${varName} = F.log_softmax(${layerName}({{input}}), dim=1)`;
+        } else {
+          forwardCode = `${varName} = ${layerName}({{input}})`;
+        }
+        break;
+
+      default:
+        return;
+    }
+
+    if (layerCode) {
+      layerDefs.push(layerCode);
+      
+      // Find input for this layer
+      const incomingEdge = edges.find(e => e.target === node.id);
+      let inputVar = 'x';
+      if (incomingEdge && processedNodes.has(incomingEdge.source)) {
+        inputVar = processedNodes.get(incomingEdge.source);
+      }
+      
+      forwardSteps.push(forwardCode.replace(/{{input}}/g, inputVar));
+      processedNodes.set(node.id, varName);
+      layerIndex++;
+    }
+  });
+
+  // Get the last variable name for return
+  const lastVar = processedNodes.size > 0 
+    ? Array.from(processedNodes.values()).pop() 
+    : 'x';
+
+  const code = `import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class NeuralNetwork(nn.Module):
+    """
+    Neural Network generated by NeuralFlow Architect
+    """
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+        ${layerDefs.length > 0 ? layerDefs.join('\n        ') : '# Add layers to your network'}
+    
+    def forward(self, x):
+        ${forwardSteps.length > 0 ? forwardSteps.join('\n        ') : '# Define forward pass'}
+        return ${lastVar}
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Initialize model
+    model = NeuralNetwork()
+    print(model)
+    
+    # Example input (adjust dimensions based on your input layer)
+    # For image data: batch_size x channels x height x width
+    # For sequential data: batch_size x sequence_length x features
+    x = torch.randn(1, 784)  # Example: flattened 28x28 image
+    
+    # Forward pass
+    output = model(x)
+    print(f"Output shape: {output.shape}")
+`;
+
+  return code;
+};
+
+export const downloadCode = (code, filename = 'neural_network.py') => {
+  const blob = new Blob([code], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
