@@ -197,9 +197,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
           setTrainingHistory(prev => [...prev, {
             epoch: epoch + 1,
             loss: logs.loss?.toFixed(4),
-            accuracy: logs.acc?.toFixed(4),
+            accuracy: (logs.acc || logs.accuracy)?.toFixed(4),
             valLoss: logs.val_loss?.toFixed(4),
-            valAccuracy: logs.val_acc?.toFixed(4),
+            valAccuracy: (logs.val_acc || logs.val_accuracy)?.toFixed(4),
           }]);
         },
         onTrainEnd: () => {
