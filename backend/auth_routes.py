@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 import httpx
 import uuid
+import secrets
+import json
+import base64
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -31,6 +34,11 @@ class SaveNetworkRequest(BaseModel):
     name: str
     nodes: list
     edges: list
+    trained_weights: Optional[str] = None  # Base64 encoded weights
+    version_note: Optional[str] = None
+
+class ShareModelRequest(BaseModel):
+    model_id: str
 
 # Helper to get user from session
 async def get_current_user(request: Request, db) -> Optional[User]:
