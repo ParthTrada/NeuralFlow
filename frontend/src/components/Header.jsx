@@ -45,10 +45,10 @@ export const Header = ({
         >
           <Cpu className="w-5 h-5 text-primary" />
         </motion.div>
-        <div>
-          <h1 className="font-bold text-lg tracking-tight">NeuralFlow</h1>
-          <p className="text-xs text-muted-foreground">Architect</p>
-        </div>
+        <a href="/" className="hover:opacity-80 transition-opacity">
+          <h1 className="font-bold text-lg tracking-tight">NeuralFlows</h1>
+          <p className="text-xs text-muted-foreground">Builder</p>
+        </a>
       </div>
 
       {/* Stats */}
