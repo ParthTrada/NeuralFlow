@@ -350,7 +350,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
   }
 
   const layerConfig = getLayerConfig(selectedNode.data.layerType);
-  const configFields = getConfigFields(selectedNode.data.layerType);
+  const configFields = getConfigFields(selectedNode.data.layerType, selectedNode.data.config);
   const Icon = layerConfig?.icon;
 
   const handleConfigChange = (key, value) => {
