@@ -128,6 +128,26 @@ class NeuralFlowAPITester:
         }
         return self.run_test("Save Model (Unauthenticated)", "POST", "auth/models", 401, test_model)
 
+    def test_share_model_unauthenticated(self):
+        """Test share model without authentication"""
+        return self.run_test("Share Model (Unauthenticated)", "POST", "auth/models/test_id/share", 401)
+
+    def test_get_shared_model_invalid_token(self):
+        """Test get shared model with invalid token"""
+        return self.run_test("Get Shared Model (Invalid Token)", "GET", "auth/shared/invalid_token", 404)
+
+    def test_get_model_versions_unauthenticated(self):
+        """Test get model versions without authentication"""
+        return self.run_test("Get Model Versions (Unauthenticated)", "GET", "auth/models/test_id/versions", 401)
+
+    def test_revoke_share_unauthenticated(self):
+        """Test revoke share without authentication"""
+        return self.run_test("Revoke Share (Unauthenticated)", "DELETE", "auth/models/test_id/share", 401)
+
+    def test_clone_model_unauthenticated(self):
+        """Test clone model without authentication"""
+        return self.run_test("Clone Model (Unauthenticated)", "POST", "auth/models/test_id/clone", 401)
+
 def main():
     print("🚀 Starting NeuralFlow API Tests...")
     print("=" * 50)
