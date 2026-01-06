@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uuid
 from datetime import datetime, timezone
+from auth_routes import create_auth_routes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -23,6 +24,10 @@ app = FastAPI(title="NeuralFlow Architect API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Include auth routes
+auth_router = create_auth_routes(db)
+api_router.include_router(auth_router)
 
 # Models
 class LayerConfig(BaseModel):
