@@ -1,18 +1,26 @@
 # NeuralFlow Architect - Product Requirements Document
 
 ## Original Problem Statement
-Build a website where users can create neural networks through drag and drop, similar to Azure Synapse pipelines. After constructing the graphical model of the NN, users can run the neural network and download generated PyTorch code.
+Build a website called "NeuralFlows" (domain neuralflows.ai) where users can create neural networks through drag and drop, similar to Azure Synapse pipelines. After constructing the graphical model of the NN, users can run the neural network and download generated PyTorch code. Features include:
+- Graphical model building with drag-and-drop
+- In-browser training with data upload
+- PyTorch code generation & download
+- User accounts with Google OAuth for model persistence
+- Model versioning and sharing
+- Landing page for product introduction
 
 ## User Choices
 - Both basic and advanced layers
 - PyTorch code generation
-- Simple build and download (no accounts)
 - Dark/Light mode toggle
+- Google OAuth authentication
+- Model versioning and sharing
 
 ## Architecture
-- **Frontend**: React 19 + React Flow + Framer Motion + Tailwind CSS + Shadcn UI
-- **Backend**: FastAPI + MongoDB (for future features)
+- **Frontend**: React 19 + React Flow + Framer Motion + Tailwind CSS + Shadcn UI + TensorFlow.js
+- **Backend**: FastAPI + MongoDB
 - **Code Generation**: Client-side PyTorch code generator
+- **Authentication**: Emergent-managed Google OAuth
 
 ## User Personas
 1. **ML Students** - Learning neural network architectures
@@ -28,80 +36,66 @@ Build a website where users can create neural networks through drag and drop, si
 - [x] Code preview with syntax highlighting
 - [x] Download .py file
 - [x] Dark/Light mode toggle
+- [x] In-browser training with TensorFlow.js
+- [x] CSV and image data upload
+- [x] Real-time training progress charts
+- [x] Model prediction testing
+- [x] Google OAuth authentication
+- [x] Save/Load models to account
+- [x] Model versioning
+- [x] Share models via link
+- [x] Professional landing page
 
-## What's Been Implemented (Jan 6, 2025)
+## What's Been Implemented
+
+### Jan 6, 2025 - Landing Page
+- ✅ Professional landing page at '/' route
+- ✅ Animated neural network background (canvas-based)
+- ✅ Hero section with "Build Neural Networks Visually" headline
+- ✅ Feature cards (Drag & Drop, Train in Browser, Export Code, Layers, Share)
+- ✅ How-it-works section (Design → Train → Export)
+- ✅ Call-to-action section
+- ✅ Navigation to builder at '/builder'
+- ✅ Consistent NeuralFlows branding
+
+### Jan 6, 2025 - Training & Auth Features
+- ✅ Browser-based Training with TensorFlow.js
+- ✅ CSV data upload and processing
+- ✅ Image folder upload for classification
+- ✅ Sample data generation (classification/regression)
+- ✅ Training config (epochs, batch size, learning rate, optimizer)
+- ✅ Real-time loss/accuracy charts during training
+- ✅ Google OAuth - Sign in with Google
+- ✅ Save/Load models to account
+- ✅ Model versioning (v1, v2, v3...)
+- ✅ Export trained weights
+- ✅ Share models via link
+
+### Initial MVP
 - ✅ Full drag-and-drop neural network builder
 - ✅ Basic Layers: Input, Dense, Conv2D, MaxPool2D, Dropout, Flatten, Output
 - ✅ Advanced Layers: BatchNorm1D/2D, LSTM, GRU, Multi-Head Attention
 - ✅ Real-time PyTorch code generation
-- ✅ Code preview modal with syntax highlighting
-- ✅ Copy to clipboard functionality
-- ✅ Download as .py file
-- ✅ Layer properties editing
 - ✅ Dark/Light theme toggle
-- ✅ Network validation on "Run"
-- ✅ Responsive Control Room layout
-- ✅ **NEW: Browser-based Training with TensorFlow.js**
-- ✅ **NEW: CSV data upload and processing**
-- ✅ **NEW: Image folder upload for classification**
-- ✅ **NEW: Sample data generation (classification/regression)**
-- ✅ **NEW: Training config (epochs, batch size, learning rate, optimizer)**
-- ✅ **NEW: Real-time loss/accuracy charts during training**
+- ✅ Resizable UI panels
 
 ## Prioritized Backlog
 
 ### P0 (Critical)
-- None - MVP complete
+- None - All critical features complete
 
 ### P1 (High Priority)
-- [ ] Save/Load network designs to local storage
-- [ ] TensorFlow/Keras code generation option (in addition to PyTorch)
+- [ ] TensorFlow/Keras code generation option
 - [ ] Undo/Redo functionality
-- [ ] Backend-based training for larger models (Python/PyTorch)
+- [ ] Backend-based training for larger models
 
 ### P2 (Medium Priority)
-- [ ] User accounts and cloud save
 - [ ] Network templates (CNN, RNN, Transformer)
 - [ ] Export as ONNX format
 - [ ] Layer validation warnings
+- [ ] Collaborative real-time editing
 
 ### P3 (Nice to Have)
-- [ ] Share networks via URL
-- [ ] Collaborative editing
-- [ ] Training configuration (optimizer, loss, metrics)
-- [ ] Dataset input specification
-
-## Next Tasks
-1. Add local storage for saving network designs
-2. Implement undo/redo with Ctrl+Z/Y
-3. Add network templates for common architectures
-
-## Update (Jan 6, 2025) - Training & Auth Features
-- ✅ **Fixed**: Accuracy now shows in training chart (was only showing loss)
-- ✅ **NEW: Google OAuth** - Sign in with Google to save models
-- ✅ **NEW: Save Models** - Save network designs to your account
-- ✅ **NEW: Load Models** - Load previously saved networks
-- ✅ **NEW: Test Predictions** - After training, test model with custom inputs
-- ✅ **NEW: Data info tips** - Shows required input shape when loading data
-
-## Update (Jan 6, 2025) - Pre-Deployment Features
-
-### Model Versioning
-- ✅ Saving with same name auto-creates new version (v1, v2, v3...)
-- ✅ Version history panel shows all versions of a model
-- ✅ Version notes for documenting changes
-- ✅ Load any previous version
-
-### Export Trained Weights
-- ✅ After training, weights are captured as base64
-- ✅ "Include trained weights" checkbox when saving
-- ✅ Export button downloads JSON with full model + weights
-- ✅ Models show "Trained" badge when weights are included
-
-### Share Models via Link
-- ✅ Share button generates unique share link
-- ✅ Anyone with link can view the shared model
-- ✅ Clone shared models to your own account
-- ✅ Revoke share links anytime
-- ✅ Shared models show owner name
-- ✅ URL param ?shared={token} auto-loads shared model
+- [ ] Pre-built architectures/templates
+- [ ] Training history persistence
+- [ ] Model comparison tools
