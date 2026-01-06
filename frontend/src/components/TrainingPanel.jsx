@@ -202,9 +202,29 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             valAccuracy: (logs.val_acc || logs.val_accuracy)?.toFixed(4),
           }]);
         },
-        onTrainEnd: () => {
+        onTrainEnd: async () => {
           setIsTraining(false);
           setStatus('complete');
+          
+          // Export weights as base64
+          if (modelRef.current && onWeightsTrained) {
+            try {
+              const weightsData = await modelRef.current.getWeights();
+              const weightsArray = await Promise.all(
+                weightsData.map(async (w) => ({
+                  name: w.name,
+                  shape: w.shape,
+                  data: Array.from(await w.data())
+                }))
+              );
+              const weightsJson = JSON.stringify(weightsArray);
+              const weightsBase64 = btoa(weightsJson);
+              onWeightsTrained(weightsBase64);
+            } catch (e) {
+              console.error('Failed to export weights:', e);
+            }
+          }
+          
           toast.success('Training complete!');
         }
       });
