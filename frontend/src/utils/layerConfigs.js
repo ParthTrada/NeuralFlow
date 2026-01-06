@@ -9,7 +9,11 @@ import {
   GitBranch,
   Zap,
   CircleDot,
-  Target
+  Target,
+  FileText,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  AlignJustify
 } from 'lucide-react';
 
 export const layerCategories = {
@@ -24,7 +28,8 @@ export const layerCategories = {
         description: 'Input layer - defines the shape of input data',
         tip: 'The entry point of your network. Shape depends on your data: [784] for flattened 28×28 images, [3, 224, 224] for RGB images.',
         defaultConfig: {
-          inputShape: [2],
+          inputShape: [784],
+          inputSize: 784
         }
       },
       {
@@ -35,8 +40,8 @@ export const layerCategories = {
         description: 'Fully connected layer',
         tip: 'Every neuron connects to all neurons in the previous layer. Great for learning complex patterns. Use ReLU activation for hidden layers.',
         defaultConfig: {
-          inputSize: 2,
-          units: 16,
+          inputSize: 784,
+          units: 128,
           activation: 'relu'
         }
       },
@@ -95,8 +100,8 @@ export const layerCategories = {
         description: 'Output layer for predictions',
         tip: 'Final layer producing predictions. Use Softmax for multi-class classification, Sigmoid for binary, or no activation for regression.',
         defaultConfig: {
-          inputSize: 16,
-          numClasses: 3,
+          inputSize: 128,
+          numClasses: 10,
           activation: 'softmax'
         }
       }
@@ -106,6 +111,18 @@ export const layerCategories = {
     label: 'Advanced Layers',
     layers: [
       {
+        type: 'Embedding',
+        label: 'Embedding',
+        icon: FileText,
+        color: 'hsl(200, 80%, 50%)',
+        description: 'Converts token IDs to dense vectors',
+        tip: 'Maps discrete tokens (words, characters) to continuous vectors. Essential for NLP tasks. vocab_size = number of unique tokens.',
+        defaultConfig: {
+          vocabSize: 10000,
+          embedDim: 256
+        }
+      },
+      {
         type: 'BatchNorm1D',
         label: 'BatchNorm1D',
         icon: BarChart3,
@@ -113,7 +130,7 @@ export const layerCategories = {
         description: 'Batch normalization for 1D data',
         tip: 'Normalizes layer inputs to have zero mean and unit variance. Speeds up training and allows higher learning rates. Use after Dense layers.',
         defaultConfig: {
-          numFeatures: 64
+          numFeatures: 128
         }
       },
       {
@@ -128,6 +145,17 @@ export const layerCategories = {
         }
       },
       {
+        type: 'LayerNorm',
+        label: 'LayerNorm',
+        icon: AlignJustify,
+        color: 'hsl(142, 71%, 45%)',
+        description: 'Layer normalization (used in Transformers)',
+        tip: 'Normalizes across features instead of batch. Preferred in Transformers and RNNs. Works well with small batch sizes.',
+        defaultConfig: {
+          normalizedShape: 256
+        }
+      },
+      {
         type: 'LSTM',
         label: 'LSTM',
         icon: Activity,
@@ -135,7 +163,7 @@ export const layerCategories = {
         description: 'Long Short-Term Memory for sequences',
         tip: 'Remembers long-term dependencies in sequential data. Has "gates" to control information flow. Great for text, time-series, and speech.',
         defaultConfig: {
-          inputSize: 64,
+          inputSize: 256,
           hiddenSize: 128,
           numLayers: 1,
           bidirectional: false
@@ -149,7 +177,7 @@ export const layerCategories = {
         description: 'Gated Recurrent Unit for sequences',
         tip: 'Simpler alternative to LSTM with fewer parameters. Often performs similarly but trains faster. Good choice for smaller datasets.',
         defaultConfig: {
-          inputSize: 64,
+          inputSize: 256,
           hiddenSize: 128,
           numLayers: 1
         }
@@ -164,6 +192,34 @@ export const layerCategories = {
         defaultConfig: {
           embedDim: 256,
           numHeads: 8
+        }
+      },
+      {
+        type: 'TransformerEncoder',
+        label: 'Transformer Encoder',
+        icon: ArrowDownToLine,
+        color: 'hsl(220, 80%, 55%)',
+        description: 'Full Transformer encoder block',
+        tip: 'Complete encoder with self-attention + feed-forward + normalization. Used in BERT for understanding text. Stack multiple for deeper models.',
+        defaultConfig: {
+          dModel: 256,
+          nHead: 8,
+          dimFeedforward: 1024,
+          numLayers: 2
+        }
+      },
+      {
+        type: 'TransformerDecoder',
+        label: 'Transformer Decoder',
+        icon: ArrowUpFromLine,
+        color: 'hsl(280, 80%, 55%)',
+        description: 'Full Transformer decoder block',
+        tip: 'Decoder with masked self-attention + cross-attention + feed-forward. Used in GPT for text generation. Attends to encoder output.',
+        defaultConfig: {
+          dModel: 256,
+          nHead: 8,
+          dimFeedforward: 1024,
+          numLayers: 2
         }
       }
     ]
@@ -191,7 +247,7 @@ export const getLayerConfig = (layerType) => {
 export const getConfigFields = (layerType) => {
   const fields = {
     Input: [
-      { key: 'inputShape', label: 'Input Shape', type: 'text', placeholder: '[784] or [1, 28, 28]' }
+      { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 }
     ],
     Dense: [
       { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 },
@@ -213,11 +269,18 @@ export const getConfigFields = (layerType) => {
       { key: 'rate', label: 'Dropout Rate', type: 'number', min: 0, max: 1, step: 0.1 }
     ],
     Flatten: [],
+    Embedding: [
+      { key: 'vocabSize', label: 'Vocab Size', type: 'number', min: 1 },
+      { key: 'embedDim', label: 'Embedding Dim', type: 'number', min: 1 }
+    ],
     BatchNorm1D: [
       { key: 'numFeatures', label: 'Num Features', type: 'number', min: 1 }
     ],
     BatchNorm2D: [
       { key: 'numFeatures', label: 'Num Features', type: 'number', min: 1 }
+    ],
+    LayerNorm: [
+      { key: 'normalizedShape', label: 'Normalized Shape', type: 'number', min: 1 }
     ],
     LSTM: [
       { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 },
@@ -230,9 +293,21 @@ export const getConfigFields = (layerType) => {
       { key: 'hiddenSize', label: 'Hidden Size', type: 'number', min: 1 },
       { key: 'numLayers', label: 'Num Layers', type: 'number', min: 1 }
     ],
-    Attention: [
+    MultiHeadAttention: [
       { key: 'embedDim', label: 'Embed Dimension', type: 'number', min: 1 },
       { key: 'numHeads', label: 'Num Heads', type: 'number', min: 1 }
+    ],
+    TransformerEncoder: [
+      { key: 'dModel', label: 'Model Dimension', type: 'number', min: 1 },
+      { key: 'nHead', label: 'Num Heads', type: 'number', min: 1 },
+      { key: 'dimFeedforward', label: 'Feedforward Dim', type: 'number', min: 1 },
+      { key: 'numLayers', label: 'Num Layers', type: 'number', min: 1 }
+    ],
+    TransformerDecoder: [
+      { key: 'dModel', label: 'Model Dimension', type: 'number', min: 1 },
+      { key: 'nHead', label: 'Num Heads', type: 'number', min: 1 },
+      { key: 'dimFeedforward', label: 'Feedforward Dim', type: 'number', min: 1 },
+      { key: 'numLayers', label: 'Num Layers', type: 'number', min: 1 }
     ],
     Output: [
       { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 },
