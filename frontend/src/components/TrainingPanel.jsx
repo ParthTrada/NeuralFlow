@@ -193,30 +193,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
             return;
           }
           
-          // Debug: log all available metrics
-          console.log('Training logs:', JSON.stringify(logs));
-          
-          // TensorFlow.js may return 'acc', 'accuracy', or other metric names
-          // Check all possible keys
-          const logKeys = Object.keys(logs);
-          console.log('Available log keys:', logKeys);
-          
-          // Find accuracy metric (could be 'acc', 'accuracy', or contain 'acc')
-          const accKey = logKeys.find(k => k === 'acc' || k === 'accuracy' || k.includes('acc'));
-          const valAccKey = logKeys.find(k => k === 'val_acc' || k === 'val_accuracy' || (k.startsWith('val_') && k.includes('acc')));
-          
-          const accuracy = accKey ? logs[accKey] : null;
-          const valAccuracy = valAccKey ? logs[valAccKey] : null;
-          
-          console.log('Accuracy:', accuracy, 'Val Accuracy:', valAccuracy);
+          // Debug: log raw values
+          console.log('Raw logs:', JSON.stringify(logs));
+          console.log('acc value:', logs.acc, 'val_acc value:', logs.val_acc);
           
           setCurrentEpoch(epoch + 1);
           setTrainingHistory(prev => [...prev, {
             epoch: epoch + 1,
             loss: logs.loss != null ? Number(logs.loss).toFixed(4) : null,
-            accuracy: accuracy != null ? Number(accuracy).toFixed(4) : null,
+            accuracy: logs.acc != null ? Number(logs.acc).toFixed(4) : null,
             valLoss: logs.val_loss != null ? Number(logs.val_loss).toFixed(4) : null,
-            valAccuracy: valAccuracy != null ? Number(valAccuracy).toFixed(4) : null,
+            valAccuracy: logs.val_acc != null ? Number(logs.val_acc).toFixed(4) : null,
           }]);
         },
         onTrainEnd: async () => {
