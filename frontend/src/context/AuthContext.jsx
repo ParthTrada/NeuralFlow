@@ -37,6 +37,8 @@ export const AuthProvider = ({ children }) => {
 
   // Emergent Google OAuth login
   const login = () => {
+    // Store current path to return after login
+    sessionStorage.setItem('authReturnPath', window.location.pathname);
     const redirectUrl = window.location.origin + '/auth/callback';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
