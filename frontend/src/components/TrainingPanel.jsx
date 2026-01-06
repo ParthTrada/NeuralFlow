@@ -482,6 +482,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
                     </span>
                   </div>
                 )}
+                
+                {/* Data info hint */}
+                {status === 'ready' && processedData && (
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 text-xs">
+                    <p><strong>Tip:</strong> Configure your first layer's input size to match: <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.inputShape?.[0] || 'N/A'}</code></p>
+                    {processedData.numClasses > 1 && (
+                      <p className="mt-1">Output layer should have <code className="font-mono bg-blue-500/20 px-1 rounded">{processedData.numClasses}</code> classes</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <Separator />
