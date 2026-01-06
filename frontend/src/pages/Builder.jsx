@@ -199,6 +199,7 @@ export default function Builder() {
         onShowCode={handleShowCode}
         onClearCanvas={handleClearCanvas}
         onOpenTraining={handleOpenTraining}
+        onOpenModels={() => setIsModelsOpen(true)}
         isRunning={isRunning}
         nodeCount={nodes.length}
       />
