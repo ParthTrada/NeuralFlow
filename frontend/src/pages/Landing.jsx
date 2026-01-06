@@ -1,21 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, 
   Layers, 
   Cpu, 
-  Download, 
   Share2, 
   Zap,
   Brain,
   Code2,
-  MousePointerClick
+  MousePointerClick,
+  Sun,
+  Moon,
+  Menu,
+  X
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 // Animated neural network background
-const NeuralBackground = () => {
+const NeuralBackground = ({ isDark }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -47,11 +50,11 @@ const NeuralBackground = () => {
     };
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+      ctx.fillStyle = isDark ? 'rgba(5, 5, 5, 0.1)' : 'rgba(250, 250, 250, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw connections
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+      ctx.strokeStyle = isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.2)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -71,16 +74,14 @@ const NeuralBackground = () => {
       // Draw nodes
       ctx.globalAlpha = 1;
       nodes.forEach(node => {
-        ctx.fillStyle = 'rgba(139, 92, 246, 0.6)';
+        ctx.fillStyle = isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.5)';
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Update position
         node.x += node.vx;
         node.y += node.vy;
 
-        // Bounce off edges
         if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
       });
@@ -96,7 +97,7 @@ const NeuralBackground = () => {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <canvas
@@ -108,75 +109,153 @@ const NeuralBackground = () => {
 };
 
 // Feature card component
-const FeatureCard = ({ icon: Icon, title, description, className = '', delay = 0 }) => (
+const FeatureCard = ({ icon: Icon, title, description, className = '', delay = 0, isDark }) => (
   <motion.div
     initial={{ opacity: 0, y: 30 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.6, delay }}
-    className={`group relative p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.05] hover:border-primary/30 transition-colors duration-300 ${className}`}
+    className={`group relative p-5 sm:p-6 rounded-2xl border backdrop-blur-sm transition-colors duration-300 ${className} ${
+      isDark 
+        ? 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/30' 
+        : 'border-zinc-200 bg-white/60 hover:bg-white/80 hover:border-primary/40 shadow-sm'
+    }`}
   >
-    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
     <div className="relative z-10">
-      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors duration-300">
-        <Icon className="w-6 h-6 text-primary" />
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-3 sm:mb-4 transition-colors duration-300 ${
+        isDark ? 'bg-primary/10 group-hover:bg-primary/20' : 'bg-primary/10 group-hover:bg-primary/15'
+      }`}>
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
       </div>
-      <h3 className="text-lg font-semibold text-white mb-2 tracking-tight">{title}</h3>
-      <p className="text-zinc-400 text-sm leading-relaxed">{description}</p>
+      <h3 className={`text-base sm:text-lg font-semibold mb-2 tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>{title}</h3>
+      <p className={`text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>{description}</p>
     </div>
   </motion.div>
 );
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [isDark, setIsDark] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleStartBuilding = () => {
     navigate('/builder');
   };
 
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+  };
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-      <NeuralBackground />
+    <div 
+      className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${
+        isDark ? 'bg-[#050505] text-white' : 'bg-[#fafafa] text-zinc-900'
+      }`} 
+      style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+    >
+      <NeuralBackground isDark={isDark} />
       
       {/* Gradient overlay */}
       <div className="fixed inset-0 pointer-events-none" style={{ 
-        background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15), transparent)',
+        background: isDark 
+          ? 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15), transparent)'
+          : 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.08), transparent)',
         zIndex: 1 
       }} />
 
       {/* Navigation */}
-      <nav className="relative z-20 px-6 lg:px-12 py-6 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
+      <nav className="relative z-20 px-4 sm:px-6 lg:px-12 py-4 sm:py-6 flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
           <motion.div
             whileHover={{ rotate: 180 }}
             transition={{ duration: 0.5 }}
-            className="p-2 rounded-lg bg-primary/10 border border-primary/20"
+            className={`p-1.5 sm:p-2 rounded-lg border ${
+              isDark ? 'bg-primary/10 border-primary/20' : 'bg-primary/10 border-primary/20'
+            }`}
           >
-            <Cpu className="w-6 h-6 text-primary" />
+            <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </motion.div>
-          <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Manrope', sans-serif" }}>
+          <span className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
             NeuralFlows
           </span>
         </div>
-        <Button 
-          onClick={handleStartBuilding}
-          variant="outline"
-          className="border-white/20 hover:bg-white/10 hover:border-white/40"
-          data-testid="nav-start-btn"
-        >
-          Start Building
-        </Button>
+
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
+            data-testid="theme-toggle-btn"
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
+          <Button 
+            onClick={handleStartBuilding}
+            variant="outline"
+            className={isDark 
+              ? 'border-white/20 hover:bg-white/10 hover:border-white/40' 
+              : 'border-zinc-300 hover:bg-zinc-100 hover:border-zinc-400'
+            }
+            data-testid="nav-start-btn"
+          >
+            Start Building
+          </Button>
+        </div>
+
+        {/* Mobile nav */}
+        <div className="flex sm:hidden items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
+            data-testid="theme-toggle-mobile-btn"
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
+            data-testid="mobile-menu-btn"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
+        </div>
       </nav>
 
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`sm:hidden relative z-20 px-4 pb-4 ${isDark ? 'bg-[#050505]/95' : 'bg-white/95'} backdrop-blur-md`}
+        >
+          <Button 
+            onClick={() => { handleStartBuilding(); setMobileMenuOpen(false); }}
+            className="w-full bg-primary hover:bg-primary/90 text-white"
+            data-testid="mobile-start-btn"
+          >
+            Start Building
+          </Button>
+        </motion.div>
+      )}
+
       {/* Hero Section */}
-      <section className="relative z-10 px-6 lg:px-12 pt-20 pb-32 max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 lg:px-12 pt-12 sm:pt-20 pb-16 sm:pb-32 max-w-7xl mx-auto">
         <div className="max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs uppercase tracking-[0.2em] mb-8">
+            <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-6 sm:mb-8 ${
+              isDark ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
+            }`}>
               Visual AI Development
             </span>
           </motion.div>
@@ -185,7 +264,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-none mb-8"
+            className={`text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight leading-[1.1] mb-6 sm:mb-8 ${isDark ? 'text-white' : 'text-zinc-900'}`}
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
             Build Neural Networks
@@ -197,7 +276,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mb-12"
+            className={`text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl mb-8 sm:mb-12 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
           >
             Drag, drop, and connect layers to design your neural network architecture. 
             Train directly in your browser and export production-ready PyTorch code.
@@ -207,12 +286,12 @@ export default function Landing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4"
           >
             <Button 
               onClick={handleStartBuilding}
               size="lg"
-              className="group bg-primary hover:bg-primary/90 text-white px-8 py-6 text-base rounded-xl"
+              className="group bg-primary hover:bg-primary/90 text-white px-6 sm:px-8 py-5 sm:py-6 text-base rounded-xl w-full sm:w-auto"
               data-testid="hero-start-btn"
             >
               Start Building — Free
@@ -221,7 +300,9 @@ export default function Landing() {
             <Button 
               variant="ghost"
               size="lg"
-              className="text-zinc-400 hover:text-white hover:bg-white/5 px-8 py-6 text-base rounded-xl"
+              className={`px-6 sm:px-8 py-5 sm:py-6 text-base rounded-xl w-full sm:w-auto ${
+                isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
+              }`}
               onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               data-testid="learn-more-btn"
             >
@@ -230,7 +311,7 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        {/* Hero visual accent */}
+        {/* Hero visual accent - hidden on mobile */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -238,91 +319,91 @@ export default function Landing() {
           className="absolute right-0 top-1/2 -translate-y-1/2 hidden xl:block"
         >
           <div className="relative w-96 h-96">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
-            <div className="absolute inset-8 rounded-full border border-primary/20 animate-pulse" />
-            <div className="absolute inset-16 rounded-full border border-primary/30" />
-            <div className="absolute inset-24 rounded-full bg-primary/10 flex items-center justify-center">
-              <Brain className="w-16 h-16 text-primary/60" />
+            <div className={`absolute inset-0 rounded-full blur-3xl ${isDark ? 'bg-gradient-to-br from-primary/20 to-transparent' : 'bg-gradient-to-br from-primary/10 to-transparent'}`} />
+            <div className={`absolute inset-8 rounded-full border animate-pulse ${isDark ? 'border-primary/20' : 'border-primary/30'}`} />
+            <div className={`absolute inset-16 rounded-full border ${isDark ? 'border-primary/30' : 'border-primary/20'}`} />
+            <div className={`absolute inset-24 rounded-full flex items-center justify-center ${isDark ? 'bg-primary/10' : 'bg-primary/5'}`}>
+              <Brain className={`w-16 h-16 ${isDark ? 'text-primary/60' : 'text-primary/50'}`} />
             </div>
           </div>
         </motion.div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 px-6 lg:px-12 py-32 max-w-7xl mx-auto">
+      <section id="features" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-16"
+          className="mb-10 sm:mb-16"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs uppercase tracking-[0.2em] mb-6">
+          <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-4 sm:mb-6 ${
+            isDark ? 'bg-white/5 border-white/10 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-500'
+          }`}>
             Features
           </span>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight" style={{ fontFamily: "'Manrope', sans-serif" }}>
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
             Everything you need to build
           </h2>
         </motion.div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Hero Card - Drag & Drop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <FeatureCard
             icon={MousePointerClick}
             title="Drag & Drop Builder"
-            description="Intuitive canvas interface to design neural networks. Simply drag layers from the palette and connect them to build your architecture."
-            className="lg:col-span-2 lg:row-span-1"
+            description="Intuitive canvas interface to design neural networks. Simply drag layers from the palette and connect them."
+            className="lg:col-span-2"
             delay={0}
+            isDark={isDark}
           />
-
-          {/* Train in Browser */}
           <FeatureCard
             icon={Zap}
             title="Train in Browser"
-            description="Train your models directly in the browser using TensorFlow.js. Upload CSV or image data and watch real-time training progress."
+            description="Train models directly in your browser using TensorFlow.js. Upload data and watch real-time progress."
             delay={0.1}
+            isDark={isDark}
           />
-
-          {/* Export Code */}
           <FeatureCard
             icon={Code2}
             title="Export PyTorch Code"
-            description="Generate production-ready PyTorch code from your visual design. Copy to clipboard or download as a .py file."
+            description="Generate production-ready PyTorch code. Copy to clipboard or download as a .py file."
             delay={0.2}
+            isDark={isDark}
           />
-
-          {/* Layer Library */}
           <FeatureCard
             icon={Layers}
             title="Comprehensive Layers"
-            description="Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, and more. All the layers you need for any architecture."
+            description="Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, and more for any architecture."
             delay={0.3}
+            isDark={isDark}
           />
-
-          {/* Save & Share */}
           <FeatureCard
             icon={Share2}
             title="Save & Share"
-            description="Sign in to save your models, version them, and share with collaborators via a simple link. Your work is always accessible."
+            description="Sign in to save models, version them, and share with collaborators via a simple link."
             delay={0.4}
+            isDark={isDark}
           />
         </div>
       </section>
 
       {/* How it Works */}
-      <section className="relative z-10 px-6 lg:px-12 py-32 max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-center mb-12 sm:mb-20"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs uppercase tracking-[0.2em] mb-6">
+          <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-4 sm:mb-6 ${
+            isDark ? 'bg-white/5 border-white/10 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-500'
+          }`}>
             How it works
           </span>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight" style={{ fontFamily: "'Manrope', sans-serif" }}>
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
             Three steps to your model
           </h2>
         </motion.div>
@@ -341,13 +422,13 @@ export default function Landing() {
               transition={{ duration: 0.6, delay: idx * 0.15 }}
               className="text-center"
             >
-              <div className="text-6xl font-bold text-primary/20 mb-4" style={{ fontFamily: "'Manrope', sans-serif" }}>
+              <div className={`text-5xl sm:text-6xl font-bold mb-3 sm:mb-4 ${isDark ? 'text-primary/20' : 'text-primary/30'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
                 {item.step}
               </div>
-              <h3 className="text-xl font-semibold mb-3 tracking-tight" style={{ fontFamily: "'Manrope', sans-serif" }}>
+              <h3 className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-3 tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
                 {item.title}
               </h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
+              <p className={`text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 {item.desc}
               </p>
             </motion.div>
@@ -356,28 +437,38 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 px-6 lg:px-12 py-32 max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-transparent p-12 lg:p-20 text-center overflow-hidden"
+          className={`relative rounded-2xl sm:rounded-3xl border p-8 sm:p-12 lg:p-20 text-center overflow-hidden ${
+            isDark 
+              ? 'border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-transparent' 
+              : 'border-zinc-200 bg-gradient-to-br from-primary/5 via-white to-white shadow-lg'
+          }`}
         >
           {/* Background glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+          <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 sm:w-96 h-64 sm:h-96 rounded-full blur-3xl ${
+            isDark ? 'bg-primary/20' : 'bg-primary/10'
+          }`} />
           
           <div className="relative z-10">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight mb-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
+            <h2 className={`text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-light tracking-tight mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
               Ready to build?
             </h2>
-            <p className="text-zinc-400 text-lg mb-10 max-w-xl mx-auto">
+            <p className={`text-base sm:text-lg mb-8 sm:mb-10 max-w-xl mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
               Start designing your neural network architecture today. No signup required.
             </p>
             <Button 
               onClick={handleStartBuilding}
               size="lg"
-              className="group bg-white text-black hover:bg-zinc-100 px-10 py-6 text-base rounded-xl font-semibold"
+              className={`group px-8 sm:px-10 py-5 sm:py-6 text-base rounded-xl font-semibold w-full sm:w-auto ${
+                isDark 
+                  ? 'bg-white text-black hover:bg-zinc-100' 
+                  : 'bg-zinc-900 text-white hover:bg-zinc-800'
+              }`}
               data-testid="cta-start-btn"
             >
               Start Building — Free
@@ -388,15 +479,17 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 px-6 lg:px-12 py-12 border-t border-white/10 max-w-7xl mx-auto">
+      <footer className={`relative z-10 px-4 sm:px-6 lg:px-12 py-8 sm:py-12 border-t max-w-7xl mx-auto ${
+        isDark ? 'border-white/10' : 'border-zinc-200'
+      }`}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Cpu className="w-5 h-5 text-primary" />
-            <span className="font-semibold tracking-tight" style={{ fontFamily: "'Manrope', sans-serif" }}>
+            <span className={`font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
               NeuralFlows
             </span>
           </div>
-          <p className="text-zinc-500 text-sm">
+          <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
             © {new Date().getFullYear()} NeuralFlows. Build smarter.
           </p>
         </div>
