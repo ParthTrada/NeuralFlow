@@ -23,11 +23,11 @@ const templates = [
     color: '#8b5cf6',
     layers: 5,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 250, y: 50 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 250, y: 180 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu', inputSize: 784 } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 250, y: 310 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 250, y: 440 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 64, activation: 'relu' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 250, y: 570 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu', inputSize: 784 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 64, activation: 'relu' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -44,15 +44,15 @@ const templates = [
     color: '#06b6d4',
     layers: 9,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 250, y: 50 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 250, y: 180 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { filters: 32, kernelSize: 3, activation: 'relu', padding: 'same' } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 250, y: 310 }, data: { label: 'MaxPool2D', layerType: 'MaxPool2D', config: { poolSize: 2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 250, y: 440 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { filters: 64, kernelSize: 3, activation: 'relu', padding: 'same' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 250, y: 570 }, data: { label: 'MaxPool2D', layerType: 'MaxPool2D', config: { poolSize: 2 } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 250, y: 700 }, data: { label: 'Flatten', layerType: 'Flatten', config: {} } },
-      { id: 'node_6', type: 'layerNode', position: { x: 250, y: 830 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
-      { id: 'node_7', type: 'layerNode', position: { x: 250, y: 960 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.5 } } },
-      { id: 'node_8', type: 'layerNode', position: { x: 250, y: 1090 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { filters: 32, kernelSize: 3, activation: 'relu', padding: 'same' } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'MaxPool2D', layerType: 'MaxPool2D', config: { poolSize: 2 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { filters: 64, kernelSize: 3, activation: 'relu', padding: 'same' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'MaxPool2D', layerType: 'MaxPool2D', config: { poolSize: 2 } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Flatten', layerType: 'Flatten', config: {} } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 780 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
+      { id: 'node_7', type: 'layerNode', position: { x: 0, y: 910 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.5 } } },
+      { id: 'node_8', type: 'layerNode', position: { x: 0, y: 1040 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -73,12 +73,12 @@ const templates = [
     color: '#22c55e',
     layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 250, y: 50 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 100 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 250, y: 180 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 128, returnSequences: true } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 250, y: 310 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 250, y: 440 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 64, returnSequences: false } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 250, y: 570 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 32, activation: 'relu' } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 250, y: 700 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 100 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 128, returnSequences: true } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { units: 64, returnSequences: false } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 32, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -96,13 +96,13 @@ const templates = [
     color: '#f59e0b',
     layers: 7,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 250, y: 50 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 512 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 250, y: 180 }, data: { label: 'Multi-Head Attention', layerType: 'MultiHeadAttention', config: { numHeads: 8, keyDim: 64 } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 250, y: 310 }, data: { label: 'BatchNorm1D', layerType: 'BatchNorm1D', config: {} } },
-      { id: 'node_3', type: 'layerNode', position: { x: 250, y: 440 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 256, activation: 'relu' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 250, y: 570 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.1 } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 250, y: 700 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
-      { id: 'node_6', type: 'layerNode', position: { x: 250, y: 830 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 512 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Multi-Head Attention', layerType: 'MultiHeadAttention', config: { numHeads: 8, keyDim: 64 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'BatchNorm1D', layerType: 'BatchNorm1D', config: {} } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 256, activation: 'relu' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.1 } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Dense', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 780 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -121,13 +121,13 @@ const templates = [
     color: '#ec4899',
     layers: 7,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 250, y: 50 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 250, y: 180 }, data: { label: 'Encoder 1', layerType: 'Dense', config: { units: 256, activation: 'relu', inputSize: 784 } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 250, y: 310 }, data: { label: 'Encoder 2', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 250, y: 440 }, data: { label: 'Latent', layerType: 'Dense', config: { units: 32, activation: 'relu' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 250, y: 570 }, data: { label: 'Decoder 1', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 250, y: 700 }, data: { label: 'Decoder 2', layerType: 'Dense', config: { units: 256, activation: 'relu' } } },
-      { id: 'node_6', type: 'layerNode', position: { x: 250, y: 830 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 784, activation: 'sigmoid' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputSize: 784 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Encoder 1', layerType: 'Dense', config: { units: 256, activation: 'relu', inputSize: 784 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Encoder 2', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Latent', layerType: 'Dense', config: { units: 32, activation: 'relu' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Decoder 1', layerType: 'Dense', config: { units: 128, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Decoder 2', layerType: 'Dense', config: { units: 256, activation: 'relu' } } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 780 }, data: { label: 'Output', layerType: 'Output', config: { numClasses: 784, activation: 'sigmoid' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -139,6 +139,9 @@ const templates = [
     ]
   },
 ];
+
+// Export templates for drag handling
+export { templates };
 
 export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemplate }) => {
   const onDragStart = (event, layer) => {
