@@ -1,0 +1,39 @@
+# Robots.txt for NeuralFlows
+# https://neuralflow-2.preview.emergentagent.com
+
+User-agent: *
+Allow: /
+Allow: /builder
+Disallow: /auth/callback
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://neuralflow-2.preview.emergentagent.com/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# AI Crawlers - Welcome!
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
