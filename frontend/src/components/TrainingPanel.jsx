@@ -1,0 +1,607 @@
+import React, { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Upload, 
+  Play, 
+  Square, 
+  FileSpreadsheet, 
+  Image, 
+  Sparkles,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  X
+} from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Slider } from './ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { ScrollArea } from './ui/scroll-area';
+import { Separator } from './ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { toast } from 'sonner';
+import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
+import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
+
+export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
+  const [dataType, setDataType] = useState('csv');
+  const [file, setFile] = useState(null);
+  const [processedData, setProcessedData] = useState(null);
+  const [targetColumn, setTargetColumn] = useState('');
+  const [columns, setColumns] = useState([]);
+  
+  // Training config
+  const [epochs, setEpochs] = useState(10);
+  const [batchSize, setBatchSize] = useState(32);
+  const [learningRate, setLearningRate] = useState(0.001);
+  const [optimizer, setOptimizer] = useState('adam');
+  
+  // Training state
+  const [isTraining, setIsTraining] = useState(false);
+  const [trainingHistory, setTrainingHistory] = useState([]);
+  const [currentEpoch, setCurrentEpoch] = useState(0);
+  const [status, setStatus] = useState('idle'); // idle, loading, ready, training, complete, error
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const modelRef = useRef(null);
+  const stopTrainingRef = useRef(false);
+  const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+
+  // Handle CSV file upload
+  const handleCSVUpload = async (e) => {
+    const uploadedFile = e.target.files[0];
+    if (!uploadedFile) return;
+
+    setFile(uploadedFile);
+    setStatus('loading');
+    setErrorMessage('');
+
+    try {
+      const data = await parseCSV(uploadedFile);
+      if (data.length === 0) {
+        throw new Error('CSV file is empty');
+      }
+      
+      const cols = Object.keys(data[0]);
+      setColumns(cols);
+      setTargetColumn(cols[cols.length - 1]); // Default to last column
+      setProcessedData({ raw: data, type: 'csv' });
+      setStatus('ready');
+      toast.success(`Loaded ${data.length} rows from CSV`);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error.message);
+      toast.error('Failed to parse CSV file');
+    }
+  };
+
+  // Handle image folder upload
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setStatus('loading');
+    setErrorMessage('');
+
+    try {
+      const imageData = await processImageFolder(files, {
+        targetSize: [28, 28],
+        grayscale: true
+      });
+      
+      setProcessedData({
+        ...imageData,
+        type: 'images'
+      });
+      setStatus('ready');
+      toast.success(`Loaded ${imageData.imageCount} images with ${imageData.numClasses} classes`);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error.message);
+      toast.error('Failed to process images');
+    }
+  };
+
+  // Generate sample data
+  const handleGenerateSample = (type) => {
+    setStatus('loading');
+    try {
+      const data = generateSampleData(type, 500);
+      setProcessedData({
+        ...data,
+        type: 'sample'
+      });
+      setStatus('ready');
+      toast.success(`Generated ${type} sample dataset`);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error.message);
+    }
+  };
+
+  // Start training
+  const handleStartTraining = async () => {
+    if (!processedData) {
+      toast.error('Please upload data first');
+      return;
+    }
+
+    if (nodes.length === 0) {
+      toast.error('Please add layers to your network first');
+      return;
+    }
+
+    setIsTraining(true);
+    setTrainingHistory([]);
+    setCurrentEpoch(0);
+    setStatus('training');
+    stopTrainingRef.current = false;
+
+    try {
+      // Build model from nodes
+      modelRef.current = buildTFModel(nodes, edges);
+      
+      // Determine loss function based on task
+      const isClassification = processedData.numClasses > 1 && processedData.type !== 'regression';
+      const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
+      
+      // Compile model
+      compileModel(modelRef.current, {
+        optimizer,
+        learningRate,
+        loss,
+        metrics: isClassification ? ['accuracy'] : ['mse'],
+      });
+
+      // Get training data
+      let xTrain, yTrain;
+      
+      if (processedData.type === 'csv' && processedData.raw) {
+        const processed = processCSVData(processedData.raw, targetColumn);
+        xTrain = processed.xTrain;
+        yTrain = processed.yTrain;
+      } else {
+        xTrain = processedData.xTrain;
+        yTrain = processedData.yTrain;
+      }
+
+      // Train model
+      await trainModel(modelRef.current, xTrain, yTrain, {
+        epochs,
+        batchSize,
+        validationSplit: 0.2,
+      }, {
+        onEpochEnd: (epoch, logs) => {
+          if (stopTrainingRef.current) {
+            modelRef.current.stopTraining = true;
+            return;
+          }
+          
+          setCurrentEpoch(epoch + 1);
+          setTrainingHistory(prev => [...prev, {
+            epoch: epoch + 1,
+            loss: logs.loss?.toFixed(4),
+            accuracy: logs.acc?.toFixed(4),
+            valLoss: logs.val_loss?.toFixed(4),
+            valAccuracy: logs.val_acc?.toFixed(4),
+          }]);
+        },
+        onTrainEnd: () => {
+          setIsTraining(false);
+          setStatus('complete');
+          toast.success('Training complete!');
+        }
+      });
+
+    } catch (error) {
+      console.error('Training error:', error);
+      setStatus('error');
+      setErrorMessage(error.message);
+      setIsTraining(false);
+      toast.error(`Training failed: ${error.message}`);
+    }
+  };
+
+  // Stop training
+  const handleStopTraining = () => {
+    stopTrainingRef.current = true;
+    setIsTraining(false);
+    toast.info('Training stopped');
+  };
+
+  // Reset
+  const handleReset = () => {
+    if (modelRef.current) {
+      disposeModel(modelRef.current);
+      modelRef.current = null;
+    }
+    setFile(null);
+    setProcessedData(null);
+    setTrainingHistory([]);
+    setCurrentEpoch(0);
+    setStatus('idle');
+    setErrorMessage('');
+    setColumns([]);
+    setTargetColumn('');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 25 }}
+          className="absolute right-0 top-0 bottom-0 w-[500px] bg-card border-l border-border shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+          data-testid="training-panel"
+        >
+          {/* Header */}
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-primary/10">
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Train Network</h2>
+                <p className="text-xs text-muted-foreground">Browser-based training with TensorFlow.js</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose} data-testid="close-training-btn">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="h-[calc(100vh-80px)]">
+            <div className="p-4 space-y-6">
+              {/* Data Upload Section */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                  1. Load Data
+                </h3>
+                
+                <Tabs value={dataType} onValueChange={setDataType}>
+                  <TabsList className="grid grid-cols-3 w-full">
+                    <TabsTrigger value="csv" data-testid="tab-csv">
+                      <FileSpreadsheet className="w-4 h-4 mr-1" />
+                      CSV
+                    </TabsTrigger>
+                    <TabsTrigger value="images" data-testid="tab-images">
+                      <Image className="w-4 h-4 mr-1" />
+                      Images
+                    </TabsTrigger>
+                    <TabsTrigger value="sample" data-testid="tab-sample">
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Sample
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="csv" className="space-y-3 mt-4">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCSVUpload}
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-20 border-dashed"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="upload-csv-btn"
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="w-5 h-5" />
+                        <span>{file ? file.name : 'Upload CSV File'}</span>
+                      </div>
+                    </Button>
+                    
+                    {columns.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Target Column (Label)</Label>
+                        <Select value={targetColumn} onValueChange={setTargetColumn}>
+                          <SelectTrigger data-testid="select-target-column">
+                            <SelectValue placeholder="Select target column" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columns.map(col => (
+                              <SelectItem key={col} value={col}>{col}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="images" className="space-y-3 mt-4">
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      webkitdirectory="true"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-20 border-dashed"
+                      onClick={() => imageInputRef.current?.click()}
+                      data-testid="upload-images-btn"
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="w-5 h-5" />
+                        <span>Upload Image Folder</span>
+                        <span className="text-xs text-muted-foreground">Organize by class folders</span>
+                      </div>
+                    </Button>
+                  </TabsContent>
+
+                  <TabsContent value="sample" className="space-y-3 mt-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleGenerateSample('classification')}
+                        data-testid="generate-classification-btn"
+                      >
+                        Classification
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleGenerateSample('regression')}
+                        data-testid="generate-regression-btn"
+                      >
+                        Regression
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Generate synthetic data for testing your network
+                    </p>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Status indicator */}
+                {status !== 'idle' && (
+                  <div className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
+                    status === 'ready' ? 'bg-green-500/10 text-green-500' :
+                    status === 'loading' ? 'bg-blue-500/10 text-blue-500' :
+                    status === 'training' ? 'bg-primary/10 text-primary' :
+                    status === 'complete' ? 'bg-green-500/10 text-green-500' :
+                    status === 'error' ? 'bg-red-500/10 text-red-500' : ''
+                  }`}>
+                    {status === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {status === 'ready' && <CheckCircle2 className="w-4 h-4" />}
+                    {status === 'training' && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {status === 'complete' && <CheckCircle2 className="w-4 h-4" />}
+                    {status === 'error' && <AlertCircle className="w-4 h-4" />}
+                    <span>
+                      {status === 'loading' && 'Processing data...'}
+                      {status === 'ready' && 'Data ready for training'}
+                      {status === 'training' && `Training... Epoch ${currentEpoch}/${epochs}`}
+                      {status === 'complete' && 'Training complete!'}
+                      {status === 'error' && errorMessage}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Training Config */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                  2. Training Config
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label>Epochs</Label>
+                      <span className="text-sm text-muted-foreground">{epochs}</span>
+                    </div>
+                    <Slider
+                      value={[epochs]}
+                      onValueChange={([v]) => setEpochs(v)}
+                      min={1}
+                      max={100}
+                      step={1}
+                      disabled={isTraining}
+                      data-testid="epochs-slider"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label>Batch Size</Label>
+                      <span className="text-sm text-muted-foreground">{batchSize}</span>
+                    </div>
+                    <Slider
+                      value={[batchSize]}
+                      onValueChange={([v]) => setBatchSize(v)}
+                      min={8}
+                      max={128}
+                      step={8}
+                      disabled={isTraining}
+                      data-testid="batch-size-slider"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label>Learning Rate</Label>
+                      <span className="text-sm text-muted-foreground">{learningRate}</span>
+                    </div>
+                    <Slider
+                      value={[Math.log10(learningRate) + 4]}
+                      onValueChange={([v]) => setLearningRate(Math.pow(10, v - 4))}
+                      min={0}
+                      max={3}
+                      step={0.1}
+                      disabled={isTraining}
+                      data-testid="learning-rate-slider"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Optimizer</Label>
+                    <Select value={optimizer} onValueChange={setOptimizer} disabled={isTraining}>
+                      <SelectTrigger data-testid="select-optimizer">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="adam">Adam</SelectItem>
+                        <SelectItem value="sgd">SGD</SelectItem>
+                        <SelectItem value="rmsprop">RMSprop</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Training Progress */}
+              {trainingHistory.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                    3. Training Progress
+                  </h3>
+                  
+                  <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trainingHistory}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="epoch" 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                        />
+                        <YAxis 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="loss" 
+                          stroke="hsl(var(--destructive))" 
+                          strokeWidth={2}
+                          dot={false}
+                          name="Loss"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="accuracy" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={false}
+                          name="Accuracy"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="valLoss" 
+                          stroke="hsl(var(--destructive))" 
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          name="Val Loss"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="valAccuracy" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          name="Val Accuracy"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Latest metrics */}
+                  {trainingHistory.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="p-2 rounded-lg bg-secondary">
+                        <span className="text-muted-foreground">Loss:</span>
+                        <span className="ml-2 font-mono">
+                          {trainingHistory[trainingHistory.length - 1]?.loss}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-secondary">
+                        <span className="text-muted-foreground">Accuracy:</span>
+                        <span className="ml-2 font-mono">
+                          {trainingHistory[trainingHistory.length - 1]?.accuracy}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4">
+                {!isTraining ? (
+                  <>
+                    <Button 
+                      className="flex-1 glow-primary"
+                      onClick={handleStartTraining}
+                      disabled={status !== 'ready' && status !== 'complete'}
+                      data-testid="start-training-btn"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Start Training
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleReset}
+                      data-testid="reset-training-btn"
+                    >
+                      Reset
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={handleStopTraining}
+                    data-testid="stop-training-btn"
+                  >
+                    <Square className="w-4 h-4 mr-2" />
+                    Stop Training
+                  </Button>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
