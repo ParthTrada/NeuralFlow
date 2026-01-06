@@ -734,7 +734,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                             }
                             value={predictionInput}
                             onChange={(e) => setPredictionInput(e.target.value)}
-                            className="text-xs sm:text-sm h-9 sm:h-10"
+                            className="text-base sm:text-sm h-10"
+                            style={{ fontSize: '16px' }}
                             data-testid="prediction-input"
                           />
                           <Button 
