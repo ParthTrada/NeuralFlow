@@ -82,6 +82,19 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - ✅ Dark/Light theme toggle
 - ✅ Resizable UI panels
 
+### Jan 6, 2025 - Templates, Learning Panel & New Layers
+- ✅ Network Templates: Simple MLP, CNN, RNN (LSTM), Transformer, Autoencoder
+- ✅ Templates are draggable and can be added additively to the canvas
+- ✅ Learning Panel in right sidebar with context-sensitive educational content
+- ✅ Layer tips showing description, details, and best practices for each layer type
+- ✅ New Advanced Layers: Embedding, LayerNorm, TransformerEncoder, TransformerDecoder
+- ✅ Fixed PyTorch code generation for Transformer and Autoencoder templates
+- ✅ Correct code generation for TransformerEncoder (nn.TransformerEncoderLayer + nn.TransformerEncoder)
+- ✅ Correct code generation for TransformerDecoder (nn.TransformerDecoderLayer + nn.TransformerDecoder)
+- ✅ Mobile-responsive builder interface
+- ✅ Tap-to-add layers on mobile
+- ✅ Fixed header overflow and input auto-zoom issues on mobile
+
 ## Prioritized Backlog
 
 ### P0 (Critical)
@@ -93,12 +106,13 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [ ] Backend-based training for larger models
 
 ### P2 (Medium Priority)
-- [ ] Network templates (CNN, RNN, Transformer)
+- [x] Network templates (CNN, RNN, Transformer) ✅ COMPLETED
 - [ ] Export as ONNX format
 - [ ] Layer validation warnings
 - [ ] Collaborative real-time editing
+- [ ] Allow users to save custom architectures as templates
 
 ### P3 (Nice to Have)
-- [ ] Pre-built architectures/templates
+- [x] Pre-built architectures/templates ✅ COMPLETED
 - [ ] Training history persistence
 - [ ] Model comparison tools
