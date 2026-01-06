@@ -6,6 +6,7 @@ import { LayerPalette } from '../components/LayerPalette';
 import { NetworkCanvas } from '../components/NetworkCanvas';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
+import { TrainingPanel } from '../components/TrainingPanel';
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { getLayerConfig } from '../utils/layerConfigs';
 
@@ -19,6 +20,7 @@ export default function Builder() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isTrainingPanelOpen, setIsTrainingPanelOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
 
@@ -165,6 +167,15 @@ export default function Builder() {
     }, 2000);
   }, [nodes.length, setNodes, handleShowCode]);
 
+  // Open training panel
+  const handleOpenTraining = useCallback(() => {
+    if (nodes.length === 0) {
+      toast.error('Add some layers first!');
+      return;
+    }
+    setIsTrainingPanelOpen(true);
+  }, [nodes.length]);
+
   return (
     <div className={`h-screen overflow-hidden ${!isDarkMode ? 'light' : ''}`} data-testid="builder-page">
       <Header
@@ -173,6 +184,7 @@ export default function Builder() {
         onRun={handleRun}
         onShowCode={handleShowCode}
         onClearCanvas={handleClearCanvas}
+        onOpenTraining={handleOpenTraining}
         isRunning={isRunning}
         nodeCount={nodes.length}
       />
@@ -206,6 +218,13 @@ export default function Builder() {
         code={generatedCode}
         onDownload={handleDownloadCode}
         isDarkMode={isDarkMode}
+      />
+
+      <TrainingPanel
+        nodes={nodes}
+        edges={edges}
+        isOpen={isTrainingPanelOpen}
+        onClose={() => setIsTrainingPanelOpen(false)}
       />
     </div>
   );
