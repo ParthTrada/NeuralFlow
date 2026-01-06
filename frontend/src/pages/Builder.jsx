@@ -241,6 +241,14 @@ export default function Builder() {
         isOpen={isTrainingPanelOpen}
         onClose={() => setIsTrainingPanelOpen(false)}
       />
+
+      <SavedModelsPanel
+        isOpen={isModelsOpen}
+        onClose={() => setIsModelsOpen(false)}
+        onLoadModel={handleLoadModel}
+        currentNodes={nodes}
+        currentEdges={edges}
+      />
     </div>
   );
 }
