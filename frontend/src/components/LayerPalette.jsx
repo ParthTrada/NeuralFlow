@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, Info } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -8,12 +8,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip';
 import { ScrollArea } from './ui/scroll-area';
 import { layerCategories } from '../utils/layerConfigs';
 import { cn } from '../lib/utils';
@@ -185,144 +179,118 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
   };
 
   const renderContent = () => (
-    <TooltipProvider delayDuration={300}>
-      <Accordion type="multiple" defaultValue={['basic', 'advanced', 'templates']} className="w-full">
-        {Object.entries(layerCategories).map(([key, category]) => (
-          <AccordionItem key={key} value={key} className="border-border">
-            <AccordionTrigger 
-              className="text-sm font-semibold hover:no-underline px-2"
-              data-testid={`accordion-${key}`}
-            >
-              {category.label}
-            </AccordionTrigger>
-            <AccordionContent className="space-y-1 px-1">
-              {category.layers.map((layer) => {
-                const Icon = layer.icon;
-                return (
-                  <motion.div
-                    key={layer.type}
-                    draggable={!isMobile}
-                    onDragStart={(e) => !isMobile && onDragStart(e, layer)}
-                    onClick={() => handleLayerClick(layer)}
-                    whileHover={!isMobile ? { scale: 1.02, x: 4 } : undefined}
-                    whileTap={{ scale: 0.98 }}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg",
-                      isMobile ? "cursor-pointer active:border-primary" : "cursor-grab",
-                      "bg-secondary/50 hover:bg-secondary border border-transparent",
-                      "hover:border-border transition-all duration-200"
-                    )}
-                    data-testid={`palette-layer-${layer.type.toLowerCase()}`}
-                  >
-                    <div 
-                      className="p-2 rounded-md flex-shrink-0"
-                      style={{ backgroundColor: `${layer.color}20` }}
-                    >
-                      <Icon 
-                        className="w-4 h-4" 
-                        style={{ color: layer.color }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {layer.label}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {layer.description}
-                      </div>
-                    </div>
-                    {layer.tip && (
-                      <Tooltip>
-                        <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <button className="p-1 hover:bg-background/50 rounded-full flex-shrink-0">
-                            <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-[250px] text-xs">
-                          <p>{layer.tip}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                    {isMobile && !layer.tip && <Plus className="w-4 h-4 text-muted-foreground" />}
-                  </motion.div>
-                );
-              })}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-
-        {/* Templates Section */}
-        <AccordionItem value="templates" className="border-border">
+    <Accordion type="multiple" defaultValue={['basic', 'advanced', 'templates']} className="w-full">
+      {Object.entries(layerCategories).map(([key, category]) => (
+        <AccordionItem key={key} value={key} className="border-border">
           <AccordionTrigger 
             className="text-sm font-semibold hover:no-underline px-2"
-            data-testid="accordion-templates"
+            data-testid={`accordion-${key}`}
           >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Templates
-            </span>
+            {category.label}
           </AccordionTrigger>
           <AccordionContent className="space-y-1 px-1">
-            <p className="text-xs text-muted-foreground px-2 pb-2">
-              {isMobile ? 'Tap to add' : 'Drag to canvas or click to add'}
-            </p>
-            {templates.map((template) => {
-              const Icon = template.icon;
+            {category.layers.map((layer) => {
+              const Icon = layer.icon;
               return (
                 <motion.div
-                  key={template.id}
+                  key={layer.type}
                   draggable={!isMobile}
-                  onDragStart={(e) => !isMobile && onTemplateDragStart(e, template)}
-                  onClick={() => handleTemplateClick(template)}
+                  onDragStart={(e) => !isMobile && onDragStart(e, layer)}
+                  onClick={() => handleLayerClick(layer)}
                   whileHover={!isMobile ? { scale: 1.02, x: 4 } : undefined}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg",
-                    isMobile ? "cursor-pointer" : "cursor-grab",
+                    isMobile ? "cursor-pointer active:border-primary" : "cursor-grab",
                     "bg-secondary/50 hover:bg-secondary border border-transparent",
-                    "hover:border-primary/30 transition-all duration-200"
+                    "hover:border-border transition-all duration-200"
                   )}
-                  data-testid={`template-${template.id}`}
+                  data-testid={`palette-layer-${layer.type.toLowerCase()}`}
                 >
                   <div 
                     className="p-2 rounded-md flex-shrink-0"
-                    style={{ backgroundColor: `${template.color}20` }}
+                    style={{ backgroundColor: `${layer.color}20` }}
                   >
                     <Icon 
                       className="w-4 h-4" 
-                      style={{ color: template.color }}
+                      style={{ color: layer.color }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">
-                      {template.name}
+                      {layer.label}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {template.description}
+                      {layer.description}
                     </div>
                   </div>
-                  {template.tip && (
-                    <Tooltip>
-                      <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <button className="p-1 hover:bg-background/50 rounded-full flex-shrink-0">
-                          <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-[250px] text-xs">
-                        <p>{template.tip}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  <span className="text-xs text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full flex-shrink-0">
-                    {template.layers}
-                  </span>
+                  {isMobile && <Plus className="w-4 h-4 text-muted-foreground" />}
                 </motion.div>
               );
             })}
           </AccordionContent>
         </AccordionItem>
-      </Accordion>
-    </TooltipProvider>
+      ))}
+
+      {/* Templates Section */}
+      <AccordionItem value="templates" className="border-border">
+        <AccordionTrigger 
+          className="text-sm font-semibold hover:no-underline px-2"
+          data-testid="accordion-templates"
+        >
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Templates
+          </span>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-1 px-1">
+          <p className="text-xs text-muted-foreground px-2 pb-2">
+            {isMobile ? 'Tap to add' : 'Drag to canvas or click to add'}
+          </p>
+          {templates.map((template) => {
+            const Icon = template.icon;
+            return (
+              <motion.div
+                key={template.id}
+                draggable={!isMobile}
+                onDragStart={(e) => !isMobile && onTemplateDragStart(e, template)}
+                onClick={() => handleTemplateClick(template)}
+                whileHover={!isMobile ? { scale: 1.02, x: 4 } : undefined}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg",
+                  isMobile ? "cursor-pointer" : "cursor-grab",
+                  "bg-secondary/50 hover:bg-secondary border border-transparent",
+                  "hover:border-primary/30 transition-all duration-200"
+                )}
+                data-testid={`template-${template.id}`}
+              >
+                <div 
+                  className="p-2 rounded-md flex-shrink-0"
+                  style={{ backgroundColor: `${template.color}20` }}
+                >
+                  <Icon 
+                    className="w-4 h-4" 
+                    style={{ color: template.color }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">
+                    {template.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {template.description}
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {template.layers}
+                </span>
+              </motion.div>
+            );
+          })}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 
   // Mobile slide-over panel
