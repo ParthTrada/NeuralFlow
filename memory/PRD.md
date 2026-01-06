@@ -57,6 +57,9 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - ✅ Call-to-action section
 - ✅ Navigation to builder at '/builder'
 - ✅ Consistent NeuralFlows branding
+- ✅ Dark/Light mode toggle on landing page
+- ✅ Mobile-responsive design with hamburger menu
+- ✅ Full-width CTAs on mobile
 
 ### Jan 6, 2025 - Training & Auth Features
 - ✅ Browser-based Training with TensorFlow.js
