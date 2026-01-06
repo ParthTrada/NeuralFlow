@@ -16,16 +16,34 @@ export const buildTFModel = (nodes, edges) => {
   // Filter out Input nodes and get layer configs
   const layerNodes = sortedNodes.filter(n => n.data.layerType !== 'Input');
   
-  // Find input shape from Input node
+  // Find input shape - first check Input node, then first layer's inputSize
   const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
-  let inputShape = [784]; // default
+  let inputShape = null;
+  
   if (inputNode?.data?.config?.inputShape) {
     const shapeStr = inputNode.data.config.inputShape;
     if (typeof shapeStr === 'string') {
-      inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
+      try {
+        inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
+      } catch {
+        inputShape = [parseInt(shapeStr) || 784];
+      }
     } else if (Array.isArray(shapeStr)) {
       inputShape = shapeStr;
     }
+  }
+  
+  // If no Input node, get inputSize from first layer
+  if (!inputShape && layerNodes.length > 0) {
+    const firstLayerConfig = layerNodes[0].data.config || {};
+    if (firstLayerConfig.inputSize) {
+      inputShape = [firstLayerConfig.inputSize];
+    }
+  }
+  
+  // Default fallback
+  if (!inputShape) {
+    inputShape = [784];
   }
 
   const model = tf.sequential();
