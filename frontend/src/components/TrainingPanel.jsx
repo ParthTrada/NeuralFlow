@@ -52,6 +52,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
   const [status, setStatus] = useState('idle'); // idle, loading, ready, training, complete, error
   const [errorMessage, setErrorMessage] = useState('');
   
+  // Prediction state
+  const [predictionInput, setPredictionInput] = useState('');
+  const [predictionResult, setPredictionResult] = useState(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
