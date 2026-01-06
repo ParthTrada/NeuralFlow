@@ -82,45 +82,74 @@ async def get_current_user(request: Request, db) -> Optional[User]:
     return User(**user_doc)
 
 def create_auth_routes(db):
-    @router.post("/session")
-    async def create_session(request: SessionRequest, response: Response):
-        """Exchange session_id for session_token"""
+    import os
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    
+    @router.post("/google")
+    async def google_auth(request: Request, response: Response):
+        """Exchange Google auth code for session"""
+        body = await request.json()
+        code = body.get('code')
+        redirect_uri = body.get('redirect_uri')
+        
+        if not code:
+            raise HTTPException(status_code=400, detail="Missing auth code")
+        
         try:
-            # Call Emergent auth API
+            # Exchange code for tokens
             async with httpx.AsyncClient() as client:
-                auth_response = await client.get(
-                    "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                    headers={"X-Session-ID": request.session_id}
+                token_response = await client.post(
+                    "https://oauth2.googleapis.com/token",
+                    data={
+                        "code": code,
+                        "client_id": GOOGLE_CLIENT_ID,
+                        "client_secret": GOOGLE_CLIENT_SECRET,
+                        "redirect_uri": redirect_uri,
+                        "grant_type": "authorization_code"
+                    }
                 )
                 
-                if auth_response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Invalid session_id")
+                if token_response.status_code != 200:
+                    raise HTTPException(status_code=401, detail="Failed to exchange code")
                 
-                auth_data = auth_response.json()
-        except httpx.RequestError:
-            raise HTTPException(status_code=500, detail="Auth service unavailable")
+                tokens = token_response.json()
+                access_token = tokens.get("access_token")
+                
+                # Get user info from Google
+                user_response = await client.get(
+                    "https://www.googleapis.com/oauth2/v2/userinfo",
+                    headers={"Authorization": f"Bearer {access_token}"}
+                )
+                
+                if user_response.status_code != 200:
+                    raise HTTPException(status_code=401, detail="Failed to get user info")
+                
+                google_user = user_response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Auth service error: {str(e)}")
         
         # Extract user data
-        email = auth_data.get("email")
-        name = auth_data.get("name")
-        picture = auth_data.get("picture")
-        session_token = auth_data.get("session_token")
+        email = google_user.get("email")
+        name = google_user.get("name")
+        picture = google_user.get("picture")
         
-        if not email or not session_token:
-            raise HTTPException(status_code=401, detail="Invalid auth response")
+        if not email:
+            raise HTTPException(status_code=401, detail="No email from Google")
+        
+        # Generate session token
+        session_token = secrets.token_urlsafe(32)
         
         # Find or create user
         existing_user = await db.users.find_one({"email": email}, {"_id": 0})
         
         if existing_user:
             user_id = existing_user["user_id"]
-            # Update user info
             await db.users.update_one(
                 {"email": email},
                 {"$set": {"name": name, "picture": picture}}
             )
         else:
-            # Create new user
             user_id = f"user_{uuid.uuid4().hex[:12]}"
             await db.users.insert_one({
                 "user_id": user_id,
@@ -128,6 +157,44 @@ def create_auth_routes(db):
                 "name": name,
                 "picture": picture,
                 "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Create session
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        await db.user_sessions.insert_one({
+            "user_id": user_id,
+            "session_token": session_token,
+            "expires_at": expires_at.isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Set cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=7 * 24 * 60 * 60,
+            path="/"
+        )
+        
+        return {
+            "user_id": user_id,
+            "email": email,
+            "name": name,
+            "picture": picture
+        }
+    
+    @router.get("/google/client-id")
+    async def get_google_client_id():
+        """Get Google Client ID for frontend"""
+        return {"client_id": GOOGLE_CLIENT_ID}
+    
+    @router.post("/session")
+    async def create_session(request: SessionRequest, response: Response):
+        """Exchange session_id for session_token (legacy)"""
+        raise HTTPException(status_code=410, detail="Use /auth/google instead")
             })
         
         # Create session
