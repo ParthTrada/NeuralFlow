@@ -185,7 +185,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
   };
 
   const renderContent = () => (
-    <>
+    <TooltipProvider delayDuration={300}>
       <Accordion type="multiple" defaultValue={['basic', 'advanced', 'templates']} className="w-full">
         {Object.entries(layerCategories).map(([key, category]) => (
           <AccordionItem key={key} value={key} className="border-border">
@@ -231,7 +231,19 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
                         {layer.description}
                       </div>
                     </div>
-                    {isMobile && <Plus className="w-4 h-4 text-muted-foreground" />}
+                    {layer.tip && (
+                      <Tooltip>
+                        <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <button className="p-1 hover:bg-background/50 rounded-full flex-shrink-0">
+                            <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[250px] text-xs">
+                          <p>{layer.tip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {isMobile && !layer.tip && <Plus className="w-4 h-4 text-muted-foreground" />}
                   </motion.div>
                 );
               })}
@@ -289,7 +301,19 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
                       {template.description}
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full">
+                  {template.tip && (
+                    <Tooltip>
+                      <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <button className="p-1 hover:bg-background/50 rounded-full flex-shrink-0">
+                          <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-[250px] text-xs">
+                        <p>{template.tip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  <span className="text-xs text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full flex-shrink-0">
                     {template.layers}
                   </span>
                 </motion.div>
@@ -298,7 +322,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-    </>
+    </TooltipProvider>
   );
 
   // Mobile slide-over panel
