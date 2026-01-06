@@ -1,0 +1,91 @@
+# NeuralFlows - Visual Neural Network Builder
+
+> Build, train, and export neural networks visually with drag-and-drop interface
+
+## Overview
+
+NeuralFlows is a free web application that allows users to design deep learning models without writing code. The platform features a drag-and-drop interface for creating neural network architectures, real-time PyTorch code generation, and in-browser model training using TensorFlow.js.
+
+## Key Features
+
+- **Visual Network Builder**: Drag and drop layers to create neural network architectures
+- **PyTorch Code Generation**: Automatically generates production-ready Python code
+- **In-Browser Training**: Train models directly in the browser using TensorFlow.js
+- **Pre-built Templates**: MLP, CNN, RNN (LSTM), Transformer, Autoencoder
+- **Learning Panel**: Educational content for each layer type
+- **Model Persistence**: Save, load, and share your models
+- **Dark/Light Theme**: Toggle between themes
+
+## Supported Layer Types
+
+### Basic Layers
+- Input: Define input shape (Flat vectors, Images, Sequences)
+- Dense (Fully Connected): Linear transformation with optional activation
+- Output: Final classification layer
+
+### Convolutional Layers
+- Conv2D: 2D convolution for image processing
+- MaxPool2D: Max pooling for downsampling
+- Flatten: Flatten spatial dimensions
+
+### Recurrent Layers
+- LSTM: Long Short-Term Memory for sequences
+- GRU: Gated Recurrent Unit
+
+### Attention Layers
+- MultiHeadAttention: Multi-head self-attention mechanism
+- TransformerEncoder: Complete transformer encoder block
+- TransformerDecoder: Complete transformer decoder block
+
+### Normalization & Regularization
+- BatchNorm1D/2D: Batch normalization
+- LayerNorm: Layer normalization
+- Dropout: Regularization by random dropout
+- Embedding: Token embedding for NLP
+
+## Input Types
+
+1. **Flat (Vector)**: Single dimension input (e.g., 784 for flattened 28x28 images)
+2. **Image (C, H, W)**: 3D input with channels, height, width (e.g., 3, 224, 224 for RGB)
+3. **Sequence (Len, Feat)**: 2D input with sequence length and features (e.g., 32, 256)
+
+## Templates
+
+| Template | Use Case | Architecture |
+|----------|----------|--------------|
+| Simple MLP | Tabular data, classification | Input → Dense → Dropout → Dense → Output |
+| CNN | Image classification | Input → Conv2D → MaxPool → Conv2D → MaxPool → Flatten → Dense → Output |
+| RNN (LSTM) | Sequences, time series | Input → LSTM → Dropout → LSTM → Dense → Output |
+| Transformer | NLP, attention-based | Input → MultiHeadAttention → LayerNorm → Dense → Output |
+| Autoencoder | Dimensionality reduction | Input → Encoder layers → Latent → Decoder layers → Output |
+
+## How to Use
+
+1. Visit https://neuralflow-2.preview.emergentagent.com/
+2. Click "Start Building" to open the builder
+3. Select a template or add layers from the sidebar
+4. Configure layer parameters in the right panel
+5. Click "View Code" to see generated PyTorch code
+6. Use "Train Model" to train in-browser (MNIST dataset)
+7. Download PyTorch code for use in your projects
+
+## Technical Stack
+
+- Frontend: React, React Flow, TailwindCSS, Shadcn UI
+- Training: TensorFlow.js (in-browser)
+- Code Generation: PyTorch (Python)
+- Backend: FastAPI, MongoDB
+- Authentication: Google OAuth
+
+## API Endpoints
+
+- `GET /api/health` - Health check
+- `POST /api/auth/session` - Create session
+- `GET /api/auth/me` - Get current user
+- `GET /api/auth/models` - Get user's saved models
+- `POST /api/auth/models` - Save a model
+- `GET /api/auth/shared/{token}` - Get shared model
+
+## Contact
+
+Website: https://neuralflow-2.preview.emergentagent.com/
