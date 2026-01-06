@@ -7,13 +7,16 @@ import { NetworkCanvas } from '../components/NetworkCanvas';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
+import { SavedModelsPanel } from '../components/SavedModelsPanel';
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { getLayerConfig } from '../utils/layerConfigs';
+import { useAuth } from '../context/AuthContext';
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
 
 export default function Builder() {
+  const { isAuthenticated } = useAuth();
   const reactFlowRef = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -21,8 +24,19 @@ export default function Builder() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isTrainingPanelOpen, setIsTrainingPanelOpen] = useState(false);
+  const [isModelsOpen, setIsModelsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+
+  // Load model from saved
+  const handleLoadModel = useCallback((savedNodes, savedEdges) => {
+    setNodes(savedNodes || []);
+    setEdges(savedEdges || []);
+    setSelectedNode(null);
+    // Update nodeId counter
+    const maxId = Math.max(0, ...savedNodes.map(n => parseInt(n.id.replace('node_', '')) || 0));
+    nodeId = maxId + 1;
+  }, [setNodes, setEdges]);
 
   // Toggle theme
   const handleToggleTheme = useCallback(() => {
