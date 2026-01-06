@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -26,6 +26,7 @@ export const Header = ({
   onClearCanvas,
   onOpenTraining,
   onOpenModels,
+  onOpenTemplates,
   isRunning,
   nodeCount,
   isMobile,
@@ -95,6 +96,26 @@ export const Header = ({
             </TooltipTrigger>
             <TooltipContent>
               <p>Toggle {isDarkMode ? 'Light' : 'Dark'} Mode</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Templates Button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOpenTemplates}
+                className="w-8 h-8"
+                data-testid="templates-btn"
+              >
+                <Sparkles className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Templates</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -170,6 +191,10 @@ export const Header = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onOpenTemplates}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Templates
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onShowCode}>
                 <Code className="w-4 h-4 mr-2" />
                 View Code
