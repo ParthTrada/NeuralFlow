@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -8,6 +8,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 import { ScrollArea } from './ui/scroll-area';
 import { layerCategories } from '../utils/layerConfigs';
 import { cn } from '../lib/utils';
