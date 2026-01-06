@@ -128,7 +128,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose }) => {
         type: 'sample'
       });
       setStatus('ready');
-      toast.success(`Generated ${type} sample dataset`);
+      toast.success(`Generated ${type} sample dataset (input shape: [${data.inputShape.join(', ')}], ${data.numClasses} classes)`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
