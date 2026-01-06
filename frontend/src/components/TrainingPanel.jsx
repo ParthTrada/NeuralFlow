@@ -350,7 +350,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25 }}
-          className="absolute right-0 top-0 bottom-0 w-full sm:w-[500px] bg-card border-l border-border shadow-2xl"
+          className="absolute right-0 top-0 bottom-0 w-full sm:w-[500px] bg-card border-l border-border shadow-2xl flex flex-col"
           onClick={(e) => e.stopPropagation()}
           data-testid="training-panel"
         >
@@ -371,10 +371,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
           </div>
 
           <div 
-            className="h-[calc(100vh-60px)] sm:h-[calc(100vh-80px)] overflow-y-auto overscroll-contain"
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-20">
+            <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-24">
               {/* Data Upload Section */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
