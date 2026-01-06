@@ -205,7 +205,7 @@ def create_auth_routes(db):
         await db.network_models.insert_one(model_doc)
         
         # Return without _id
-        del model_doc["_id"] if "_id" in model_doc else None
+        model_doc.pop("_id", None)
         return model_doc
     
     @router.put("/models/{model_id}")
