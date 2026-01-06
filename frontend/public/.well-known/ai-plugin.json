@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "NeuralFlows",
+  "name_for_model": "neuralflows",
+  "description_for_human": "Visual neural network builder with drag-and-drop interface. Build, train, and export PyTorch models.",
+  "description_for_model": "NeuralFlows is a web application for building neural networks visually. Users can drag and drop layers to create architectures, train models in-browser using TensorFlow.js, and export production-ready PyTorch code. The application supports various layer types including Dense, Conv2D, MaxPool2D, LSTM, GRU, MultiHeadAttention, TransformerEncoder, TransformerDecoder, BatchNorm, LayerNorm, Dropout, Embedding, Flatten, and Output layers. Pre-built templates are available for common architectures: Simple MLP (for tabular data), CNN (for image classification), RNN/LSTM (for sequences), Transformer (for NLP), and Autoencoder (for dimensionality reduction). Users can configure input shapes for different data types: Flat vectors, Images (channels, height, width), and Sequences (length, features). The builder includes a learning panel that provides educational content about each layer type.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://neuralflow-2.preview.emergentagent.com/api/openapi.json"
+  },
+  "logo_url": "https://neuralflow-2.preview.emergentagent.com/favicon.svg",
+  "contact_email": "support@neuralflows.com",
+  "legal_info_url": "https://neuralflow-2.preview.emergentagent.com/"
+}
