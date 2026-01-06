@@ -88,8 +88,8 @@ export const layerCategories = {
         color: 'hsl(158, 64%, 40%)',
         description: 'Output layer for predictions',
         defaultConfig: {
-          inputSize: 128,
-          numClasses: 10,
+          inputSize: 16,
+          numClasses: 3,
           activation: 'softmax'
         }
       }
