@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { AuthCallback } from "./components/AuthCallback";
+import Landing from "./pages/Landing";
 import Builder from "./pages/Builder";
 
 // Router wrapper to handle auth callback
@@ -16,7 +17,8 @@ function AppRouter() {
   
   return (
     <Routes>
-      <Route path="/" element={<Builder />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/builder" element={<Builder />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
     </Routes>
   );
