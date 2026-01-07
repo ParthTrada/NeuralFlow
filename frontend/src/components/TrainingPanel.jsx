@@ -33,7 +33,7 @@ import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
 import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
 
-export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights }) => {
+export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData }) => {
   const [dataType, setDataType] = useState('csv');
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
