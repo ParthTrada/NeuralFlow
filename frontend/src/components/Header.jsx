@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -17,6 +17,7 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from '../context/AuthContext';
+import { useProductTour } from './ProductTour';
 
 export const Header = ({ 
   isDarkMode, 
