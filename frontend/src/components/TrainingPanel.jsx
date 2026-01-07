@@ -722,36 +722,159 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                     </h3>
                     
                     <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm">
-                          Input (comma-separated)
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder={processedData?.inputShape ? 
-                              `${processedData.inputShape[0]} values` : 
-                              'e.g., 0.5, 0.3'
-                            }
-                            value={predictionInput}
-                            onChange={(e) => setPredictionInput(e.target.value)}
-                            className="text-base sm:text-sm h-10"
-                            style={{ fontSize: '16px' }}
-                            data-testid="prediction-input"
-                          />
-                          <Button 
-                            onClick={handlePredict}
-                            disabled={isPredicting || !predictionInput.trim()}
-                            className="text-xs sm:text-sm h-9 sm:h-10 px-3"
-                            data-testid="predict-btn"
-                          >
-                            {isPredicting ? (
-                              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                            ) : (
-                              'Go'
+                      {/* Input Type Tabs */}
+                      <Tabs defaultValue="csv" className="w-full">
+                        <TabsList className="grid grid-cols-3 w-full h-8">
+                          <TabsTrigger value="csv" className="text-xs">
+                            <FileSpreadsheet className="w-3 h-3 mr-1" />
+                            Values
+                          </TabsTrigger>
+                          <TabsTrigger value="image" className="text-xs">
+                            <Image className="w-3 h-3 mr-1" />
+                            Image
+                          </TabsTrigger>
+                          <TabsTrigger value="text" className="text-xs">
+                            <span className="text-xs mr-1">Aa</span>
+                            Text
+                          </TabsTrigger>
+                        </TabsList>
+
+                        {/* CSV/Values Input */}
+                        <TabsContent value="csv" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Input (comma-separated values)
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder={processedData?.inputShape ? 
+                                  `${processedData.inputShape[0]} values` : 
+                                  'e.g., 0.5, 0.3, 0.8'
+                                }
+                                value={predictionInput}
+                                onChange={(e) => setPredictionInput(e.target.value)}
+                                className="text-base sm:text-sm h-10"
+                                style={{ fontSize: '16px' }}
+                                data-testid="prediction-input"
+                              />
+                              <Button 
+                                onClick={handlePredict}
+                                disabled={isPredicting || !predictionInput.trim()}
+                                className="text-xs sm:text-sm h-9 sm:h-10 px-3"
+                                data-testid="predict-btn"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                                ) : (
+                                  'Test'
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Enter {processedData?.inputShape?.[0] || 'N'} comma-separated numbers
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        {/* Image Input */}
+                        <TabsContent value="image" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Upload Image to Classify
+                            </Label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImagePredict}
+                              className="hidden"
+                              id="test-image-input"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                className="flex-1 h-20 border-dashed"
+                                onClick={() => document.getElementById('test-image-input')?.click()}
+                              >
+                                <div className="flex flex-col items-center gap-1">
+                                  <Upload className="w-5 h-5" />
+                                  <span className="text-xs">
+                                    {testImage ? 'Change Image' : 'Upload Image'}
+                                  </span>
+                                </div>
+                              </Button>
+                              {testImage && (
+                                <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
+                                  <img 
+                                    src={testImagePreview} 
+                                    alt="Test" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            {testImage && (
+                              <Button 
+                                onClick={handleImagePrediction}
+                                disabled={isPredicting}
+                                className="w-full text-xs sm:text-sm h-9"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                  <Sparkles className="w-4 h-4 mr-2" />
+                                )}
+                                Classify Image
+                              </Button>
                             )}
-                          </Button>
-                        </div>
-                      </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Best for CNN models. Image will be resized to match input layer.
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        {/* Text/Sequence Input */}
+                        <TabsContent value="text" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Enter Text or Sequence
+                            </Label>
+                            <textarea
+                              placeholder="Enter text for sentiment analysis or sequence data..."
+                              value={textInput}
+                              onChange={(e) => setTextInput(e.target.value)}
+                              className="w-full h-24 p-3 rounded-lg bg-secondary border border-border text-sm resize-none"
+                              style={{ fontSize: '16px' }}
+                            />
+                            <div className="flex gap-2">
+                              <Select value={textEncoding} onValueChange={setTextEncoding}>
+                                <SelectTrigger className="h-9 text-xs flex-1">
+                                  <SelectValue placeholder="Encoding" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="bow" className="text-xs">Bag of Words</SelectItem>
+                                  <SelectItem value="tfidf" className="text-xs">TF-IDF</SelectItem>
+                                  <SelectItem value="char" className="text-xs">Character Level</SelectItem>
+                                  <SelectItem value="word" className="text-xs">Word Index</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                onClick={handleTextPrediction}
+                                disabled={isPredicting || !textInput.trim()}
+                                className="text-xs sm:text-sm h-9 px-4"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  'Analyze'
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Best for RNN/LSTM models. Text will be encoded based on selection.
+                            </p>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
 
                       {/* Prediction Result */}
                       {predictionResult && (
@@ -765,7 +888,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                             <div className="space-y-2 sm:space-y-3">
                               <div className="flex items-center justify-between text-xs sm:text-sm">
                                 <span className="font-semibold">Predicted:</span>
-                                <span className="font-bold text-primary">
+                                <span className="font-bold text-primary text-base">
                                   {predictionResult.predictedClass}
                                 </span>
                               </div>
