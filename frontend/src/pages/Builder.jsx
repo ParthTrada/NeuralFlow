@@ -450,6 +450,8 @@ export default function Builder() {
         onWeightsTrained={setTrainedWeights}
         modelId={currentModelId}
         savedWeights={trainedWeights}
+        savedTrainingData={savedTrainingData}
+        onSaveTrainingData={handleSaveTrainingData}
       />
 
       <SavedModelsPanel
