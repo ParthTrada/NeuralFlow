@@ -391,7 +391,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
+      <section id="features" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-24 max-w-7xl mx-auto scroll-mt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
