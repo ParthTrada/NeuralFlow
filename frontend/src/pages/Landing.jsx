@@ -141,6 +141,15 @@ export default function Landing() {
   const [isDark, setIsDark] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Redirect to builder if shared model link
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedToken = urlParams.get('shared');
+    if (sharedToken) {
+      navigate(`/builder?shared=${sharedToken}`, { replace: true });
+    }
+  }, [navigate]);
+
   const handleStartBuilding = () => {
     navigate('/builder');
   };
