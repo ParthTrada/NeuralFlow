@@ -129,6 +129,7 @@ export const Header = ({
                   onClick={onOpenModels}
                   className="w-8 h-8"
                   data-testid="my-models-btn"
+                  data-tour="save-btn"
                 >
                   <FolderOpen className="w-4 h-4" />
                 </Button>
