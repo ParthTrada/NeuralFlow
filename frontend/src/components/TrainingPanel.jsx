@@ -1283,6 +1283,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         </motion.div>
                       )}
                     </div>
+                    
+                    {/* Save Training Results Button */}
+                    {trainingHistory.length > 0 && onSaveTrainingData && (
+                      <div className="pt-4 border-t border-border mt-4">
+                        <Button
+                          onClick={handleSaveTrainingData}
+                          className="w-full"
+                          variant="outline"
+                          data-testid="save-training-btn"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Training Results
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                          Save training history with your model to restore it later
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
