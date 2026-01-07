@@ -80,9 +80,8 @@ export default function Builder() {
       const model = response.data;
       setNodes(model.nodes || []);
       setEdges(model.edges || []);
-      if (model.trained_weights) {
-        setTrainedWeights(model.trained_weights);
-      }
+      setTrainedWeights(model.trained_weights || null);
+      setCurrentModelId(model.model_id || `shared_${shareToken}`);
       toast.success(`Loaded shared model: ${model.name}`);
       setSearchParams({});
     } catch (error) {
