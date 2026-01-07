@@ -82,6 +82,7 @@ export default function Builder() {
       setNodes(model.nodes || []);
       setEdges(model.edges || []);
       setTrainedWeights(model.trained_weights || null);
+      setSavedTrainingData(model.training_data || null);
       setCurrentModelId(model.model_id || `shared_${shareToken}`);
       toast.success(`Loaded shared model: ${model.name}`);
       setSearchParams({});
