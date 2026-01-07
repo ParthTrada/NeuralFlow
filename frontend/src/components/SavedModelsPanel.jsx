@@ -522,7 +522,7 @@ export const SavedModelsPanel = ({
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input
-                  value={`${window.location.origin}?shared=${shareDialog.share_token}`}
+                  value={`${window.location.origin}/builder?shared=${shareDialog.share_token}`}
                   readOnly
                   className="font-mono text-sm"
                 />
