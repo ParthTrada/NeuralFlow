@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Box, 
-  Layers, 
-  Grid3X3, 
-  Minimize2, 
-  Droplets, 
-  Rows3, 
-  Target,
-  Sparkles,
+  CircleDot,      // Input
+  Grid3X3,        // Dense
+  Layers,         // Conv2D
+  Maximize2,      // MaxPool2D
+  Scissors,       // Dropout
+  Minimize2,      // Flatten
+  Target,         // Output
+  Activity,       // LSTM
+  Zap,            // MultiHeadAttention
+  BarChart3,      // BatchNorm
   ChevronLeft,
   ChevronRight,
   Play,
-  ArrowDown
+  ArrowDown,
+  Sparkles
 } from 'lucide-react';
 import { Button } from './ui/button';
 
-// Layer type configurations with icons and colors
+// Layer type configurations with EXACT icons from layerConfigs.js
 const layerTypes = {
-  Input: { icon: Box, color: '#22c55e', label: 'Input' },
-  Conv2D: { icon: Grid3X3, color: '#06b6d4', label: 'Conv2D' },
-  MaxPool2D: { icon: Minimize2, color: '#0ea5e9', label: 'MaxPool' },
-  BatchNorm: { icon: Layers, color: '#f59e0b', label: 'BatchNorm' },
-  Dropout: { icon: Droplets, color: '#ef4444', label: 'Dropout' },
-  Flatten: { icon: Rows3, color: '#a855f7', label: 'Flatten' },
-  Dense: { icon: Layers, color: '#8b5cf6', label: 'Dense' },
-  LSTM: { icon: Sparkles, color: '#22c55e', label: 'LSTM' },
-  Attention: { icon: Target, color: '#f59e0b', label: 'Attention' },
-  Output: { icon: Target, color: '#ec4899', label: 'Output' },
+  Input: { icon: CircleDot, color: 'hsl(187, 95%, 42%)', label: 'Input' },
+  Dense: { icon: Grid3X3, color: 'hsl(263, 70%, 50%)', label: 'Dense' },
+  Conv2D: { icon: Layers, color: 'hsl(263, 70%, 50%)', label: 'Conv2D' },
+  MaxPool2D: { icon: Maximize2, color: 'hsl(263, 70%, 50%)', label: 'MaxPool' },
+  Dropout: { icon: Scissors, color: 'hsl(38, 92%, 50%)', label: 'Dropout' },
+  Flatten: { icon: Minimize2, color: 'hsl(263, 70%, 50%)', label: 'Flatten' },
+  Output: { icon: Target, color: 'hsl(158, 64%, 40%)', label: 'Output' },
+  LSTM: { icon: Activity, color: 'hsl(330, 81%, 60%)', label: 'LSTM' },
+  Attention: { icon: Zap, color: 'hsl(45, 93%, 47%)', label: 'Attention' },
+  BatchNorm: { icon: BarChart3, color: 'hsl(142, 71%, 45%)', label: 'BatchNorm' },
 };
 
 // Sample architectures to showcase
@@ -92,9 +95,9 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
       <motion.div
         animate={isAnimating ? {
           boxShadow: [
-            `0 0 0 0 ${config.color}00`,
-            `0 0 20px 4px ${config.color}40`,
-            `0 0 0 0 ${config.color}00`,
+            `0 0 0 0 transparent`,
+            `0 0 20px 4px ${config.color}`,
+            `0 0 0 0 transparent`,
           ],
         } : {}}
         transition={{ 
@@ -103,7 +106,7 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
           repeat: isAnimating ? Infinity : 0,
           repeatDelay: 0.5
         }}
-        className={`relative w-16 h-16 lg:w-20 lg:h-20 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+        className={`relative w-14 h-14 lg:w-16 lg:h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
           isDark 
             ? 'bg-zinc-900/80 border-zinc-700 hover:border-zinc-500' 
             : 'bg-white border-zinc-200 hover:border-zinc-400 shadow-sm'
@@ -113,11 +116,11 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
         }}
       >
         <div
-          className="absolute inset-0 rounded-xl opacity-20"
+          className="absolute inset-0 rounded-xl opacity-15"
           style={{ backgroundColor: config.color }}
         />
         <Icon 
-          className="w-6 h-6 lg:w-7 lg:h-7 relative z-10" 
+          className="w-5 h-5 lg:w-6 lg:h-6 relative z-10" 
           style={{ color: config.color }} 
         />
         
@@ -139,11 +142,11 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
       
       {/* Layer label */}
       <div className="mt-2 text-center">
-        <p className={`text-xs font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+        <p className={`text-[11px] lg:text-xs font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
           {config.label}
         </p>
         {layer.config && (
-          <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+          <p className={`text-[9px] lg:text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
             {layer.config}
           </p>
         )}
@@ -151,13 +154,13 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
       
       {/* Horizontal connection line to next node */}
       {index < totalLayers - 1 && (
-        <div className="absolute left-full top-1/2 -translate-y-1/2 w-6 lg:w-8 flex items-center" style={{ marginTop: '-12px' }}>
+        <div className="absolute left-full top-1/2 -translate-y-1/2 w-4 lg:w-6 flex items-center" style={{ marginTop: '-14px' }}>
           <motion.div
             animate={isAnimating ? {
               background: [
-                `linear-gradient(90deg, ${config.color}40 0%, transparent 100%)`,
-                `linear-gradient(90deg, ${config.color} 0%, ${config.color}40 50%, transparent 100%)`,
-                `linear-gradient(90deg, transparent 0%, ${config.color}40 100%)`,
+                `linear-gradient(90deg, ${config.color} 0%, transparent 100%)`,
+                `linear-gradient(90deg, transparent 0%, ${config.color} 50%, transparent 100%)`,
+                `linear-gradient(90deg, transparent 0%, ${config.color} 100%)`,
               ],
             } : {}}
             transition={{ 
@@ -169,7 +172,7 @@ const HorizontalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark })
           />
           {/* Arrow pointing right */}
           <div 
-            className={`w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] ${
+            className={`w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[5px] ${
               isDark ? 'border-l-zinc-600' : 'border-l-zinc-300'
             }`}
             style={isAnimating ? { borderLeftColor: config.color } : {}}
@@ -196,9 +199,9 @@ const VerticalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) =
       <motion.div
         animate={isAnimating ? {
           boxShadow: [
-            `0 0 0 0 ${config.color}00`,
-            `0 0 20px 4px ${config.color}40`,
-            `0 0 0 0 ${config.color}00`,
+            `0 0 0 0 transparent`,
+            `0 0 20px 4px ${config.color}`,
+            `0 0 0 0 transparent`,
           ],
         } : {}}
         transition={{ 
@@ -207,7 +210,7 @@ const VerticalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) =
           repeat: isAnimating ? Infinity : 0,
           repeatDelay: 0.5
         }}
-        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 w-[200px] ${
+        className={`relative flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 transition-all duration-300 w-[180px] ${
           isDark 
             ? 'bg-zinc-900/80 border-zinc-700 hover:border-zinc-500' 
             : 'bg-white border-zinc-200 hover:border-zinc-400 shadow-sm'
@@ -218,11 +221,11 @@ const VerticalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) =
       >
         {/* Icon */}
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: `${config.color}20` }}
         >
           <Icon 
-            className="w-5 h-5" 
+            className="w-4 h-4" 
             style={{ color: config.color }} 
           />
         </div>
@@ -257,13 +260,13 @@ const VerticalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) =
       
       {/* Vertical connection line to next node */}
       {index < totalLayers - 1 && (
-        <div className="flex flex-col items-center py-1">
+        <div className="flex flex-col items-center py-0.5">
           <motion.div
             animate={isAnimating ? {
               background: [
-                `linear-gradient(180deg, ${config.color}40 0%, transparent 100%)`,
-                `linear-gradient(180deg, ${config.color} 0%, ${config.color}40 50%, transparent 100%)`,
-                `linear-gradient(180deg, transparent 0%, ${config.color}40 100%)`,
+                `linear-gradient(180deg, ${config.color} 0%, transparent 100%)`,
+                `linear-gradient(180deg, transparent 0%, ${config.color} 50%, transparent 100%)`,
+                `linear-gradient(180deg, transparent 0%, ${config.color} 100%)`,
               ],
             } : {}}
             transition={{ 
@@ -271,11 +274,11 @@ const VerticalLayerNode = ({ layer, index, totalLayers, isAnimating, isDark }) =
               delay: index * 0.15,
               repeat: isAnimating ? Infinity : 0,
             }}
-            className={`w-0.5 h-4 ${isDark ? 'bg-zinc-600' : 'bg-zinc-300'}`}
+            className={`w-0.5 h-3 ${isDark ? 'bg-zinc-600' : 'bg-zinc-300'}`}
           />
           {/* Arrow pointing down */}
           <div 
-            className={`w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] ${
+            className={`w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] ${
               isDark ? 'border-t-zinc-600' : 'border-t-zinc-300'
             }`}
             style={isAnimating ? { borderTopColor: config.color } : {}}
@@ -323,7 +326,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <AnimatePresence mode="wait">
             <motion.h3
@@ -331,7 +334,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`text-lg sm:text-xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}
+              className={`text-base sm:text-lg font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}
               style={{ fontFamily: "'Manrope', sans-serif" }}
             >
               {architecture.name}
@@ -343,7 +346,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className={`text-sm mt-1 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
+              className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
             >
               {architecture.description}
             </motion.p>
@@ -387,7 +390,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
       </div>
 
       {/* Network visualization */}
-      <div className={`relative rounded-2xl border p-4 sm:p-6 md:p-8 overflow-hidden ${
+      <div className={`relative rounded-2xl border p-4 sm:p-6 overflow-hidden ${
         isDark 
           ? 'bg-zinc-900/50 border-zinc-800' 
           : 'bg-white/80 border-zinc-200 shadow-sm'
@@ -399,13 +402,13 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
             backgroundImage: isDark 
               ? 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 1px, transparent 1px)'
               : 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
+            backgroundSize: '20px 20px',
           }}
         />
         
         {/* DESKTOP: Horizontal layout (hidden on mobile) */}
         <div className="hidden md:block relative overflow-x-auto pb-2">
-          <div className="flex items-start justify-center gap-6 lg:gap-8 min-w-max">
+          <div className="flex items-start justify-center gap-4 lg:gap-6 min-w-max px-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`desktop-${currentArch}`}
@@ -413,7 +416,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-start gap-6 lg:gap-8"
+                className="flex items-start gap-4 lg:gap-6"
               >
                 {architecture.layers.map((layer, idx) => (
                   <HorizontalLayerNode
@@ -431,7 +434,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
         </div>
         
         {/* MOBILE: Vertical layout (hidden on desktop) */}
-        <div className="md:hidden relative max-h-[350px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <div className="md:hidden relative max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar">
           <div className="flex flex-col items-center py-2">
             <AnimatePresence mode="wait">
               <motion.div
@@ -458,7 +461,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
           
           {/* Scroll hint for mobile */}
           <div className="flex justify-center mt-2">
-            <p className={`text-xs flex items-center gap-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            <p className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
               <ArrowDown className="w-3 h-3" />
               Scroll to see all layers
             </p>
@@ -467,9 +470,10 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
         <Button
           variant="outline"
+          size="sm"
           onClick={handleAnimate}
           disabled={isAnimating}
           className={`w-full sm:w-auto ${
@@ -484,6 +488,7 @@ export const NetworkShowcase = ({ isDark, onTryTemplate }) => {
         
         {onTryTemplate && (
           <Button
+            size="sm"
             onClick={() => onTryTemplate(architecture)}
             className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white"
           >
