@@ -146,17 +146,6 @@ export const Header = ({
         {/* Desktop action buttons */}
         <Button
           variant="outline"
-          onClick={onShowCode}
-          className="hidden lg:flex"
-          data-testid="show-code-btn"
-          data-tour="generate-code"
-        >
-          <Code className="w-4 h-4 mr-2" />
-          View Code
-        </Button>
-
-        <Button
-          variant="outline"
           onClick={onOpenTraining}
           className="hidden lg:flex"
           data-testid="train-network-btn"
