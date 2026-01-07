@@ -70,6 +70,42 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const lastModelIdRef = useRef(null);
+
+  // Reset training state when a different model is loaded
+  useEffect(() => {
+    if (modelId && modelId !== lastModelIdRef.current) {
+      // Dispose existing model if any
+      if (modelRef.current) {
+        try {
+          modelRef.current.dispose();
+        } catch (e) {
+          console.log('Model disposal skipped');
+        }
+        modelRef.current = null;
+      }
+      
+      // Reset all training-related state
+      setFile(null);
+      setProcessedData(null);
+      setTrainingHistory([]);
+      setCurrentEpoch(0);
+      setStatus('idle');
+      setErrorMessage('');
+      setColumns([]);
+      setTargetColumn('');
+      setPredictionInput('');
+      setPredictionResult(null);
+      setTestImage(null);
+      setTestImagePreview('');
+      setTextInput('');
+      
+      // Update the ref
+      lastModelIdRef.current = modelId;
+      
+      console.log('TrainingPanel reset for new model:', modelId);
+    }
+  }, [modelId]);
 
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
