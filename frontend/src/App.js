@@ -1,18 +1,22 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { AuthCallback } from "./components/AuthCallback";
 import Landing from "./pages/Landing";
 import Builder from "./pages/Builder";
 
-// Router wrapper to handle auth callback
+// Router component that handles auth callback detection
 function AppRouter() {
   const location = useLocation();
   
-  // Check URL fragment for session_id (Emergent auth)
-  if (location.hash?.includes('session_id=')) {
-    return <AuthCallback />;
+  // Check if URL contains session_id (OAuth callback)
+  const hasSessionId = location.hash?.includes('session_id=') || 
+                       location.search?.includes('session_id=');
+  
+  // If we have a session_id, redirect to auth callback
+  if (hasSessionId && location.pathname !== '/auth/callback') {
+    return <Navigate to={`/auth/callback${location.hash}${location.search}`} replace />;
   }
   
   return (
