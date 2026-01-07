@@ -406,33 +406,41 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       // Normalize to [0, 1]
       imageTensor = imageTensor.div(255.0);
       
-      // Check if model has Conv2D layers - if not, we need to flatten
+      // Determine if we need to flatten the image for Dense/MLP models
+      // Check 1: Look at visual nodes for Conv2D layers
       const hasConv2D = nodes.some(n => 
         n.data.layerType === 'Conv2D' || 
         n.data.layerType === 'MaxPool2D' ||
         n.data.layerType === 'AvgPool2D'
       );
       
-      // Also check model's actual input shape
-      let modelExpects2D = false;
+      // Check 2: Inspect the actual model's input shape
+      let modelInputDims = null;
       try {
-        const modelInputShape = modelRef.current.inputs[0].shape;
-        // If model input shape is [null, N] where N is a single number, it expects 2D (flattened)
-        modelExpects2D = modelInputShape.length === 2;
+        if (modelRef.current?.inputs?.[0]?.shape) {
+          modelInputDims = modelRef.current.inputs[0].shape.length;
+          console.log('Model input shape:', modelRef.current.inputs[0].shape, 'dims:', modelInputDims);
+        }
       } catch (e) {
-        console.log('Could not determine model input shape, using layer detection');
+        console.log('Could not determine model input shape:', e.message);
       }
       
+      // Decide whether to flatten:
+      // - Flatten if model expects 2D input (e.g., Dense layer) 
+      // - Flatten if no Conv2D layers in the visual network
+      // - Keep 4D only if we have Conv2D AND model confirms it needs 4D input
+      const shouldFlatten = modelInputDims === 2 || (!hasConv2D && modelInputDims !== 4);
+      
       let inputTensor;
-      if (!hasConv2D || modelExpects2D) {
+      if (shouldFlatten) {
         // Flatten for Dense/MLP models: [1, height * width * channels]
         const flatSize = targetHeight * targetWidth * channels;
         inputTensor = imageTensor.reshape([1, flatSize]);
-        console.log('Flattened input shape:', inputTensor.shape);
+        console.log('Flattened input for Dense model - shape:', inputTensor.shape);
       } else {
         // Keep 4D for Conv2D models: [1, height, width, channels]
         inputTensor = imageTensor.expandDims(0);
-        console.log('4D input shape:', inputTensor.shape);
+        console.log('4D input for Conv2D model - shape:', inputTensor.shape);
       }
 
       const prediction = modelRef.current.predict(inputTensor);
