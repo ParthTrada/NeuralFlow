@@ -136,13 +136,13 @@ export default function Builder() {
     toast.success(`Added ${templateName || 'template'} to canvas!`);
   }, [nodes, setNodes, setEdges]);
 
-  const handleLoadModel = useCallback((savedNodes, savedEdges, weights) => {
+  const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId) => {
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
     setSelectedNode(null);
-    if (weights) {
-      setTrainedWeights(weights);
-    }
+    setTrainedWeights(weights || null);
+    // Set a unique model ID to trigger TrainingPanel reset
+    setCurrentModelId(modelId || `model_${Date.now()}`);
     const maxId = Math.max(0, ...(savedNodes || []).map(n => parseInt(n.id.replace('node_', '')) || 0));
     nodeId = maxId + 1;
   }, [setNodes, setEdges]);
