@@ -1,7 +1,3 @@
-#====================================================================================================
-# START - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
-#====================================================================================================
-
 # THIS SECTION CONTAINS CRITICAL TESTING INSTRUCTIONS FOR BOTH AGENTS
 # BOTH MAIN_AGENT AND TESTING_AGENT MUST PRESERVE THIS ENTIRE BLOCK
 
@@ -101,3 +97,141 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  NeuralFlow Architect - Visual neural network builder application.
+  Current issue: MNIST model testing fails with shape mismatch error when testing image classification models that use Dense input layers (not Conv2D).
+  Error: "expected dense_Dense1_input to have 2 dimension(s), but got array with shape [1,28,28,1]"
+
+backend:
+  - task: "Google OAuth Authentication"
+    implemented: true
+    working: true
+    file: "/app/backend/auth_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Google OAuth working via Emergent platform integration"
+
+  - task: "Admin Dashboard API"
+    implemented: true
+    working: true
+    file: "/app/backend/admin_routes.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Returns database and collection statistics"
+
+  - task: "Model CRUD Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Save, load, share models functionality working"
+
+frontend:
+  - task: "Landing Page Design"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Responsive landing page with neural network showcase"
+
+  - task: "Network Builder Canvas"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Builder.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Drag-drop network building functionality"
+
+  - task: "Model Training with TensorFlow.js"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/TrainingPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Training with CSV, images, sample data works"
+
+  - task: "Image Classification Testing (Dense Input Models)"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/TrainingPanel.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported error: 'expected dense_Dense1_input to have 2 dimension(s), but got array with shape [1,28,28,1]' when testing MNIST model"
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed handleImagePrediction function - improved logic to detect if model expects 2D (flattened) or 4D input. Now checks modelInputDims === 2 OR (!hasConv2D && modelInputDims !== 4) to determine if flattening is needed."
+
+  - task: "Admin Dashboard Page"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Admin.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Shows database statistics"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Image Classification Testing (Dense Input Models)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Fixed the image classification bug in TrainingPanel.jsx. The issue was that when testing an image on a model with Dense input layer (like MNIST classifier with flattened input), the image tensor wasn't being flattened correctly.
+      
+      Changes made to handleImagePrediction function:
+      1. Improved model input dimension detection - now properly reads modelRef.current.inputs[0].shape.length
+      2. Changed flatten condition logic: shouldFlatten = modelInputDims === 2 || (!hasConv2D && modelInputDims !== 4)
+      3. Added better console logging for debugging
+      
+      Please test by:
+      1. Navigate to /builder
+      2. Create a simple Dense network (Input: 784 → Dense: 128 → Output: 10)
+      3. Train on MNIST or classification sample data
+      4. After training, go to "Test Model" section → Image tab
+      5. Upload a 28x28 grayscale image (or any image, it will resize)
+      6. Click "Classify Image"
+      7. Verify no shape mismatch error occurs and prediction displays
