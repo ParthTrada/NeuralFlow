@@ -720,10 +720,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
               <div className="p-1.5 sm:p-2 rounded-md bg-primary/10">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Train Network</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">TensorFlow.js</p>
-              </div>
+              <h2 className="font-bold text-base sm:text-lg">Train Network</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} data-testid="close-training-btn">
               <X className="w-4 h-4" />
