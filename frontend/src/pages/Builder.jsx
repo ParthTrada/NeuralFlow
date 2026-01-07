@@ -46,6 +46,7 @@ export default function Builder() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
   const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
+  const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
   
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
