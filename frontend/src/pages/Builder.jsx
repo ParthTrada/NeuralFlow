@@ -10,6 +10,7 @@ import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
+import { ProductTour } from '../components/ProductTour';
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
 
