@@ -831,7 +831,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <br />
                         <strong className="text-foreground/80">Example:</strong> images/cat/*.jpg, images/dog/*.jpg
                         <br />
-                        <strong className="text-foreground/80">Tip:</strong> Images auto-resize to 28x28. Use Conv2D or set Input to 784 for Dense.
+                        <strong className="text-foreground/80">Tip:</strong> Use Conv2D layers for image data, or Dense with Input size 784 for 28x28 grayscale.
                       </p>
                     </div>
                   </TabsContent>
