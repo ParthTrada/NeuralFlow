@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -18,95 +18,105 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Check auth status on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
-      // First try to get user from localStorage as backup
+      // First check localStorage for stored user
       const storedUser = localStorage.getItem('neuralflow_user');
       const storedToken = localStorage.getItem('neuralflow_token');
       
-      // Try API call with token in header
-      const headers = storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {};
-      
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        withCredentials: true,
-        headers
-      });
-      setUser(response.data);
-      // Update localStorage
-      localStorage.setItem('neuralflow_user', JSON.stringify(response.data));
+      if (storedUser && storedToken) {
+        // Verify token is still valid
+        const response = await axios.get(`${API_URL}/auth/me`, {
+          headers: { 'Authorization': `Bearer ${storedToken}` },
+          withCredentials: true
+        });
+        setUser(response.data);
+      }
     } catch (error) {
-      // Clear localStorage on auth failure
+      // Token invalid, clear storage
       localStorage.removeItem('neuralflow_user');
       localStorage.removeItem('neuralflow_token');
       setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   // Emergent Google OAuth login
-  const login = () => {
+  const login = useCallback(() => {
     // Store current path to return after login
-    sessionStorage.setItem('authReturnPath', window.location.pathname);
+    const currentPath = window.location.pathname;
+    sessionStorage.setItem('authReturnPath', currentPath !== '/auth/callback' ? currentPath : '/builder');
+    
+    // Redirect to Emergent OAuth
     const redirectUrl = window.location.origin + '/auth/callback';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-  };
+  }, []);
 
-  const logout = async () => {
+  // Logout
+  const logout = useCallback(async () => {
     try {
       const storedToken = localStorage.getItem('neuralflow_token');
-      const headers = storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {};
-      
-      await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true,
-        headers
-      });
+      if (storedToken) {
+        await axios.post(`${API_URL}/auth/logout`, {}, {
+          headers: { 'Authorization': `Bearer ${storedToken}` },
+          withCredentials: true
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      // Always clear local state
+      localStorage.removeItem('neuralflow_user');
+      localStorage.removeItem('neuralflow_token');
+      setUser(null);
     }
-    // Clear localStorage
-    localStorage.removeItem('neuralflow_user');
-    localStorage.removeItem('neuralflow_token');
-    setUser(null);
-  };
+  }, []);
 
-  const processSessionId = async (sessionId) => {
+  // Process session ID from OAuth callback
+  const processSessionId = useCallback(async (sessionId) => {
     try {
       const response = await axios.post(`${API_URL}/auth/session`, {
         session_id: sessionId
       }, {
-        withCredentials: true
+        withCredentials: true,
+        timeout: 30000 // 30 second timeout
       });
       
-      // Store user and token in localStorage for mobile browsers that block cookies
-      localStorage.setItem('neuralflow_user', JSON.stringify(response.data));
-      if (response.data.session_token) {
-        localStorage.setItem('neuralflow_token', response.data.session_token);
+      const userData = response.data;
+      
+      // Store user and token
+      localStorage.setItem('neuralflow_user', JSON.stringify(userData));
+      if (userData.session_token) {
+        localStorage.setItem('neuralflow_token', userData.session_token);
       }
       
-      setUser(response.data);
-      return response.data;
+      setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Session processing error:', error);
       throw error;
     }
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    processSessionId,
+    isAuthenticated: !!user
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      logout,
-      processSessionId,
-      checkAuth,
-      isAuthenticated: !!user
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;
