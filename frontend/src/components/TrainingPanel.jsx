@@ -72,7 +72,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const imageInputRef = useRef(null);
   const lastModelIdRef = useRef(null);
 
-  // Reset training state when a different model is loaded
+  // Restore or reset training state when a different model is loaded
   useEffect(() => {
     if (modelId && modelId !== lastModelIdRef.current) {
       // Dispose existing model if any
@@ -85,12 +85,43 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         modelRef.current = null;
       }
       
-      // Reset all training-related state
+      // Check if we have saved training data for this model
+      if (savedTrainingData) {
+        console.log('Restoring saved training data for model:', modelId);
+        setTrainingHistory(savedTrainingData.trainingHistory || []);
+        setStatus(savedTrainingData.trainingHistory?.length > 0 ? 'complete' : 'idle');
+        setCurrentEpoch(savedTrainingData.trainingHistory?.length || 0);
+        // Rebuild model if we have weights
+        if (savedWeights && nodes.length > 0) {
+          try {
+            const model = buildTFModel(nodes, edges);
+            compileModel(model, {
+              optimizer: savedTrainingData.optimizer || 'adam',
+              learningRate: savedTrainingData.learningRate || 0.001,
+              loss: 'categoricalCrossentropy',
+              metrics: ['acc'],
+            });
+            // Load weights
+            const weightsJson = atob(savedWeights);
+            const weightsArray = JSON.parse(weightsJson);
+            const tensors = weightsArray.map(w => tf.tensor(w.data, w.shape));
+            model.setWeights(tensors);
+            modelRef.current = model;
+            console.log('Model restored with saved weights');
+          } catch (e) {
+            console.log('Could not restore model weights:', e.message);
+          }
+        }
+      } else {
+        // Reset all training-related state for new model
+        setTrainingHistory([]);
+        setCurrentEpoch(0);
+        setStatus('idle');
+      }
+      
+      // Always reset these
       setFile(null);
       setProcessedData(null);
-      setTrainingHistory([]);
-      setCurrentEpoch(0);
-      setStatus('idle');
       setErrorMessage('');
       setColumns([]);
       setTargetColumn('');
@@ -102,10 +133,25 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       // Update the ref
       lastModelIdRef.current = modelId;
-      
-      console.log('TrainingPanel reset for new model:', modelId);
     }
-  }, [modelId]);
+  }, [modelId, savedTrainingData, savedWeights, nodes, edges]);
+
+  // Function to save current training data
+  const handleSaveTrainingData = useCallback(() => {
+    if (!onSaveTrainingData) return;
+    
+    const trainingData = {
+      trainingHistory,
+      epochs,
+      batchSize,
+      learningRate,
+      optimizer,
+      status,
+      savedAt: new Date().toISOString()
+    };
+    
+    onSaveTrainingData(trainingData);
+  }, [onSaveTrainingData, trainingHistory, epochs, batchSize, learningRate, optimizer, status]);
 
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
