@@ -204,6 +204,28 @@ export const Header = ({
           {!isMobile && (isRunning ? 'Running...' : 'Run')}
         </Button>
 
+        {/* Help Button - restart tour */}
+        {!isMobile && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={restartTour}
+                  className="w-8 h-8"
+                  data-testid="help-btn"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Show Tour</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
         {/* User Menu */}
         {isAuthenticated ? (
           <DropdownMenu>
