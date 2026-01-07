@@ -273,9 +273,24 @@ export default function Landing() {
                   <button
                     key={item.name}
                     onClick={() => {
-                      const element = document.querySelector(item.href);
-                      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      // Close menu first
                       setMobileMenuOpen(false);
+                      
+                      // Delay scroll to allow menu to close
+                      setTimeout(() => {
+                        const element = document.querySelector(item.href);
+                        if (element) {
+                          // Get header height for offset
+                          const headerHeight = 70;
+                          const elementPosition = element.getBoundingClientRect().top;
+                          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+                          
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                          });
+                        }
+                      }, 250);
                     }}
                     className={`block w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                       isDark 
