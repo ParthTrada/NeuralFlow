@@ -58,6 +58,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
   const [predictionResult, setPredictionResult] = useState(null);
   const [isPredicting, setIsPredicting] = useState(false);
   
+  // Image prediction state
+  const [testImage, setTestImage] = useState(null);
+  const [testImagePreview, setTestImagePreview] = useState('');
+  
+  // Text prediction state
+  const [textInput, setTextInput] = useState('');
+  const [textEncoding, setTextEncoding] = useState('bow');
+  
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
