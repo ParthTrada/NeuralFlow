@@ -187,8 +187,17 @@ export default function Landing() {
             </span>
           </div>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation - Dark mode first, then links */}
           <div className="hidden md:flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
+              data-testid="theme-toggle-btn"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             {[
               { name: 'Features', href: '#features' },
               { name: 'How It Works', href: '#how-it-works' },
@@ -209,28 +218,6 @@ export default function Landing() {
                 {item.name}
               </button>
             ))}
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
-              data-testid="theme-toggle-btn"
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-            <Button 
-              onClick={handleStartBuilding}
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-white px-5"
-              data-testid="nav-start-btn"
-            >
-              Start Building
-              <ArrowRight className="w-4 h-4 ml-1.5" />
-            </Button>
           </div>
 
           {/* Mobile Actions */}
