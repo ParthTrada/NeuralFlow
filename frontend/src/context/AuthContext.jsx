@@ -1,7 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+// For production: Use same origin (works when frontend and backend are on same domain)
+// For development: Use REACT_APP_BACKEND_URL from .env
+const getApiUrl = () => {
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  
+  // If env URL is set and doesn't contain 'preview' or 'csb.app' (dev URLs), use it
+  if (envUrl && !envUrl.includes('preview.emergentagent.com') && !envUrl.includes('csb.app')) {
+    return envUrl + '/api';
+  }
+  
+  // In production or if env not properly set, use same origin
+  // This works because Kubernetes ingress routes /api to backend
+  if (typeof window !== 'undefined') {
+    return window.location.origin + '/api';
+  }
+  
+  return '/api';
+};
+
+const API_URL = getApiUrl();
 
 const AuthContext = createContext(null);
 
