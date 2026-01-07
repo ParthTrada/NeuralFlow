@@ -146,6 +146,7 @@ export const Header = ({
           onClick={onShowCode}
           className="hidden lg:flex"
           data-testid="show-code-btn"
+          data-tour="generate-code"
         >
           <Code className="w-4 h-4 mr-2" />
           View Code
@@ -156,6 +157,7 @@ export const Header = ({
           onClick={onOpenTraining}
           className="hidden lg:flex"
           data-testid="train-network-btn"
+          data-tour="train-btn"
         >
           <GraduationCap className="w-4 h-4 mr-2" />
           Train
