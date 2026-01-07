@@ -277,16 +277,6 @@ export default function Landing() {
                     {item.name}
                   </button>
                 ))}
-                <div className="pt-2">
-                  <Button 
-                    onClick={() => { handleStartBuilding(); setMobileMenuOpen(false); }}
-                    className="w-full bg-primary hover:bg-primary/90 text-white"
-                    data-testid="mobile-start-btn"
-                  >
-                    Start Building
-                    <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Button>
-                </div>
               </div>
             </motion.div>
           )}
