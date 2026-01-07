@@ -136,16 +136,38 @@ export default function Builder() {
     toast.success(`Added ${templateName || 'template'} to canvas!`);
   }, [nodes, setNodes, setEdges]);
 
-  const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId) => {
+  const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId, trainingData) => {
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
     setSelectedNode(null);
     setTrainedWeights(weights || null);
-    // Set a unique model ID to trigger TrainingPanel reset
+    setSavedTrainingData(trainingData || null);
+    // Set a unique model ID to trigger TrainingPanel reset/restore
     setCurrentModelId(modelId || `model_${Date.now()}`);
     const maxId = Math.max(0, ...(savedNodes || []).map(n => parseInt(n.id.replace('node_', '')) || 0));
     nodeId = maxId + 1;
   }, [setNodes, setEdges]);
+
+  // Handle saving training data
+  const handleSaveTrainingData = useCallback(async (trainingData) => {
+    if (!currentModelId || !isAuthenticated) {
+      toast.error('Please save your model first');
+      return;
+    }
+    
+    try {
+      await axios.patch(`${API_URL}/auth/models/${currentModelId}/training`, {
+        training_data: trainingData
+      }, {
+        withCredentials: true
+      });
+      setSavedTrainingData(trainingData);
+      toast.success('Training results saved!');
+    } catch (error) {
+      console.error('Failed to save training data:', error);
+      toast.error('Failed to save training results');
+    }
+  }, [currentModelId, isAuthenticated]);
 
   const handleToggleTheme = useCallback(() => {
     setIsDarkMode(prev => {
