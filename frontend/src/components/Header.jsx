@@ -34,7 +34,7 @@ export const Header = ({
   showLayerPalette
 }) => {
   const { user, login, logout, isAuthenticated } = useAuth();
-  const { restartTour } = useProductTour();
+  // const { restartTour } = useProductTour(); // Commented out - Product Tour disabled
 
   return (
     <header 
