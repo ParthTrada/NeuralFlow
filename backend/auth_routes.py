@@ -439,4 +439,31 @@ def create_auth_routes(db):
         
         return versions
     
+    # Save training data endpoint
+    @router.patch("/models/{model_id}/training")
+    async def save_training_data(model_id: str, request: Request):
+        """Save training data (history, config) for a model"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        body = await request.json()
+        training_data = body.get("training_data")
+        
+        if not training_data:
+            raise HTTPException(status_code=400, detail="No training data provided")
+        
+        result = await db.network_models.update_one(
+            {"model_id": model_id, "user_id": user.user_id},
+            {"$set": {
+                "training_data": training_data,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        return {"message": "Training data saved"}
+    
     return router
