@@ -435,6 +435,9 @@ export default function Builder() {
         currentEdges={edges}
         trainedWeights={trainedWeights}
       />
+
+      {/* Product Tour for first-time users */}
+      <ProductTour isDark={isDarkMode} />
     </div>
   );
 }
