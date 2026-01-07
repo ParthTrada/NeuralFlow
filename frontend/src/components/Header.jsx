@@ -204,8 +204,8 @@ export const Header = ({
           {!isMobile && (isRunning ? 'Running...' : 'Run')}
         </Button>
 
-        {/* Help Button - restart tour */}
-        {!isMobile && (
+        {/* Help Button - restart tour - Disabled */}
+        {/* {!isMobile && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -224,7 +224,7 @@ export const Header = ({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )}
+        )} */}
 
         {/* User Menu */}
         {isAuthenticated ? (
