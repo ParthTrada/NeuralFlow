@@ -774,6 +774,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       </div>
                     </Button>
                     
+                    {/* CSV Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Format:</strong> CSV with headers. Last column = target.
+                        <br />
+                        <strong className="text-foreground/80">Example:</strong> feature1, feature2, ..., label
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Numeric values work best. Match input size to your Input layer.
+                      </p>
+                    </div>
+                    
                     {columns.length > 0 && (
                       <div className="space-y-2">
                         <Label className="text-xs sm:text-sm">Target Column</Label>
@@ -812,6 +823,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <span>Upload Image Folder</span>
                       </div>
                     </Button>
+                    
+                    {/* Images Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Structure:</strong> Folder with subfolders per class.
+                        <br />
+                        <strong className="text-foreground/80">Example:</strong> images/cat/*.jpg, images/dog/*.jpg
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Images auto-resize to 28x28. Use Conv2D or set Input to 784 for Dense.
+                      </p>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
@@ -833,9 +855,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         Regression
                       </Button>
                     </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Generate synthetic data for testing
-                    </p>
+                    
+                    {/* Sample Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 10 features, 3 classes. Use Softmax output.
+                        <br />
+                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 10 features, 1 output. Use Linear output.
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Great for testing your network architecture quickly.
+                      </p>
+                    </div>
                   </TabsContent>
                 </Tabs>
 
