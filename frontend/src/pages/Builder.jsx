@@ -426,6 +426,8 @@ export default function Builder() {
         isOpen={isTrainingPanelOpen}
         onClose={() => setIsTrainingPanelOpen(false)}
         onWeightsTrained={setTrainedWeights}
+        modelId={currentModelId}
+        savedWeights={trainedWeights}
       />
 
       <SavedModelsPanel
