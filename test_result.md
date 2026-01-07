@@ -195,6 +195,21 @@ frontend:
         agent: "testing"
         comment: "PARTIAL TEST COMPLETED: Successfully built Dense-only MNIST network (Input:784→Dense:128→Output:10) and verified training panel functionality. Code review shows comprehensive fix implemented in handleImagePrediction function with improved model input dimension detection and correct flattening logic. Unable to complete full end-to-end image classification test due to UI automation limitations, but the implemented fix appears technically sound and should resolve the original shape mismatch error. Recommend manual verification or alternative testing approach."
 
+  - task: "Model Switching Training State Reset"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/TrainingPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported: When switching between saved models, the training results from previous model persist instead of showing the current model's data"
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed by: 1) Added currentModelId state in Builder.jsx to track loaded model, 2) Passed modelId prop to TrainingPanel, 3) Added useEffect in TrainingPanel to reset all training state when modelId changes. Now when loading a different saved model, training panel resets: trainingHistory, status, predictions, processed data, etc."
+
   - task: "Admin Dashboard Page"
     implemented: true
     working: true
