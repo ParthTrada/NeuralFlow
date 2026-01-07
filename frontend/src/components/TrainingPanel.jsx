@@ -342,6 +342,250 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     }
   };
 
+  // Handle image file selection for prediction
+  const handleImagePredict = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setTestImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setTestImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    setPredictionResult(null);
+  };
+
+  // Handle image prediction
+  const handleImagePrediction = async () => {
+    if (!modelRef.current || !testImage) {
+      toast.error('No model or image available');
+      return;
+    }
+
+    setIsPredicting(true);
+    setPredictionResult(null);
+
+    try {
+      // Create image element
+      const img = document.createElement('img');
+      img.src = testImagePreview;
+      
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
+
+      // Determine input shape from model or processedData
+      let targetHeight = 28;
+      let targetWidth = 28;
+      let channels = 1;
+
+      // Try to get input shape from the first layer
+      const inputLayer = nodes.find(n => n.data.layerType === 'Input');
+      if (inputLayer?.data?.config) {
+        const config = inputLayer.data.config;
+        if (config.inputHeight) targetHeight = config.inputHeight;
+        if (config.inputWidth) targetWidth = config.inputWidth;
+        if (config.inputChannels) channels = config.inputChannels;
+      }
+
+      // Process image with TensorFlow.js
+      let imageTensor = tf.browser.fromPixels(img);
+      
+      // Convert to grayscale if needed
+      if (channels === 1 && imageTensor.shape[2] === 3) {
+        imageTensor = imageTensor.mean(2).expandDims(2);
+      }
+      
+      // Resize
+      imageTensor = tf.image.resizeBilinear(imageTensor, [targetHeight, targetWidth]);
+      
+      // Normalize to [0, 1]
+      imageTensor = imageTensor.div(255.0);
+      
+      // Check if model expects flattened input or 4D tensor
+      const firstNonInputLayer = nodes.find(n => 
+        n.data.layerType !== 'Input' && 
+        (n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D')
+      );
+      
+      let inputTensor;
+      if (firstNonInputLayer?.data?.layerType === 'Dense') {
+        // Flatten for Dense layer
+        inputTensor = imageTensor.reshape([1, targetHeight * targetWidth * channels]);
+      } else {
+        // Keep 4D for Conv2D
+        inputTensor = imageTensor.expandDims(0);
+      }
+
+      const prediction = modelRef.current.predict(inputTensor);
+      const predictionData = await prediction.data();
+      
+      const labels = processedData?.uniqueTargets || processedData?.uniqueLabels || 
+        Array.from({length: predictionData.length}, (_, i) => `Class ${i}`);
+      
+      const maxIndex = predictionData.indexOf(Math.max(...predictionData));
+      const probabilities = Array.from(predictionData).map((prob, idx) => ({
+        class: labels[idx] || `Class ${idx}`,
+        probability: (prob * 100).toFixed(2)
+      })).sort((a, b) => b.probability - a.probability);
+      
+      setPredictionResult({
+        type: 'classification',
+        predictedClass: labels[maxIndex] || `Class ${maxIndex}`,
+        confidence: (predictionData[maxIndex] * 100).toFixed(2),
+        allProbabilities: probabilities
+      });
+
+      // Cleanup
+      imageTensor.dispose();
+      inputTensor.dispose();
+      prediction.dispose();
+      
+      toast.success('Image classified!');
+    } catch (error) {
+      console.error('Image prediction error:', error);
+      toast.error(`Image classification failed: ${error.message}`);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  // Handle text/sequence prediction
+  const handleTextPrediction = async () => {
+    if (!modelRef.current || !textInput.trim()) {
+      toast.error('No model or text available');
+      return;
+    }
+
+    setIsPredicting(true);
+    setPredictionResult(null);
+
+    try {
+      // Get expected input size
+      const inputLayer = nodes.find(n => n.data.layerType === 'Input');
+      const inputSize = inputLayer?.data?.config?.inputSize || 100;
+      
+      let inputVector;
+      
+      switch (textEncoding) {
+        case 'bow': {
+          // Simple bag of words - character frequency
+          const chars = textInput.toLowerCase().split('');
+          const charCounts = {};
+          chars.forEach(c => {
+            const code = c.charCodeAt(0);
+            if (code >= 32 && code <= 126) {
+              charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
+            }
+          });
+          inputVector = new Array(inputSize).fill(0);
+          Object.entries(charCounts).forEach(([idx, count]) => {
+            if (parseInt(idx) < inputSize) {
+              inputVector[parseInt(idx)] = count / chars.length;
+            }
+          });
+          break;
+        }
+        
+        case 'tfidf': {
+          // Simple TF approximation
+          const words = textInput.toLowerCase().split(/\s+/);
+          const wordCounts = {};
+          words.forEach(w => {
+            const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
+            wordCounts[hash] = (wordCounts[hash] || 0) + 1;
+          });
+          inputVector = new Array(inputSize).fill(0);
+          Object.entries(wordCounts).forEach(([idx, count]) => {
+            inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
+          });
+          break;
+        }
+        
+        case 'char': {
+          // Character-level encoding
+          inputVector = new Array(inputSize).fill(0);
+          const chars = textInput.slice(0, inputSize).split('');
+          chars.forEach((c, i) => {
+            inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
+          });
+          break;
+        }
+        
+        case 'word': {
+          // Word index encoding (simple hash)
+          const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
+          inputVector = new Array(inputSize).fill(0);
+          words.forEach((word, i) => {
+            const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
+            inputVector[i] = hash / 1000;
+          });
+          break;
+        }
+        
+        default:
+          throw new Error('Unknown encoding type');
+      }
+
+      // Check if model expects sequence input (3D) or flat input (2D)
+      const hasLSTM = nodes.some(n => 
+        n.data.layerType === 'LSTM' || 
+        n.data.layerType === 'GRU' ||
+        n.data.layerType === 'RNN'
+      );
+      
+      let inputTensor;
+      if (hasLSTM) {
+        // Reshape for RNN: [batch, timesteps, features]
+        const seqLength = inputLayer?.data?.config?.sequenceLength || inputSize;
+        const features = Math.ceil(inputSize / seqLength);
+        const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
+        inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features)], [1, seqLength, features]);
+      } else {
+        inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+      }
+
+      const prediction = modelRef.current.predict(inputTensor);
+      const predictionData = await prediction.data();
+      
+      const labels = processedData?.uniqueTargets || processedData?.uniqueLabels ||
+        ['Negative', 'Neutral', 'Positive'].slice(0, predictionData.length);
+      
+      let result;
+      if (predictionData.length > 1) {
+        const maxIndex = predictionData.indexOf(Math.max(...predictionData));
+        const probabilities = Array.from(predictionData).map((prob, idx) => ({
+          class: labels[idx] || `Class ${idx}`,
+          probability: (prob * 100).toFixed(2)
+        })).sort((a, b) => b.probability - a.probability);
+        
+        result = {
+          type: 'classification',
+          predictedClass: labels[maxIndex] || `Class ${maxIndex}`,
+          confidence: (predictionData[maxIndex] * 100).toFixed(2),
+          allProbabilities: probabilities
+        };
+      } else {
+        result = {
+          type: 'regression',
+          value: predictionData[0].toFixed(4)
+        };
+      }
+      
+      setPredictionResult(result);
+      inputTensor.dispose();
+      prediction.dispose();
+      
+      toast.success('Text analyzed!');
+    } catch (error) {
+      console.error('Text prediction error:', error);
+      toast.error(`Text analysis failed: ${error.message}`);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
