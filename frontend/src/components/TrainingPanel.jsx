@@ -406,19 +406,33 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
       // Normalize to [0, 1]
       imageTensor = imageTensor.div(255.0);
       
-      // Check if model expects flattened input or 4D tensor
-      const firstNonInputLayer = nodes.find(n => 
-        n.data.layerType !== 'Input' && 
-        (n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D')
+      // Check if model has Conv2D layers - if not, we need to flatten
+      const hasConv2D = nodes.some(n => 
+        n.data.layerType === 'Conv2D' || 
+        n.data.layerType === 'MaxPool2D' ||
+        n.data.layerType === 'AvgPool2D'
       );
       
+      // Also check model's actual input shape
+      let modelExpects2D = false;
+      try {
+        const modelInputShape = modelRef.current.inputs[0].shape;
+        // If model input shape is [null, N] where N is a single number, it expects 2D (flattened)
+        modelExpects2D = modelInputShape.length === 2;
+      } catch (e) {
+        console.log('Could not determine model input shape, using layer detection');
+      }
+      
       let inputTensor;
-      if (firstNonInputLayer?.data?.layerType === 'Dense') {
-        // Flatten for Dense layer
-        inputTensor = imageTensor.reshape([1, targetHeight * targetWidth * channels]);
+      if (!hasConv2D || modelExpects2D) {
+        // Flatten for Dense/MLP models: [1, height * width * channels]
+        const flatSize = targetHeight * targetWidth * channels;
+        inputTensor = imageTensor.reshape([1, flatSize]);
+        console.log('Flattened input shape:', inputTensor.shape);
       } else {
-        // Keep 4D for Conv2D
+        // Keep 4D for Conv2D models: [1, height, width, channels]
         inputTensor = imageTensor.expandDims(0);
+        console.log('4D input shape:', inputTensor.shape);
       }
 
       const prediction = modelRef.current.predict(inputTensor);
