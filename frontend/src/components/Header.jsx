@@ -200,8 +200,8 @@ export const Header = ({
           className="glow-primary px-2 sm:px-4"
           data-testid="run-network-btn"
         >
-          <Play className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'} ${isRunning ? 'animate-pulse' : ''}`} />
-          {!isMobile && (isRunning ? 'Running...' : 'Run')}
+          <Code className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'} ${isRunning ? 'animate-pulse' : ''}`} />
+          {!isMobile && (isRunning ? 'Generating...' : 'View Code')}
         </Button>
 
         {/* Help Button - restart tour - Disabled */}
