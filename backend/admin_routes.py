@@ -5,7 +5,7 @@ import os
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # Simple admin password protection (set this in .env for production)
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "neuralflows2025")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "xeufa#496")
 
 def verify_admin(password: str = Query(..., description="Admin password")):
     """Simple password verification for admin routes"""
