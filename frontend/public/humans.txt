@@ -1,0 +1,18 @@
+/* TEAM */
+Name: NeuralFlows Team
+Site: https://neuralflows.ai
+Location: Global
+
+/* SITE */
+Last update: 2025/07/01
+Language: English
+Standards: HTML5, CSS3, JavaScript ES6+
+Components: React, FastAPI, MongoDB, TensorFlow.js
+IDE: Visual Studio Code
+
+/* THANKS */
+React Team - https://reactjs.org
+PyTorch Team - https://pytorch.org
+TensorFlow.js Team - https://tensorflow.org/js
+Tailwind CSS - https://tailwindcss.com
+Lucide Icons - https://lucide.dev
