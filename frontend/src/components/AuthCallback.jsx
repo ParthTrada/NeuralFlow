@@ -1,127 +1,122 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { processSessionId } = useAuth();
   const hasProcessed = useRef(false);
-  const [status, setStatus] = useState('Processing...');
-  const [errorDetails, setErrorDetails] = useState(null);
+  const [status, setStatus] = useState('processing'); // processing, success, error
+  const [message, setMessage] = useState('Signing you in...');
 
   useEffect(() => {
-    // Prevent double processing in StrictMode
+    // Prevent double processing
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
-    const processAuth = async () => {
-      // Get the full URL for debugging
-      const fullUrl = window.location.href;
-      const hash = window.location.hash;
-      const search = window.location.search;
-      
-      console.log('=== Auth Callback Debug ===');
-      console.log('Full URL:', fullUrl);
-      console.log('Hash:', hash);
-      console.log('Search:', search);
-      console.log('Location hash:', location.hash);
-      console.log('Location search:', location.search);
-      
-      // Try multiple ways to extract session_id
-      let sessionId = null;
-      
-      // Method 1: From hash fragment
-      const hashMatch = hash.match(/session_id=([^&]+)/);
-      if (hashMatch) {
-        sessionId = hashMatch[1];
-        console.log('Found session_id in hash');
-      }
-      
-      // Method 2: From search params
-      if (!sessionId) {
-        const searchMatch = search.match(/session_id=([^&]+)/);
-        if (searchMatch) {
-          sessionId = searchMatch[1];
-          console.log('Found session_id in search');
-        }
-      }
-      
-      // Method 3: From URL search params API
-      if (!sessionId) {
-        const urlParams = new URLSearchParams(search);
-        const paramSessionId = urlParams.get('session_id');
-        if (paramSessionId) {
-          sessionId = paramSessionId;
-          console.log('Found session_id via URLSearchParams');
-        }
-      }
-      
-      // Method 4: From hash as search params (some auth systems use #?session_id=)
-      if (!sessionId && hash.includes('?')) {
-        const hashSearch = hash.substring(hash.indexOf('?'));
-        const hashParams = new URLSearchParams(hashSearch);
-        const hashParamSessionId = hashParams.get('session_id');
-        if (hashParamSessionId) {
-          sessionId = hashParamSessionId;
-          console.log('Found session_id in hash search params');
-        }
-      }
-      
-      if (!sessionId) {
-        console.error('No session_id found in URL');
-        setStatus('No session found');
-        setErrorDetails(`URL: ${fullUrl}`);
-        toast.error('Authentication failed - no session found');
-        setTimeout(() => navigate('/builder', { replace: true }), 3000);
-        return;
-      }
-
-      console.log('Session ID found:', sessionId.substring(0, 20) + '...');
-      setStatus('Verifying session...');
-
+    const handleAuth = async () => {
       try {
-        const user = await processSessionId(sessionId);
-        console.log('Auth successful:', user?.email);
-        setStatus('Success! Redirecting...');
-        toast.success(`Welcome, ${user?.name || 'User'}!`);
+        // Get session_id from URL
+        const sessionId = extractSessionId();
         
-        // Get the stored return path or default to builder
+        if (!sessionId) {
+          throw new Error('No session ID found. Please try signing in again.');
+        }
+
+        setMessage('Verifying your session...');
+        
+        // Exchange session_id for user data
+        const user = await processSessionId(sessionId);
+        
+        setStatus('success');
+        setMessage(`Welcome, ${user?.name || 'User'}!`);
+        toast.success(`Signed in as ${user?.email}`);
+        
+        // Get return path and navigate
         const returnPath = sessionStorage.getItem('authReturnPath') || '/builder';
         sessionStorage.removeItem('authReturnPath');
         
-        // Clear the URL hash/search to prevent re-processing
-        window.history.replaceState(null, '', returnPath);
+        // Clean URL and redirect
+        setTimeout(() => {
+          window.history.replaceState(null, '', returnPath);
+          navigate(returnPath, { replace: true });
+        }, 1000);
         
-        // Navigate back to where user was
-        setTimeout(() => navigate(returnPath, { replace: true }), 500);
       } catch (error) {
-        console.error('Auth callback error:', error);
-        const errorMsg = error.response?.data?.detail || error.message || 'Unknown error';
-        console.error('Error details:', errorMsg);
-        setStatus('Authentication failed');
-        setErrorDetails(errorMsg);
-        toast.error('Sign in failed: ' + errorMsg);
-        setTimeout(() => navigate('/builder', { replace: true }), 3000);
+        console.error('Auth error:', error);
+        setStatus('error');
+        
+        const errorMessage = error.response?.data?.detail || error.message || 'Authentication failed';
+        setMessage(errorMessage);
+        toast.error(errorMessage);
+        
+        // Redirect to builder after delay
+        setTimeout(() => {
+          navigate('/builder', { replace: true });
+        }, 3000);
       }
     };
 
-    processAuth();
-  }, [location.hash, location.search, navigate, processSessionId]);
+    handleAuth();
+  }, [navigate, processSessionId]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4 p-6 max-w-md">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        <p className="text-muted-foreground font-medium">{status}</p>
-        {errorDetails && (
-          <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg break-all">
-            {errorDetails}
+      <div className="text-center space-y-4 p-8 max-w-sm">
+        {status === 'processing' && (
+          <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+        )}
+        {status === 'success' && (
+          <CheckCircle className="w-12 h-12 mx-auto text-green-500" />
+        )}
+        {status === 'error' && (
+          <XCircle className="w-12 h-12 mx-auto text-red-500" />
+        )}
+        
+        <p className={`text-lg font-medium ${
+          status === 'error' ? 'text-red-600' : 
+          status === 'success' ? 'text-green-600' : 
+          'text-muted-foreground'
+        }`}>
+          {message}
+        </p>
+        
+        {status === 'error' && (
+          <p className="text-sm text-muted-foreground">
+            Redirecting to builder...
           </p>
         )}
       </div>
     </div>
   );
 };
+
+// Helper function to extract session_id from URL
+function extractSessionId() {
+  const url = window.location.href;
+  const hash = window.location.hash;
+  const search = window.location.search;
+  
+  // Try hash fragment first (most common for OAuth)
+  if (hash) {
+    const hashMatch = hash.match(/session_id=([^&]+)/);
+    if (hashMatch) return decodeURIComponent(hashMatch[1]);
+  }
+  
+  // Try query params
+  if (search) {
+    const params = new URLSearchParams(search);
+    const sessionId = params.get('session_id');
+    if (sessionId) return sessionId;
+  }
+  
+  // Try full URL regex as fallback
+  const urlMatch = url.match(/[#?&]session_id=([^&]+)/);
+  if (urlMatch) return decodeURIComponent(urlMatch[1]);
+  
+  return null;
+}
+
+export default AuthCallback;
