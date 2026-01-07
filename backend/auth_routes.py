@@ -86,28 +86,41 @@ def create_auth_routes(db):
     async def create_session(request: SessionRequest, response: Response):
         """Exchange session_id for session_token"""
         import logging
+        logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger(__name__)
         
         try:
             # Call Emergent auth API
-            logger.info(f"Processing session_id: {request.session_id[:20]}...")
-            async with httpx.AsyncClient() as client:
+            session_preview = request.session_id[:30] if len(request.session_id) > 30 else request.session_id
+            logger.info(f"Processing session_id: {session_preview}...")
+            print(f"[AUTH] Processing session_id: {session_preview}...")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 auth_response = await client.get(
                     "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
                     headers={"X-Session-ID": request.session_id}
                 )
                 
                 logger.info(f"Auth API response status: {auth_response.status_code}")
+                print(f"[AUTH] Emergent API response: {auth_response.status_code}")
                 
                 if auth_response.status_code != 200:
-                    logger.error(f"Auth API error: {auth_response.text}")
-                    raise HTTPException(status_code=401, detail=f"Invalid session_id: {auth_response.status_code}")
+                    error_text = auth_response.text[:200] if auth_response.text else "No error details"
+                    logger.error(f"Auth API error: {error_text}")
+                    print(f"[AUTH] Error from Emergent: {error_text}")
+                    raise HTTPException(
+                        status_code=401, 
+                        detail=f"Session verification failed (code: {auth_response.status_code}). Please try signing in again."
+                    )
                 
                 auth_data = auth_response.json()
                 logger.info(f"Auth successful for email: {auth_data.get('email', 'unknown')}")
+                print(f"[AUTH] Success for: {auth_data.get('email', 'unknown')}")
+                
         except httpx.RequestError as e:
             logger.error(f"Auth service request error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Auth service unavailable")
+            print(f"[AUTH] Request error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Auth service unavailable: {str(e)}")
         
         # Extract user data
         email = auth_data.get("email")
