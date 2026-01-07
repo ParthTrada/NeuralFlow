@@ -209,7 +209,7 @@ export const SavedModelsPanel = ({
   };
 
   const copyShareLink = (shareToken) => {
-    const link = `${window.location.origin}?shared=${shareToken}`;
+    const link = `${window.location.origin}/builder?shared=${shareToken}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
