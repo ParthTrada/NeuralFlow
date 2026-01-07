@@ -51,7 +51,19 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+// Smart API URL detection for production/development
+const getApiUrl = () => {
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  if (envUrl && !envUrl.includes('preview.emergentagent.com') && !envUrl.includes('csb.app')) {
+    return envUrl + '/api';
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin + '/api';
+  }
+  return '/api';
+};
+
+const API_URL = getApiUrl();
 
 export const SavedModelsPanel = ({ 
   isOpen, 
