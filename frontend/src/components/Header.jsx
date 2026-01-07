@@ -183,14 +183,14 @@ export const Header = ({
         )}
 
         <Button
-          onClick={onRun}
-          disabled={isRunning || nodeCount === 0}
+          onClick={onShowCode}
+          disabled={nodeCount === 0}
           size={isMobile ? "sm" : "default"}
           className="glow-primary px-2 sm:px-4"
-          data-testid="run-network-btn"
+          data-testid="view-code-btn"
         >
-          <Code className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'} ${isRunning ? 'animate-pulse' : ''}`} />
-          {!isMobile && (isRunning ? 'Generating...' : 'View Code')}
+          <Code className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'}`} />
+          {!isMobile && 'View Code'}
         </Button>
 
         {/* Help Button - restart tour - Disabled */}
