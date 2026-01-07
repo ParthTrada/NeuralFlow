@@ -280,6 +280,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     setTargetColumn('');
     setPredictionInput('');
     setPredictionResult(null);
+    setTestImage(null);
+    setTestImagePreview('');
+    setTextInput('');
   };
 
   const handlePredict = async () => {
