@@ -486,7 +486,7 @@ export default function Landing() {
           <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-4 sm:mb-6 ${
             isDark ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
           }`}>
-            Live Preview
+            Preview
           </span>
           <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
             See It In Action
