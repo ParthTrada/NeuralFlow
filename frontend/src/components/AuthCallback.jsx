@@ -20,6 +20,7 @@ export const AuthCallback = () => {
       try {
         // Get session_id from URL
         const sessionId = extractSessionId();
+        console.log('Auth callback - Session ID extracted:', sessionId ? 'yes' : 'no');
         
         if (!sessionId) {
           throw new Error('No session ID found. Please try signing in again.');
@@ -45,16 +46,33 @@ export const AuthCallback = () => {
         }, 1000);
         
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('Auth callback error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          response: error.response?.data
+        });
+        
         setStatus('error');
         
-        const errorMessage = error.response?.data?.detail || error.message || 'Authentication failed';
+        // Provide helpful error messages
+        let errorMessage = 'Authentication failed';
+        if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.response?.status === 401) {
+          errorMessage = 'Session expired. Please try signing in again.';
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
         setMessage(errorMessage);
         toast.error(errorMessage);
         
-        // Redirect to builder after delay
+        // Redirect to home with option to retry
         setTimeout(() => {
-          navigate('/builder', { replace: true });
+          navigate('/', { replace: true });
         }, 3000);
       }
     };
