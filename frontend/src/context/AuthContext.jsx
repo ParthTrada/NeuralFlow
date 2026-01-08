@@ -102,14 +102,21 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Process session ID from OAuth callback
-  const processSessionId = useCallback(async (sessionId) => {
+  // Process session ID from OAuth callback with retry logic
+  const processSessionId = useCallback(async (sessionId, retryCount = 0) => {
+    const maxRetries = 2;
+    
     try {
+      console.log('Processing session ID, attempt:', retryCount + 1);
+      
       const response = await axios.post(`${API_URL}/auth/session`, {
         session_id: sessionId
       }, {
         withCredentials: true,
-        timeout: 30000 // 30 second timeout
+        timeout: 30000, // 30 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       const userData = response.data;
@@ -123,7 +130,15 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return userData;
     } catch (error) {
-      console.error('Session processing error:', error);
+      console.error('Session processing error:', error.message, error.code);
+      
+      // Retry on network errors (common on mobile)
+      if (retryCount < maxRetries && (error.code === 'ERR_NETWORK' || error.message.includes('Network Error'))) {
+        console.log('Network error, retrying in 1 second...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return processSessionId(sessionId, retryCount + 1);
+      }
+      
       throw error;
     }
   }, []);
