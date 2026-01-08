@@ -17,6 +17,7 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from '../context/AuthContext';
+// import { useProductTour } from './ProductTour'; // Commented out - Product Tour disabled
 
 export const Header = ({ 
   isDarkMode, 
@@ -33,6 +34,7 @@ export const Header = ({
   showLayerPalette
 }) => {
   const { user, login, logout, isAuthenticated } = useAuth();
+  // const { restartTour } = useProductTour(); // Commented out - Product Tour disabled
 
   return (
     <header 
@@ -129,6 +131,7 @@ export const Header = ({
                   onClick={onOpenModels}
                   className="w-8 h-8"
                   data-testid="my-models-btn"
+                  data-tour="save-btn"
                 >
                   <FolderOpen className="w-4 h-4" />
                 </Button>
@@ -143,19 +146,10 @@ export const Header = ({
         {/* Desktop action buttons */}
         <Button
           variant="outline"
-          onClick={onShowCode}
-          className="hidden lg:flex"
-          data-testid="show-code-btn"
-        >
-          <Code className="w-4 h-4 mr-2" />
-          View Code
-        </Button>
-
-        <Button
-          variant="outline"
           onClick={onOpenTraining}
           className="hidden lg:flex"
           data-testid="train-network-btn"
+          data-tour="train-btn"
         >
           <GraduationCap className="w-4 h-4 mr-2" />
           Train
@@ -189,15 +183,37 @@ export const Header = ({
         )}
 
         <Button
-          onClick={onRun}
-          disabled={isRunning || nodeCount === 0}
+          onClick={onShowCode}
+          disabled={nodeCount === 0}
           size={isMobile ? "sm" : "default"}
           className="glow-primary px-2 sm:px-4"
-          data-testid="run-network-btn"
+          data-testid="view-code-btn"
         >
-          <Play className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'} ${isRunning ? 'animate-pulse' : ''}`} />
-          {!isMobile && (isRunning ? 'Running...' : 'Run')}
+          <Code className={`w-3 h-3 sm:w-4 sm:h-4 ${!isMobile && 'mr-2'}`} />
+          {!isMobile && 'View Code'}
         </Button>
+
+        {/* Help Button - restart tour - Disabled */}
+        {/* {!isMobile && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={restartTour}
+                  className="w-8 h-8"
+                  data-testid="help-btn"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Show Tour</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )} */}
 
         {/* User Menu */}
         {isAuthenticated ? (

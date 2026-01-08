@@ -10,10 +10,29 @@ import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
+// import { ProductTour } from '../components/ProductTour'; // Commented out - Product Tour disabled
 import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+// Smart API URL detection for production/development
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Production domains - use same origin
+    if (hostname === 'neuralflows.ai' || hostname === 'www.neuralflows.ai') {
+      return window.location.origin + '/api';
+    }
+  }
+  // Development or preview - use env variable
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  if (envUrl) {
+    return envUrl + '/api';
+  }
+  // Fallback to same origin
+  return (typeof window !== 'undefined' ? window.location.origin : '') + '/api';
+};
+
+const API_URL = getApiUrl();
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
@@ -32,6 +51,8 @@ export default function Builder() {
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
+  const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
+  const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
   
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
@@ -66,9 +87,9 @@ export default function Builder() {
       const model = response.data;
       setNodes(model.nodes || []);
       setEdges(model.edges || []);
-      if (model.trained_weights) {
-        setTrainedWeights(model.trained_weights);
-      }
+      setTrainedWeights(model.trained_weights || null);
+      setSavedTrainingData(model.training_data || null);
+      setCurrentModelId(model.model_id || `shared_${shareToken}`);
       toast.success(`Loaded shared model: ${model.name}`);
       setSearchParams({});
     } catch (error) {
@@ -122,16 +143,38 @@ export default function Builder() {
     toast.success(`Added ${templateName || 'template'} to canvas!`);
   }, [nodes, setNodes, setEdges]);
 
-  const handleLoadModel = useCallback((savedNodes, savedEdges, weights) => {
+  const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId, trainingData) => {
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
     setSelectedNode(null);
-    if (weights) {
-      setTrainedWeights(weights);
-    }
+    setTrainedWeights(weights || null);
+    setSavedTrainingData(trainingData || null);
+    // Set a unique model ID to trigger TrainingPanel reset/restore
+    setCurrentModelId(modelId || `model_${Date.now()}`);
     const maxId = Math.max(0, ...(savedNodes || []).map(n => parseInt(n.id.replace('node_', '')) || 0));
     nodeId = maxId + 1;
   }, [setNodes, setEdges]);
+
+  // Handle saving training data
+  const handleSaveTrainingData = useCallback(async (trainingData) => {
+    if (!currentModelId || !isAuthenticated) {
+      toast.error('Please save your model first');
+      return;
+    }
+    
+    try {
+      await axios.patch(`${API_URL}/auth/models/${currentModelId}/training`, {
+        training_data: trainingData
+      }, {
+        withCredentials: true
+      });
+      setSavedTrainingData(trainingData);
+      toast.success('Training results saved!');
+    } catch (error) {
+      console.error('Failed to save training data:', error);
+      toast.error('Failed to save training results');
+    }
+  }, [currentModelId, isAuthenticated]);
 
   const handleToggleTheme = useCallback(() => {
     setIsDarkMode(prev => {
@@ -412,6 +455,10 @@ export default function Builder() {
         isOpen={isTrainingPanelOpen}
         onClose={() => setIsTrainingPanelOpen(false)}
         onWeightsTrained={setTrainedWeights}
+        modelId={currentModelId}
+        savedWeights={trainedWeights}
+        savedTrainingData={savedTrainingData}
+        onSaveTrainingData={handleSaveTrainingData}
       />
 
       <SavedModelsPanel
@@ -422,6 +469,9 @@ export default function Builder() {
         currentEdges={edges}
         trainedWeights={trainedWeights}
       />
+
+      {/* Product Tour for first-time users - Disabled due to inconsistencies */}
+      {/* <ProductTour isDark={isDarkMode} /> */}
     </div>
   );
 }

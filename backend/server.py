@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional
 import uuid
 from datetime import datetime, timezone
 from auth_routes import create_auth_routes
+from admin_routes import create_admin_routes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -22,12 +23,26 @@ db = client[os.environ['DB_NAME']]
 # Create the main app
 app = FastAPI(title="NeuralFlow Architect API")
 
+# Add CORS middleware FIRST (before any routes)
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for auth
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
 # Include auth routes
 auth_router = create_auth_routes(db)
 api_router.include_router(auth_router)
+
+# Include admin routes
+admin_router = create_admin_routes(db)
+api_router.include_router(admin_router)
 
 # Models
 class LayerConfig(BaseModel):
@@ -150,14 +165,6 @@ async def generate_code(request: CodeGenerationRequest):
 
 # Include the router in the main app
 app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Configure logging
 logging.basicConfig(

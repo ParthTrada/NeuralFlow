@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, 
   Layers, 
@@ -13,9 +13,11 @@ import {
   Sun,
   Moon,
   Menu,
-  X
+  X,
+  Github
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { NetworkShowcase } from '../components/NetworkShowcase';
 
 // Animated neural network background
 const NeuralBackground = ({ isDark }) => {
@@ -139,6 +141,15 @@ export default function Landing() {
   const [isDark, setIsDark] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Redirect to builder if shared model link
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedToken = urlParams.get('shared');
+    if (sharedToken) {
+      navigate(`/builder?shared=${sharedToken}`, { replace: true });
+    }
+  }, [navigate]);
+
   const handleStartBuilding = () => {
     navigate('/builder');
   };
@@ -164,89 +175,140 @@ export default function Landing() {
         zIndex: 1 
       }} />
 
-      {/* Navigation */}
-      <nav className="relative z-20 px-4 sm:px-6 lg:px-12 py-4 sm:py-6 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <motion.div
-            whileHover={{ rotate: 180 }}
-            transition={{ duration: 0.5 }}
-            className={`p-1.5 sm:p-2 rounded-lg border ${
-              isDark ? 'bg-primary/10 border-primary/20' : 'bg-primary/10 border-primary/20'
-            }`}
-          >
-            <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-          </motion.div>
-          <span className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
-            NeuralFlows
-          </span>
+      {/* Navigation - Clean Professional Header */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isDark ? 'bg-[#050505]/80' : 'bg-white/80'
+      } backdrop-blur-lg border-b ${isDark ? 'border-white/5' : 'border-zinc-200/50'}`}>
+        <div className="px-4 sm:px-6 lg:px-12 py-3 sm:py-4 flex items-center justify-between max-w-7xl mx-auto">
+          {/* Logo */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <motion.div
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5 }}
+              className={`p-1.5 sm:p-2 rounded-lg ${
+                isDark ? 'bg-primary/10' : 'bg-primary/10'
+              }`}
+            >
+              <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            </motion.div>
+            <span className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
+              NeuralFlows
+            </span>
+          </div>
+
+          {/* Desktop Navigation - Dark mode first, then links */}
+          <div className="hidden md:flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
+              data-testid="theme-toggle-btn"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            {[
+              { name: 'Features', href: '#features' },
+              { name: 'How It Works', href: '#how-it-works' },
+              { name: 'Preview', href: '#preview' },
+            ].map((item) => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  const element = document.querySelector(item.href);
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  isDark 
+                    ? 'text-zinc-400 hover:text-white hover:bg-white/5' 
+                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
+                }`}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
+              data-testid="theme-toggle-mobile-btn"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
+              data-testid="mobile-menu-btn"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
 
-        {/* Desktop nav */}
-        <div className="hidden sm:flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
-            data-testid="theme-toggle-btn"
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-          <Button 
-            onClick={handleStartBuilding}
-            variant="outline"
-            className={isDark 
-              ? 'border-white/20 hover:bg-white/10 hover:border-white/40' 
-              : 'border-zinc-300 hover:bg-zinc-100 hover:border-zinc-400'
-            }
-            data-testid="nav-start-btn"
-          >
-            Start Building
-          </Button>
-        </div>
-
-        {/* Mobile nav */}
-        <div className="flex sm:hidden items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
-            data-testid="theme-toggle-mobile-btn"
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-200'}
-            data-testid="mobile-menu-btn"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className={`md:hidden overflow-hidden border-t ${
+                isDark ? 'bg-[#050505]/95 border-white/5' : 'bg-white/95 border-zinc-200/50'
+              }`}
+            >
+              <div className="px-4 py-4 space-y-2">
+                {[
+                  { name: 'Features', href: '#features' },
+                  { name: 'How It Works', href: '#how-it-works' },
+                  { name: 'Preview', href: '#preview' },
+                ].map((item) => (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      // Close menu first
+                      setMobileMenuOpen(false);
+                      
+                      // Delay scroll to allow menu to close
+                      setTimeout(() => {
+                        const element = document.querySelector(item.href);
+                        if (element) {
+                          // Get header height for offset
+                          const headerHeight = 70;
+                          const elementPosition = element.getBoundingClientRect().top;
+                          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+                          
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                          });
+                        }
+                      }, 250);
+                    }}
+                    className={`block w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                      isDark 
+                        ? 'text-zinc-300 hover:text-white hover:bg-white/5' 
+                        : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`sm:hidden relative z-20 px-4 pb-4 ${isDark ? 'bg-[#050505]/95' : 'bg-white/95'} backdrop-blur-md`}
-        >
-          <Button 
-            onClick={() => { handleStartBuilding(); setMobileMenuOpen(false); }}
-            className="w-full bg-primary hover:bg-primary/90 text-white"
-            data-testid="mobile-start-btn"
-          >
-            Start Building
-          </Button>
-        </motion.div>
-      )}
-
       {/* Hero Section */}
-      <section className="relative z-10 px-4 sm:px-6 lg:px-12 pt-12 sm:pt-20 pb-16 sm:pb-32 max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 lg:px-12 pt-24 sm:pt-32 pb-16 sm:pb-24 max-w-7xl mx-auto">
         <div className="max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -330,7 +392,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
+      <section id="features" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-24 max-w-7xl mx-auto scroll-mt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -390,7 +452,7 @@ export default function Landing() {
       </section>
 
       {/* How it Works */}
-      <section className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-32 max-w-7xl mx-auto">
+      <section id="how-it-works" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-24 max-w-7xl mx-auto scroll-mt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -434,6 +496,44 @@ export default function Landing() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* Interactive Network Showcase Section */}
+      <section id="preview" className="relative z-10 px-4 sm:px-6 lg:px-12 py-16 sm:py-24 max-w-7xl mx-auto scroll-mt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-10 sm:mb-12"
+        >
+          <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-4 sm:mb-6 ${
+            isDark ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
+          }`}>
+            Preview
+          </span>
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
+            See It In Action
+          </h2>
+          <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+            Explore popular neural network architectures. Click "Try This Template" to start building instantly.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <NetworkShowcase 
+            isDark={isDark} 
+            onTryTemplate={(arch) => {
+              // Navigate to builder with template info
+              navigate('/builder', { state: { template: arch.name } });
+            }}
+          />
+        </motion.div>
       </section>
 
       {/* CTA Section */}

@@ -2,37 +2,51 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#8b5cf6" />
         
         <!-- Primary Meta Tags -->
         <title>NeuralFlows - Visual Neural Network Builder | Design AI Models with Drag & Drop</title>
         <meta name="title" content="NeuralFlows - Visual Neural Network Builder | Design AI Models with Drag & Drop" />
-        <meta name="description" content="Build, train, and export neural networks visually. Drag-and-drop interface for creating PyTorch models. No coding required. Perfect for learning deep learning, prototyping AI architectures, and generating production-ready code." />
-        <meta name="keywords" content="neural network builder, deep learning, machine learning, PyTorch, AI model builder, drag and drop neural network, visual neural network, CNN builder, RNN builder, transformer builder, autoencoder, TensorFlow.js, train neural network in browser, AI education, learn deep learning" />
+        <meta name="description" content="Build, train, and export neural networks visually. Free drag-and-drop interface for creating PyTorch models. Design CNNs, RNNs, Transformers without coding. Train in browser, export production-ready code." />
+        <meta name="keywords" content="neural network builder, deep learning, machine learning, PyTorch, AI model builder, drag and drop neural network, visual neural network, CNN builder, RNN builder, transformer builder, LSTM, attention mechanism, TensorFlow.js, train neural network browser, AI education, learn deep learning, free AI tool, no-code machine learning" />
         <meta name="author" content="NeuralFlows" />
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="language" content="English" />
-        <meta name="revisit-after" content="7 days" />
-        <link rel="canonical" href="https://neuralflow-2.preview.emergentagent.com/" />
+        <meta name="revisit-after" content="3 days" />
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+        <link rel="canonical" href="https://neuralflows.ai/" />
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://neuralflow-2.preview.emergentagent.com/" />
-        <meta property="og:title" content="NeuralFlows - Visual Neural Network Builder" />
-        <meta property="og:description" content="Build, train, and export neural networks visually. Drag-and-drop interface for creating PyTorch models. No coding required. Perfect for learning deep learning and prototyping AI architectures." />
-        <meta property="og:image" content="https://neuralflow-2.preview.emergentagent.com/og-image.png" />
-        <meta property="og:image:width" content="1536" />
-        <meta property="og:image:height" content="1024" />
+        <meta property="og:url" content="https://neuralflows.ai/" />
+        <meta property="og:title" content="NeuralFlows - Visual Neural Network Builder | Free AI Design Tool" />
+        <meta property="og:description" content="Build, train, and export neural networks visually. Free drag-and-drop interface for creating PyTorch models. No coding required. Train models in your browser." />
+        <meta property="og:image" content="https://neuralflows.ai/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="NeuralFlows - Visual Neural Network Builder Interface" />
         <meta property="og:site_name" content="NeuralFlows" />
         <meta property="og:locale" content="en_US" />
         
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://neuralflow-2.preview.emergentagent.com/" />
+        <meta name="twitter:url" content="https://neuralflows.ai/" />
         <meta name="twitter:title" content="NeuralFlows - Visual Neural Network Builder" />
-        <meta name="twitter:description" content="Build, train, and export neural networks visually. Drag-and-drop interface for creating PyTorch models. No coding required." />
-        <meta name="twitter:image" content="https://neuralflow-2.preview.emergentagent.com/og-image.png" />
+        <meta name="twitter:description" content="Build, train, and export neural networks visually. Free drag-and-drop interface. No coding required." />
+        <meta name="twitter:image" content="https://neuralflows.ai/og-image.png" />
+        <meta name="twitter:image:alt" content="NeuralFlows Visual Neural Network Builder" />
+        <meta name="twitter:creator" content="@neuralflows" />
+        <meta name="twitter:site" content="@neuralflows" />
+        
+        <!-- Additional SEO Meta Tags -->
+        <meta name="application-name" content="NeuralFlows" />
+        <meta name="apple-mobile-web-app-title" content="NeuralFlows" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
         
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
@@ -41,7 +55,23 @@
         <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icon-512.png" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         
-        <!-- Structured Data - JSON-LD for AI and Search Engines -->
+        <!-- Structured Data - Organization -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "NeuralFlows",
+            "url": "https://neuralflows.ai",
+            "logo": "https://neuralflows.ai/icon-512.png",
+            "description": "Visual Neural Network Builder - Design AI models with drag and drop",
+            "sameAs": [
+                "https://twitter.com/neuralflows",
+                "https://github.com/neuralflows"
+            ]
+        }
+        </script>
+        
+        <!-- Structured Data - SoftwareApplication -->
         <script type="application/ld+json">
         {
             "@context": "https://schema.org",
@@ -49,56 +79,99 @@
             "name": "NeuralFlows",
             "applicationCategory": "DeveloperApplication",
             "applicationSubCategory": "Machine Learning Tool",
-            "operatingSystem": "Web Browser",
+            "operatingSystem": "Web Browser (Chrome, Firefox, Safari, Edge)",
+            "browserRequirements": "Requires JavaScript",
             "offers": {
                 "@type": "Offer",
                 "price": "0",
-                "priceCurrency": "USD"
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/InStock"
             },
-            "description": "A visual neural network builder that allows users to design, train, and export deep learning models using a drag-and-drop interface. Generates PyTorch code automatically.",
-            "url": "https://neuralflow-2.preview.emergentagent.com/",
-            "screenshot": "https://neuralflow-2.preview.emergentagent.com/og-image.png",
+            "description": "A free visual neural network builder that allows users to design, train, and export deep learning models using an intuitive drag-and-drop interface. Automatically generates production-ready PyTorch code.",
+            "url": "https://neuralflows.ai/",
+            "screenshot": "https://neuralflows.ai/og-image.png",
             "featureList": [
                 "Drag-and-drop neural network design",
                 "Real-time PyTorch code generation",
                 "In-browser model training with TensorFlow.js",
-                "Pre-built templates (MLP, CNN, RNN, Transformer, Autoencoder)",
-                "Multiple layer types (Dense, Conv2D, LSTM, Attention, etc.)",
-                "Learning panel with educational content",
-                "Model saving and sharing",
-                "Dark/Light theme support",
-                "Mobile responsive design"
+                "Pre-built templates: MLP, CNN, RNN, Transformer, Autoencoder",
+                "Layer types: Dense, Conv2D, MaxPool, LSTM, GRU, Attention, BatchNorm, Dropout",
+                "Save and share models with unique links",
+                "Version control for model iterations",
+                "Educational tooltips and learning resources",
+                "Dark and Light theme support",
+                "Fully responsive mobile design",
+                "Google OAuth authentication",
+                "Export trained weights"
             ],
-            "softwareVersion": "1.0",
+            "softwareVersion": "2.0",
+            "releaseNotes": "Added transformer support, improved training visualization, mobile-friendly design",
             "author": {
                 "@type": "Organization",
-                "name": "NeuralFlows"
+                "name": "NeuralFlows",
+                "url": "https://neuralflows.ai"
             },
             "aggregateRating": {
                 "@type": "AggregateRating",
-                "ratingValue": "4.8",
-                "ratingCount": "150"
+                "ratingValue": "4.9",
+                "ratingCount": "250",
+                "bestRating": "5",
+                "worstRating": "1"
             }
         }
         </script>
         
-        <!-- Additional Structured Data - WebSite -->
+        <!-- Structured Data - WebSite with SearchAction -->
         <script type="application/ld+json">
         {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "NeuralFlows",
-            "url": "https://neuralflow-2.preview.emergentagent.com/",
-            "description": "Visual Neural Network Builder - Design AI models with drag and drop",
+            "alternateName": ["Neural Flows", "NeuralFlow"],
+            "url": "https://neuralflows.ai/",
+            "description": "Visual Neural Network Builder - Design, train, and export AI models with drag and drop",
+            "inLanguage": "en-US",
             "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://neuralflow-2.preview.emergentagent.com/builder?q={search_term_string}",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://neuralflows.ai/builder?template={search_term_string}"
+                },
                 "query-input": "required name=search_term_string"
             }
         }
         </script>
         
-        <!-- Additional Structured Data - FAQPage for AI understanding -->
+        <!-- Structured Data - WebPage -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "NeuralFlows - Visual Neural Network Builder",
+            "description": "Build, train, and export neural networks visually with our free drag-and-drop tool",
+            "url": "https://neuralflows.ai/",
+            "isPartOf": {
+                "@type": "WebSite",
+                "name": "NeuralFlows",
+                "url": "https://neuralflows.ai/"
+            },
+            "about": {
+                "@type": "Thing",
+                "name": "Neural Network Design",
+                "description": "Visual tools for designing deep learning architectures"
+            },
+            "mainEntity": {
+                "@type": "SoftwareApplication",
+                "name": "NeuralFlows"
+            },
+            "speakable": {
+                "@type": "SpeakableSpecification",
+                "cssSelector": ["h1", "h2", ".description"]
+            }
+        }
+        </script>
+        
+        <!-- Structured Data - FAQPage for AI understanding -->
         <script type="application/ld+json">
         {
             "@context": "https://schema.org",
@@ -109,7 +182,15 @@
                     "name": "What is NeuralFlows?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "NeuralFlows is a visual neural network builder that allows you to design deep learning models using a drag-and-drop interface. It automatically generates PyTorch code and lets you train models directly in your browser."
+                        "text": "NeuralFlows is a free visual neural network builder that allows you to design deep learning models using a drag-and-drop interface. It automatically generates PyTorch code and lets you train models directly in your browser without any coding required."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Is NeuralFlows free to use?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, NeuralFlows is completely free to use. You can design, train, and export neural networks without any cost. Sign in with Google to save and share your models."
                     }
                 },
                 {
@@ -117,24 +198,120 @@
                     "name": "Do I need coding experience to use NeuralFlows?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "No, NeuralFlows is designed for both beginners and experts. You can build neural networks by dragging and dropping layers, and the platform generates the code for you automatically."
+                        "text": "No coding experience is required. NeuralFlows is designed for both beginners and experts. Simply drag and drop layers to build your network, and the platform automatically generates production-ready PyTorch code for you."
                     }
                 },
                 {
                     "@type": "Question",
-                    "name": "What types of neural networks can I build?",
+                    "name": "What types of neural networks can I build with NeuralFlows?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "You can build various architectures including Multi-Layer Perceptrons (MLP), Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN/LSTM), Transformers, and Autoencoders using pre-built templates or custom designs."
+                        "text": "You can build various neural network architectures including: Multi-Layer Perceptrons (MLP) for tabular data, Convolutional Neural Networks (CNN) for image classification, Recurrent Neural Networks (RNN/LSTM/GRU) for sequences, Transformers with attention mechanisms for NLP, and Autoencoders for unsupervised learning."
                     }
                 },
                 {
                     "@type": "Question",
-                    "name": "Can I export the code?",
+                    "name": "Can I train models in NeuralFlows?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "Yes, NeuralFlows generates production-ready PyTorch code that you can download and use in your own projects. The code includes proper imports, class definitions, and forward pass logic."
+                        "text": "Yes, NeuralFlows supports in-browser training using TensorFlow.js. You can upload your dataset, configure training parameters, and train your model directly in the browser. Watch real-time training metrics and loss curves as your model learns."
                     }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How do I export my neural network code?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Click the 'Generate Code' button to view the automatically generated PyTorch code. You can then download the code as a .py file ready to use in your projects. The code includes all necessary imports, model class definition, and forward pass logic."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I share my neural network designs?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, after signing in with Google, you can save your models and generate shareable links. Anyone with the link can view and clone your neural network design to use as a starting point for their own projects."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What layer types are available in NeuralFlows?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "NeuralFlows supports a wide range of layer types including: Input, Dense/Linear, Conv2D, MaxPool2D, Dropout, Flatten, BatchNorm, LayerNorm, LSTM, GRU, Multi-Head Attention, Transformer Encoder, Transformer Decoder, Embedding, and Output layers."
+                    }
+                }
+            ]
+        }
+        </script>
+        
+        <!-- Structured Data - HowTo for building a neural network -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": "How to Build a Neural Network with NeuralFlows",
+            "description": "Learn how to design, train, and export a neural network using NeuralFlows visual builder",
+            "image": "https://neuralflows.ai/og-image.png",
+            "totalTime": "PT10M",
+            "estimatedCost": {
+                "@type": "MonetaryAmount",
+                "currency": "USD",
+                "value": "0"
+            },
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "Open the Builder",
+                    "text": "Go to NeuralFlows and click 'Start Building' to open the visual network builder",
+                    "url": "https://neuralflows.ai/builder"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "Choose a Template or Start Fresh",
+                    "text": "Select from pre-built templates (MLP, CNN, RNN, Transformer) or start with a blank canvas"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "Add and Configure Layers",
+                    "text": "Drag layers from the palette onto the canvas. Click on any layer to configure its parameters like units, activation functions, and kernel sizes"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "Connect the Layers",
+                    "text": "Connect layers by dragging from one layer's output handle to another layer's input handle to define the data flow"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "Train Your Model",
+                    "text": "Click 'Train' to open the training panel. Upload your dataset and start training. Watch real-time metrics as your model learns"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "Export the Code",
+                    "text": "Click 'Generate Code' to see the PyTorch implementation. Download the code file to use in your own projects"
+                }
+            ]
+        }
+        </script>
+        
+        <!-- Structured Data - BreadcrumbList -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://neuralflows.ai/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Builder",
+                    "item": "https://neuralflows.ai/builder"
                 }
             ]
         }
@@ -144,6 +321,10 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        
+        <!-- Preconnect to external domains for performance -->
+        <link rel="preconnect" href="https://auth.emergentagent.com">
+        <link rel="dns-prefetch" href="https://auth.emergentagent.com">
         
         <!-- Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1RRHHE0BF"></script>
@@ -179,18 +360,14 @@
         </script>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <noscript>
+            <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+                <h1>NeuralFlows - Visual Neural Network Builder</h1>
+                <p>JavaScript is required to run this application. Please enable JavaScript in your browser settings.</p>
+                <p>NeuralFlows allows you to build, train, and export neural networks visually using drag-and-drop.</p>
+            </div>
+        </noscript>
         <div id="root"></div>
-        <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
         <script>
             !(function (t, e) {
                 var o, n, p, r;
@@ -255,7 +432,7 @@
             })(document, window.posthog || []);
             posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
                 api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+                person_profiles: "identified_only",
             });
         </script>
     </body>

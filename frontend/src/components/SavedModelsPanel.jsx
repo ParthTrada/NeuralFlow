@@ -51,7 +51,25 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+// Smart API URL detection for production/development
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Production domains - use same origin
+    if (hostname === 'neuralflows.ai' || hostname === 'www.neuralflows.ai') {
+      return window.location.origin + '/api';
+    }
+  }
+  // Development or preview - use env variable
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  if (envUrl) {
+    return envUrl + '/api';
+  }
+  // Fallback to same origin
+  return (typeof window !== 'undefined' ? window.location.origin : '') + '/api';
+};
+
+const API_URL = getApiUrl();
 
 export const SavedModelsPanel = ({ 
   isOpen, 
@@ -150,7 +168,7 @@ export const SavedModelsPanel = ({
   };
 
   const handleLoad = (model) => {
-    onLoadModel(model.nodes, model.edges, model.trained_weights);
+    onLoadModel(model.nodes, model.edges, model.trained_weights, model.model_id, model.training_data);
     onClose();
     toast.success(`Loaded "${model.name}" v${model.version || 1}`);
   };
@@ -209,7 +227,7 @@ export const SavedModelsPanel = ({
   };
 
   const copyShareLink = (shareToken) => {
-    const link = `${window.location.origin}?shared=${shareToken}`;
+    const link = `${window.location.origin}/builder?shared=${shareToken}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -522,7 +540,7 @@ export const SavedModelsPanel = ({
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input
-                  value={`${window.location.origin}?shared=${shareDialog.share_token}`}
+                  value={`${window.location.origin}/builder?shared=${shareDialog.share_token}`}
                   readOnly
                   className="font-mono text-sm"
                 />

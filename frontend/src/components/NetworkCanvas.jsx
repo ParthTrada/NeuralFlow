@@ -58,6 +58,7 @@ export const NetworkCanvas = React.forwardRef(({
         touchAction: 'none' // Better touch handling
       }}
       data-testid="network-canvas"
+      data-tour="canvas"
     >
       <ReactFlow
         ref={ref}

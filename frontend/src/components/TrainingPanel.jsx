@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -11,7 +11,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  X
+  X,
+  Save
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
@@ -33,7 +34,7 @@ import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
 import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
 
-export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained }) => {
+export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData }) => {
   const [dataType, setDataType] = useState('csv');
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
@@ -58,10 +59,100 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
   const [predictionResult, setPredictionResult] = useState(null);
   const [isPredicting, setIsPredicting] = useState(false);
   
+  // Image prediction state
+  const [testImage, setTestImage] = useState(null);
+  const [testImagePreview, setTestImagePreview] = useState('');
+  
+  // Text prediction state
+  const [textInput, setTextInput] = useState('');
+  const [textEncoding, setTextEncoding] = useState('bow');
+  
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const lastModelIdRef = useRef(null);
+
+  // Restore or reset training state when a different model is loaded
+  useEffect(() => {
+    if (modelId && modelId !== lastModelIdRef.current) {
+      // Dispose existing model if any
+      if (modelRef.current) {
+        try {
+          modelRef.current.dispose();
+        } catch (e) {
+          console.log('Model disposal skipped');
+        }
+        modelRef.current = null;
+      }
+      
+      // Check if we have saved training data for this model
+      if (savedTrainingData) {
+        console.log('Restoring saved training data for model:', modelId);
+        setTrainingHistory(savedTrainingData.trainingHistory || []);
+        setStatus(savedTrainingData.trainingHistory?.length > 0 ? 'complete' : 'idle');
+        setCurrentEpoch(savedTrainingData.trainingHistory?.length || 0);
+        // Rebuild model if we have weights
+        if (savedWeights && nodes.length > 0) {
+          try {
+            const model = buildTFModel(nodes, edges);
+            compileModel(model, {
+              optimizer: savedTrainingData.optimizer || 'adam',
+              learningRate: savedTrainingData.learningRate || 0.001,
+              loss: 'categoricalCrossentropy',
+              metrics: ['acc'],
+            });
+            // Load weights
+            const weightsJson = atob(savedWeights);
+            const weightsArray = JSON.parse(weightsJson);
+            const tensors = weightsArray.map(w => tf.tensor(w.data, w.shape));
+            model.setWeights(tensors);
+            modelRef.current = model;
+            console.log('Model restored with saved weights');
+          } catch (e) {
+            console.log('Could not restore model weights:', e.message);
+          }
+        }
+      } else {
+        // Reset all training-related state for new model
+        setTrainingHistory([]);
+        setCurrentEpoch(0);
+        setStatus('idle');
+      }
+      
+      // Always reset these
+      setFile(null);
+      setProcessedData(null);
+      setErrorMessage('');
+      setColumns([]);
+      setTargetColumn('');
+      setPredictionInput('');
+      setPredictionResult(null);
+      setTestImage(null);
+      setTestImagePreview('');
+      setTextInput('');
+      
+      // Update the ref
+      lastModelIdRef.current = modelId;
+    }
+  }, [modelId, savedTrainingData, savedWeights, nodes, edges]);
+
+  // Function to save current training data
+  const handleSaveTrainingData = useCallback(() => {
+    if (!onSaveTrainingData) return;
+    
+    const trainingData = {
+      trainingHistory,
+      epochs,
+      batchSize,
+      learningRate,
+      optimizer,
+      status,
+      savedAt: new Date().toISOString()
+    };
+    
+    onSaveTrainingData(trainingData);
+  }, [onSaveTrainingData, trainingHistory, epochs, batchSize, learningRate, optimizer, status]);
 
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
@@ -272,6 +363,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     setTargetColumn('');
     setPredictionInput('');
     setPredictionResult(null);
+    setTestImage(null);
+    setTestImagePreview('');
+    setTextInput('');
   };
 
   const handlePredict = async () => {
@@ -334,6 +428,272 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
     }
   };
 
+  // Handle image file selection for prediction
+  const handleImagePredict = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setTestImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setTestImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    setPredictionResult(null);
+  };
+
+  // Handle image prediction
+  const handleImagePrediction = async () => {
+    if (!modelRef.current || !testImage) {
+      toast.error('No model or image available');
+      return;
+    }
+
+    setIsPredicting(true);
+    setPredictionResult(null);
+
+    try {
+      // Create image element
+      const img = document.createElement('img');
+      img.src = testImagePreview;
+      
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
+
+      // Determine input shape from model or processedData
+      let targetHeight = 28;
+      let targetWidth = 28;
+      let channels = 1;
+
+      // Try to get input shape from the first layer
+      const inputLayer = nodes.find(n => n.data.layerType === 'Input');
+      if (inputLayer?.data?.config) {
+        const config = inputLayer.data.config;
+        if (config.inputHeight) targetHeight = config.inputHeight;
+        if (config.inputWidth) targetWidth = config.inputWidth;
+        if (config.inputChannels) channels = config.inputChannels;
+      }
+
+      // Process image with TensorFlow.js
+      let imageTensor = tf.browser.fromPixels(img);
+      
+      // Convert to grayscale if needed
+      if (channels === 1 && imageTensor.shape[2] === 3) {
+        imageTensor = imageTensor.mean(2).expandDims(2);
+      }
+      
+      // Resize
+      imageTensor = tf.image.resizeBilinear(imageTensor, [targetHeight, targetWidth]);
+      
+      // Normalize to [0, 1]
+      imageTensor = imageTensor.div(255.0);
+      
+      // Determine if we need to flatten the image for Dense/MLP models
+      // Check 1: Look at visual nodes for Conv2D layers
+      const hasConv2D = nodes.some(n => 
+        n.data.layerType === 'Conv2D' || 
+        n.data.layerType === 'MaxPool2D' ||
+        n.data.layerType === 'AvgPool2D'
+      );
+      
+      // Check 2: Inspect the actual model's input shape
+      let modelInputDims = null;
+      try {
+        if (modelRef.current?.inputs?.[0]?.shape) {
+          modelInputDims = modelRef.current.inputs[0].shape.length;
+          console.log('Model input shape:', modelRef.current.inputs[0].shape, 'dims:', modelInputDims);
+        }
+      } catch (e) {
+        console.log('Could not determine model input shape:', e.message);
+      }
+      
+      // Decide whether to flatten:
+      // - Flatten if model expects 2D input (e.g., Dense layer) 
+      // - Flatten if no Conv2D layers in the visual network
+      // - Keep 4D only if we have Conv2D AND model confirms it needs 4D input
+      const shouldFlatten = modelInputDims === 2 || (!hasConv2D && modelInputDims !== 4);
+      
+      let inputTensor;
+      if (shouldFlatten) {
+        // Flatten for Dense/MLP models: [1, height * width * channels]
+        const flatSize = targetHeight * targetWidth * channels;
+        inputTensor = imageTensor.reshape([1, flatSize]);
+        console.log('Flattened input for Dense model - shape:', inputTensor.shape);
+      } else {
+        // Keep 4D for Conv2D models: [1, height, width, channels]
+        inputTensor = imageTensor.expandDims(0);
+        console.log('4D input for Conv2D model - shape:', inputTensor.shape);
+      }
+
+      const prediction = modelRef.current.predict(inputTensor);
+      const predictionData = await prediction.data();
+      
+      const labels = processedData?.uniqueTargets || processedData?.uniqueLabels || 
+        Array.from({length: predictionData.length}, (_, i) => `Class ${i}`);
+      
+      const maxIndex = predictionData.indexOf(Math.max(...predictionData));
+      const probabilities = Array.from(predictionData).map((prob, idx) => ({
+        class: labels[idx] || `Class ${idx}`,
+        probability: (prob * 100).toFixed(2)
+      })).sort((a, b) => b.probability - a.probability);
+      
+      setPredictionResult({
+        type: 'classification',
+        predictedClass: labels[maxIndex] || `Class ${maxIndex}`,
+        confidence: (predictionData[maxIndex] * 100).toFixed(2),
+        allProbabilities: probabilities
+      });
+
+      // Cleanup
+      imageTensor.dispose();
+      inputTensor.dispose();
+      prediction.dispose();
+      
+      toast.success('Image classified!');
+    } catch (error) {
+      console.error('Image prediction error:', error);
+      toast.error(`Image classification failed: ${error.message}`);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  // Handle text/sequence prediction
+  const handleTextPrediction = async () => {
+    if (!modelRef.current || !textInput.trim()) {
+      toast.error('No model or text available');
+      return;
+    }
+
+    setIsPredicting(true);
+    setPredictionResult(null);
+
+    try {
+      // Get expected input size
+      const inputLayer = nodes.find(n => n.data.layerType === 'Input');
+      const inputSize = inputLayer?.data?.config?.inputSize || 100;
+      
+      let inputVector;
+      
+      switch (textEncoding) {
+        case 'bow': {
+          // Simple bag of words - character frequency
+          const chars = textInput.toLowerCase().split('');
+          const charCounts = {};
+          chars.forEach(c => {
+            const code = c.charCodeAt(0);
+            if (code >= 32 && code <= 126) {
+              charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
+            }
+          });
+          inputVector = new Array(inputSize).fill(0);
+          Object.entries(charCounts).forEach(([idx, count]) => {
+            if (parseInt(idx) < inputSize) {
+              inputVector[parseInt(idx)] = count / chars.length;
+            }
+          });
+          break;
+        }
+        
+        case 'tfidf': {
+          // Simple TF approximation
+          const words = textInput.toLowerCase().split(/\s+/);
+          const wordCounts = {};
+          words.forEach(w => {
+            const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
+            wordCounts[hash] = (wordCounts[hash] || 0) + 1;
+          });
+          inputVector = new Array(inputSize).fill(0);
+          Object.entries(wordCounts).forEach(([idx, count]) => {
+            inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
+          });
+          break;
+        }
+        
+        case 'char': {
+          // Character-level encoding
+          inputVector = new Array(inputSize).fill(0);
+          const chars = textInput.slice(0, inputSize).split('');
+          chars.forEach((c, i) => {
+            inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
+          });
+          break;
+        }
+        
+        case 'word': {
+          // Word index encoding (simple hash)
+          const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
+          inputVector = new Array(inputSize).fill(0);
+          words.forEach((word, i) => {
+            const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
+            inputVector[i] = hash / 1000;
+          });
+          break;
+        }
+        
+        default:
+          throw new Error('Unknown encoding type');
+      }
+
+      // Check if model expects sequence input (3D) or flat input (2D)
+      const hasLSTM = nodes.some(n => 
+        n.data.layerType === 'LSTM' || 
+        n.data.layerType === 'GRU' ||
+        n.data.layerType === 'RNN'
+      );
+      
+      let inputTensor;
+      if (hasLSTM) {
+        // Reshape for RNN: [batch, timesteps, features]
+        const seqLength = inputLayer?.data?.config?.sequenceLength || inputSize;
+        const features = Math.ceil(inputSize / seqLength);
+        const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
+        inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features)], [1, seqLength, features]);
+      } else {
+        inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+      }
+
+      const prediction = modelRef.current.predict(inputTensor);
+      const predictionData = await prediction.data();
+      
+      const labels = processedData?.uniqueTargets || processedData?.uniqueLabels ||
+        ['Negative', 'Neutral', 'Positive'].slice(0, predictionData.length);
+      
+      let result;
+      if (predictionData.length > 1) {
+        const maxIndex = predictionData.indexOf(Math.max(...predictionData));
+        const probabilities = Array.from(predictionData).map((prob, idx) => ({
+          class: labels[idx] || `Class ${idx}`,
+          probability: (prob * 100).toFixed(2)
+        })).sort((a, b) => b.probability - a.probability);
+        
+        result = {
+          type: 'classification',
+          predictedClass: labels[maxIndex] || `Class ${maxIndex}`,
+          confidence: (predictionData[maxIndex] * 100).toFixed(2),
+          allProbabilities: probabilities
+        };
+      } else {
+        result = {
+          type: 'regression',
+          value: predictionData[0].toFixed(4)
+        };
+      }
+      
+      setPredictionResult(result);
+      inputTensor.dispose();
+      prediction.dispose();
+      
+      toast.success('Text analyzed!');
+    } catch (error) {
+      console.error('Text prediction error:', error);
+      toast.error(`Text analysis failed: ${error.message}`);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -360,10 +720,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
               <div className="p-1.5 sm:p-2 rounded-md bg-primary/10">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Train Network</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">TensorFlow.js</p>
-              </div>
+              <h2 className="font-bold text-base sm:text-lg">Train Network</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} data-testid="close-training-btn">
               <X className="w-4 h-4" />
@@ -417,6 +774,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                       </div>
                     </Button>
                     
+                    {/* CSV Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Format:</strong> CSV with headers. Last column = target.
+                        <br />
+                        <strong className="text-foreground/80">Example:</strong> feature1, feature2, ..., label
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Numeric values work best. Match input size to your Input layer.
+                      </p>
+                    </div>
+                    
                     {columns.length > 0 && (
                       <div className="space-y-2">
                         <Label className="text-xs sm:text-sm">Target Column</Label>
@@ -455,6 +823,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                         <span>Upload Image Folder</span>
                       </div>
                     </Button>
+                    
+                    {/* Images Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Structure:</strong> Folder with subfolders per class.
+                        <br />
+                        <strong className="text-foreground/80">Example:</strong> images/cat/*.jpg, images/dog/*.jpg
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Use Conv2D layers for image data, or Dense with Input size 784 for 28x28 grayscale.
+                      </p>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
@@ -476,9 +855,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                         Regression
                       </Button>
                     </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Generate synthetic data for testing
-                    </p>
+                    
+                    {/* Sample Instructions */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 10 features, 3 classes. Use Softmax output.
+                        <br />
+                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 10 features, 1 output. Use Linear output.
+                        <br />
+                        <strong className="text-foreground/80">Tip:</strong> Great for testing your network architecture quickly.
+                      </p>
+                    </div>
                   </TabsContent>
                 </Tabs>
 
@@ -722,36 +1109,159 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                     </h3>
                     
                     <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm">
-                          Input (comma-separated)
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder={processedData?.inputShape ? 
-                              `${processedData.inputShape[0]} values` : 
-                              'e.g., 0.5, 0.3'
-                            }
-                            value={predictionInput}
-                            onChange={(e) => setPredictionInput(e.target.value)}
-                            className="text-base sm:text-sm h-10"
-                            style={{ fontSize: '16px' }}
-                            data-testid="prediction-input"
-                          />
-                          <Button 
-                            onClick={handlePredict}
-                            disabled={isPredicting || !predictionInput.trim()}
-                            className="text-xs sm:text-sm h-9 sm:h-10 px-3"
-                            data-testid="predict-btn"
-                          >
-                            {isPredicting ? (
-                              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                            ) : (
-                              'Go'
+                      {/* Input Type Tabs */}
+                      <Tabs defaultValue="csv" className="w-full">
+                        <TabsList className="grid grid-cols-3 w-full h-8">
+                          <TabsTrigger value="csv" className="text-xs">
+                            <FileSpreadsheet className="w-3 h-3 mr-1" />
+                            Values
+                          </TabsTrigger>
+                          <TabsTrigger value="image" className="text-xs">
+                            <Image className="w-3 h-3 mr-1" />
+                            Image
+                          </TabsTrigger>
+                          <TabsTrigger value="text" className="text-xs">
+                            <span className="text-xs mr-1">Aa</span>
+                            Text
+                          </TabsTrigger>
+                        </TabsList>
+
+                        {/* CSV/Values Input */}
+                        <TabsContent value="csv" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Input (comma-separated values)
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder={processedData?.inputShape ? 
+                                  `${processedData.inputShape[0]} values` : 
+                                  'e.g., 0.5, 0.3, 0.8'
+                                }
+                                value={predictionInput}
+                                onChange={(e) => setPredictionInput(e.target.value)}
+                                className="text-base sm:text-sm h-10"
+                                style={{ fontSize: '16px' }}
+                                data-testid="prediction-input"
+                              />
+                              <Button 
+                                onClick={handlePredict}
+                                disabled={isPredicting || !predictionInput.trim()}
+                                className="text-xs sm:text-sm h-9 sm:h-10 px-3"
+                                data-testid="predict-btn"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                                ) : (
+                                  'Test'
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Enter {processedData?.inputShape?.[0] || 'N'} comma-separated numbers
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        {/* Image Input */}
+                        <TabsContent value="image" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Upload Image to Classify
+                            </Label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImagePredict}
+                              className="hidden"
+                              id="test-image-input"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                className="flex-1 h-20 border-dashed"
+                                onClick={() => document.getElementById('test-image-input')?.click()}
+                              >
+                                <div className="flex flex-col items-center gap-1">
+                                  <Upload className="w-5 h-5" />
+                                  <span className="text-xs">
+                                    {testImage ? 'Change Image' : 'Upload Image'}
+                                  </span>
+                                </div>
+                              </Button>
+                              {testImage && (
+                                <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
+                                  <img 
+                                    src={testImagePreview} 
+                                    alt="Test" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            {testImage && (
+                              <Button 
+                                onClick={handleImagePrediction}
+                                disabled={isPredicting}
+                                className="w-full text-xs sm:text-sm h-9"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                  <Sparkles className="w-4 h-4 mr-2" />
+                                )}
+                                Classify Image
+                              </Button>
                             )}
-                          </Button>
-                        </div>
-                      </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Best for CNN models. Image will be resized to match input layer.
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        {/* Text/Sequence Input */}
+                        <TabsContent value="text" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm">
+                              Enter Text or Sequence
+                            </Label>
+                            <textarea
+                              placeholder="Enter text for sentiment analysis or sequence data..."
+                              value={textInput}
+                              onChange={(e) => setTextInput(e.target.value)}
+                              className="w-full h-24 p-3 rounded-lg bg-secondary border border-border text-sm resize-none"
+                              style={{ fontSize: '16px' }}
+                            />
+                            <div className="flex gap-2">
+                              <Select value={textEncoding} onValueChange={setTextEncoding}>
+                                <SelectTrigger className="h-9 text-xs flex-1">
+                                  <SelectValue placeholder="Encoding" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="bow" className="text-xs">Bag of Words</SelectItem>
+                                  <SelectItem value="tfidf" className="text-xs">TF-IDF</SelectItem>
+                                  <SelectItem value="char" className="text-xs">Character Level</SelectItem>
+                                  <SelectItem value="word" className="text-xs">Word Index</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                onClick={handleTextPrediction}
+                                disabled={isPredicting || !textInput.trim()}
+                                className="text-xs sm:text-sm h-9 px-4"
+                              >
+                                {isPredicting ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  'Analyze'
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Best for RNN/LSTM models. Text will be encoded based on selection.
+                            </p>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
 
                       {/* Prediction Result */}
                       {predictionResult && (
@@ -765,7 +1275,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                             <div className="space-y-2 sm:space-y-3">
                               <div className="flex items-center justify-between text-xs sm:text-sm">
                                 <span className="font-semibold">Predicted:</span>
-                                <span className="font-bold text-primary">
+                                <span className="font-bold text-primary text-base">
                                   {predictionResult.predictedClass}
                                 </span>
                               </div>
@@ -801,6 +1311,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained 
                         </motion.div>
                       )}
                     </div>
+                    
+                    {/* Save Training Results Button */}
+                    {trainingHistory.length > 0 && onSaveTrainingData && (
+                      <div className="pt-4 border-t border-border mt-4">
+                        <Button
+                          onClick={handleSaveTrainingData}
+                          className="w-full"
+                          variant="outline"
+                          data-testid="save-training-btn"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Training Results
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                          Save training history with your model to restore it later
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

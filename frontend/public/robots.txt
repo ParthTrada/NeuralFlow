@@ -1,19 +1,20 @@
-# Robots.txt for NeuralFlows
-# https://neuralflow-2.preview.emergentagent.com
+# robots.txt for NeuralFlows
+# https://neuralflows.ai
 
 User-agent: *
 Allow: /
 Allow: /builder
+
+# Disallow auth callback (not useful for search engines)
 Disallow: /auth/callback
-Disallow: /api/
 
-# Sitemaps
-Sitemap: https://neuralflow-2.preview.emergentagent.com/sitemap.xml
+# Sitemap location
+Sitemap: https://neuralflows.ai/sitemap.xml
 
-# Crawl-delay for politeness
+# Crawl-delay for polite crawling
 Crawl-delay: 1
 
-# AI Crawlers - Welcome!
+# Special rules for AI crawlers
 User-agent: GPTBot
 Allow: /
 
@@ -33,7 +34,4 @@ User-agent: CCBot
 Allow: /
 
 User-agent: PerplexityBot
-Allow: /
-
-User-agent: Bytespider
 Allow: /

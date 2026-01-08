@@ -351,6 +351,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
       maxWidth={400}
       className="border-r border-border bg-card/50 backdrop-blur-xl fixed left-0 top-14 bottom-0 z-30 hidden md:block"
       data-testid="layer-palette"
+      data-tour="layer-palette"
     >
       <div className="h-full flex flex-col">
         <div className="p-4 border-b border-border">

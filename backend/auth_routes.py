@@ -85,20 +85,42 @@ def create_auth_routes(db):
     @router.post("/session")
     async def create_session(request: SessionRequest, response: Response):
         """Exchange session_id for session_token"""
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+        
         try:
             # Call Emergent auth API
-            async with httpx.AsyncClient() as client:
+            session_preview = request.session_id[:30] if len(request.session_id) > 30 else request.session_id
+            logger.info(f"Processing session_id: {session_preview}...")
+            print(f"[AUTH] Processing session_id: {session_preview}...")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 auth_response = await client.get(
                     "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
                     headers={"X-Session-ID": request.session_id}
                 )
                 
+                logger.info(f"Auth API response status: {auth_response.status_code}")
+                print(f"[AUTH] Emergent API response: {auth_response.status_code}")
+                
                 if auth_response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Invalid session_id")
+                    error_text = auth_response.text[:200] if auth_response.text else "No error details"
+                    logger.error(f"Auth API error: {error_text}")
+                    print(f"[AUTH] Error from Emergent: {error_text}")
+                    raise HTTPException(
+                        status_code=401, 
+                        detail=f"Session verification failed (code: {auth_response.status_code}). Please try signing in again."
+                    )
                 
                 auth_data = auth_response.json()
-        except httpx.RequestError:
-            raise HTTPException(status_code=500, detail="Auth service unavailable")
+                logger.info(f"Auth successful for email: {auth_data.get('email', 'unknown')}")
+                print(f"[AUTH] Success for: {auth_data.get('email', 'unknown')}")
+                
+        except httpx.RequestError as e:
+            logger.error(f"Auth service request error: {str(e)}")
+            print(f"[AUTH] Request error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Auth service unavailable: {str(e)}")
         
         # Extract user data
         email = auth_data.get("email")
@@ -416,5 +438,32 @@ def create_auth_routes(db):
         ).sort("version", -1).to_list(50)
         
         return versions
+    
+    # Save training data endpoint
+    @router.patch("/models/{model_id}/training")
+    async def save_training_data(model_id: str, request: Request):
+        """Save training data (history, config) for a model"""
+        user = await get_current_user(request, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        body = await request.json()
+        training_data = body.get("training_data")
+        
+        if not training_data:
+            raise HTTPException(status_code=400, detail="No training data provided")
+        
+        result = await db.network_models.update_one(
+            {"model_id": model_id, "user_id": user.user_id},
+            {"$set": {
+                "training_data": training_data,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        return {"message": "Training data saved"}
     
     return router

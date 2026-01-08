@@ -567,6 +567,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onDeleteNode, onCl
         maxWidth={500}
         className="border-l border-border bg-card/50 backdrop-blur-xl fixed right-0 top-14 bottom-0 z-30 hidden md:block"
         data-testid="properties-panel"
+        data-tour="properties-panel"
       >
         {panelContent}
       </ResizablePanel>
