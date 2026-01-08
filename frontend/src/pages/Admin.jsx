@@ -22,16 +22,22 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
 
-// Smart API URL detection
+// Smart API URL detection for production/development
 const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Production domains - use same origin
+    if (hostname === 'neuralflows.ai' || hostname === 'www.neuralflows.ai') {
+      return window.location.origin + '/api';
+    }
+  }
+  // Development or preview - use env variable
   const envUrl = process.env.REACT_APP_BACKEND_URL;
-  if (envUrl && !envUrl.includes('preview.emergentagent.com') && !envUrl.includes('csb.app')) {
+  if (envUrl) {
     return envUrl + '/api';
   }
-  if (typeof window !== 'undefined') {
-    return window.location.origin + '/api';
-  }
-  return '/api';
+  // Fallback to same origin
+  return (typeof window !== 'undefined' ? window.location.origin : '') + '/api';
 };
 
 const API_URL = getApiUrl();
