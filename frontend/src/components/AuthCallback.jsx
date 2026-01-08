@@ -102,9 +102,17 @@ export const AuthCallback = () => {
         </p>
         
         {status === 'error' && (
-          <p className="text-sm text-muted-foreground">
-            Redirecting to builder...
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Redirecting to home...
+            </p>
+            <button 
+              onClick={() => login()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm"
+            >
+              Try Again
+            </button>
+          </div>
         )}
       </div>
     </div>
