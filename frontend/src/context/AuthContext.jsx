@@ -1,26 +1,32 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-// For production: Use same origin (works when frontend and backend are on same domain)
-// For development: Use REACT_APP_BACKEND_URL from .env
+// API URL configuration
+// In production (neuralflows.ai): Uses same origin with /api prefix
+// In development: Uses REACT_APP_BACKEND_URL from .env
 const getApiUrl = () => {
-  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  // Check if we're on production domain
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // Production domains - use same origin
+    if (hostname === 'neuralflows.ai' || hostname === 'www.neuralflows.ai') {
+      return window.location.origin + '/api';
+    }
+  }
   
-  // If env URL is set and doesn't contain 'preview' or 'csb.app' (dev URLs), use it
-  if (envUrl && !envUrl.includes('preview.emergentagent.com') && !envUrl.includes('csb.app')) {
+  // Development or preview - use env variable
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  if (envUrl) {
     return envUrl + '/api';
   }
   
-  // In production or if env not properly set, use same origin
-  // This works because Kubernetes ingress routes /api to backend
-  if (typeof window !== 'undefined') {
-    return window.location.origin + '/api';
-  }
-  
-  return '/api';
+  // Fallback to same origin
+  return (typeof window !== 'undefined' ? window.location.origin : '') + '/api';
 };
 
 const API_URL = getApiUrl();
+console.log('Auth API URL:', API_URL); // Debug log
 
 const AuthContext = createContext(null);
 
