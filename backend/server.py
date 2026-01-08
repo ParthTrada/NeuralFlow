@@ -23,6 +23,16 @@ db = client[os.environ['DB_NAME']]
 # Create the main app
 app = FastAPI(title="NeuralFlow Architect API")
 
+# Add CORS middleware FIRST (before any routes)
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for auth
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
