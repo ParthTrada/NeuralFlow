@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
-  const { processSessionId } = useAuth();
+  const { processSessionId, login } = useAuth();
   const hasProcessed = useRef(false);
   const [status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Signing you in...');
