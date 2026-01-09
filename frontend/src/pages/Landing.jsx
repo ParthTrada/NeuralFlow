@@ -182,15 +182,11 @@ export default function Landing() {
         <div className="px-4 sm:px-6 lg:px-12 py-3 sm:py-4 flex items-center justify-between max-w-7xl mx-auto">
           {/* Logo */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <motion.div
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.5 }}
-              className={`p-1.5 sm:p-2 rounded-lg ${
-                isDark ? 'bg-primary/10' : 'bg-primary/10'
-              }`}
-            >
-              <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            </motion.div>
+            <img 
+              src="/logo.png" 
+              alt="NeuralFlows Logo" 
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg"
+            />
             <span className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
               NeuralFlows
             </span>
