@@ -580,7 +580,11 @@ export default function Landing() {
       }`}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Cpu className="w-5 h-5 text-primary" />
+            <img 
+              src="/logo.png" 
+              alt="NeuralFlows Logo" 
+              className="w-6 h-6 rounded"
+            />
             <span className={`font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
               NeuralFlows
             </span>
