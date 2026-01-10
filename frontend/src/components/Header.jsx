@@ -56,14 +56,12 @@ export const Header = ({
           </Button>
         )}
         
-        <motion.div
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.5 }}
-          className="p-1.5 sm:p-2 rounded-lg bg-primary/10 hidden sm:flex"
-        >
-          <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-        </motion.div>
-        <a href="/" className="hover:opacity-80 transition-opacity">
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img 
+            src="/logo.png" 
+            alt="NeuralFlows Logo" 
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg"
+          />
           <h1 className="font-bold text-sm sm:text-lg tracking-tight">NeuralFlows</h1>
         </a>
       </div>
