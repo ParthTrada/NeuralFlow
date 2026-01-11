@@ -104,14 +104,25 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
   - Data Requirements Guide updated for NLP/Text models
   - Text tokenization utilities (buildVocabulary, textToIndices)
   - processTextCSVData function for text CSV processing
-- ✅ **PDF Q&A Chatbot Feature:**
-  - PdfChat.jsx page with upload interface and chat UI
-  - pdf_qa_routes.py backend with Groq/Llama 3.3 integration
-  - Simple TF-IDF based embeddings for text similarity (no external API needed)
-  - PDF upload endpoint (/api/pdf-qa/upload)
-  - Question answering endpoint (/api/pdf-qa/ask)
-  - Session management for multi-turn conversations
-  - PDF Chat button on landing page
+- ✅ **PDF Q&A Chatbot Feature:** (Disabled for now, code preserved)
+
+### Jan 11, 2025 - Advanced Transformer & Keras Code Generation
+- ✅ **Advanced Transformer Support:**
+  - New PositionalEncoding layer with max_len, d_model, dropout config
+  - GlobalAvgPool1D layer for sequence pooling
+  - Updated Transformer template to BERT-style architecture:
+    - Input (text) → Embedding → Positional Encoding → Transformer Encoder (4 layers) → Global Avg Pool → Output
+  - TransformerEncoder and TransformerDecoder now use composite blocks with internal skip connections
+- ✅ **TensorFlow/Keras Code Generation:**
+  - Framework toggle (PyTorch | TF/Keras) in code preview modal
+  - Full Keras code generation with tf.keras.layers
+  - Custom layer implementations for Keras:
+    - PositionalEncoding class with learnable embeddings
+    - TransformerEncoderBlock with Multi-Head Attention + FFN + LayerNorm + residual connections
+    - TransformerDecoderBlock with masked self-attention + cross-attention
+  - Proper input shape handling for all layer types
+  - Download separate files for each framework
+
 
 ### Jan 6, 2025 - Input Layer Type System
 - ✅ Added Input Type dropdown with 3 options: Flat (Vector), Image (C, H, W), Sequence (Len, Feat)
