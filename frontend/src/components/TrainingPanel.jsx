@@ -277,11 +277,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           seqLength: MODEL_SEQ_LENGTH,
           fullText: shakespeareText,
         });
-          idxToChar,
-          vocabSize,
-          seqLength: 64,
-          fullText: shakespeareText,
-        });
         
         // Set default prompt
         setGenerationPrompt('ROMEO: But, soft! what light through yonder window breaks?');
