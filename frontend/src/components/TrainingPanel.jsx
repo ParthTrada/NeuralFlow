@@ -1909,8 +1909,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     
                     <Button 
-                      onClick={handleMarkovGeneration}
-                      disabled={isGenerating || !generationPrompt.trim()}
+                      onClick={handleMiniGPTGeneration}
+                      disabled={isGenerating || !generationPrompt.trim() || isTraining || isLoadingMiniGPT}
                       className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                       data-testid="generate-text-btn"
                     >
@@ -1919,10 +1919,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                           Generating...
                         </>
+                      ) : isTraining || isLoadingMiniGPT ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Training... Please wait
+                        </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 mr-2" />
-                          Generate Text
+                          Generate Text {useMarkovFallback || !miniGPTTrainingComplete ? '(Markov)' : '(Neural)'}
                         </>
                       )}
                     </Button>
