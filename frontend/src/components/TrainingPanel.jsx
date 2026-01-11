@@ -213,7 +213,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const handleGenerateSample = (type) => {
     setStatus('loading');
     try {
-      const data = generateSampleData(type, 500);
+      // For sequence data, get seqLength and features from Input node if available
+      let options = {};
+      if (type === 'sequence') {
+        const inputNode = nodes.find(n => n.data.layerType === 'Input');
+        if (inputNode?.data?.config) {
+          options.seqLength = inputNode.data.config.seqLength || 50;
+          options.features = inputNode.data.config.features || 10;
+        }
+        // Get numClasses from Output node if available
+        const outputNode = nodes.find(n => n.data.layerType === 'Output');
+        if (outputNode?.data?.config?.numClasses) {
+          options.numClasses = outputNode.data.config.numClasses;
+        }
+      }
+      
+      const data = generateSampleData(type, 500, options);
       setProcessedData({
         ...data,
         type: 'sample'
