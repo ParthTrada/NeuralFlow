@@ -997,6 +997,26 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         </div>
                       )}
                       
+                      {networkReqs.modelType === 'NLP/Text' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> CSV Format for Text Classification:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># text column + label column</div>
+                            <div className="mt-1">text, sentiment</div>
+                            <div>"I love this product!", positive</div>
+                            <div>"Terrible experience.", negative</div>
+                            <div>"It's okay I guess", neutral</div>
+                            <div className="text-muted-foreground">...</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Text will be tokenized to {networkReqs.seqLength || 100} tokens.
+                            Vocab size: {networkReqs.vocabSize || 10000}. Use Sample → Text/NLP to test.
+                          </p>
+                        </div>
+                      )}
+                      
                       {/* Quick Generate Button */}
                       <div className="pt-2 border-t border-border/50">
                         <p className="text-[10px] text-muted-foreground mb-2">
