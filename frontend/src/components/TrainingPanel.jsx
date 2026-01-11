@@ -1353,6 +1353,51 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   };
 
+  // Handle text generation (for Mini-GPT style models)
+  const handleTextGeneration = async () => {
+    if (!modelRef.current) {
+      toast.error('Please train the model first');
+      return;
+    }
+
+    if (!generationPrompt.trim()) {
+      toast.error('Please enter a prompt');
+      return;
+    }
+
+    if (!processedData?.charToIdx || !processedData?.idxToChar) {
+      toast.error('Character vocabulary not found. Make sure to train with a text generation dataset.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratedText('');
+
+    try {
+      const result = await generateText(
+        modelRef.current,
+        generationPrompt,
+        processedData.charToIdx,
+        processedData.idxToChar,
+        {
+          length: generationLength,
+          temperature: generationTemp,
+          seqLength: processedData.seqLength || 64,
+          onToken: (char, fullText) => {
+            setGeneratedText(fullText);
+          }
+        }
+      );
+
+      toast.success(`Generated ${result.length} characters!`);
+    } catch (error) {
+      console.error('Text generation error:', error);
+      toast.error(`Generation failed: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
