@@ -36,7 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
-import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
+import { parseCSV, processCSVData, processTextCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
 
 // Analyze network to determine data requirements
 const analyzeNetworkRequirements = (nodes) => {
