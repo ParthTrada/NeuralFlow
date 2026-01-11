@@ -202,15 +202,10 @@ const Guide = () => {
               viewport={{ once: true }}
               className="order-1 lg:order-2"
             >
-              <GuideCard>
-                <div className="space-y-3">
-                  <TemplateRow icon="🧠" name="Simple MLP" desc="3 layers, 128 neurons" active />
-                  <TemplateRow icon="🖼️" name="CNN - Image Classifier" desc="Conv2D + Pooling" />
-                  <TemplateRow icon="📈" name="RNN - Sequence Model" desc="LSTM layers" />
-                  <TemplateRow icon="📝" name="Text Classifier" desc="Embedding + LSTM" />
-                  <TemplateRow icon="⚡" name="Transformer" desc="Multi-head attention" />
-                </div>
-              </GuideCard>
+              <ScreenshotCard 
+                src={SCREENSHOTS.templates} 
+                alt="Template selection panel showing MLP, CNN, RNN, Transformer options" 
+              />
             </motion.div>
           </div>
         </div>
