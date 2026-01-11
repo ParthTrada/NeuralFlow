@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText, GitMerge } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText, GitMerge, Wand2 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -15,6 +15,35 @@ import { ResizablePanel } from './ResizablePanel';
 
 // Template definitions
 const templates = [
+  {
+    id: 'mini-gpt',
+    name: 'Mini-GPT',
+    description: 'Decoder-only LLM for text generation',
+    tip: 'A simplified GPT architecture that generates text character-by-character. Train on Shakespeare or any text to see it write! ~2M parameters, trainable in browser.',
+    icon: Wand2,
+    color: '#a855f7',
+    layers: 8,
+    isNew: true,
+    nodes: [
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 65, seqLength: 64 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 120 }, data: { label: 'Token Embedding', layerType: 'Embedding', config: { vocabSize: 65, embedDim: 128 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 240 }, data: { label: 'Positional Encoding', layerType: 'PositionalEncoding', config: { maxLen: 64, dModel: 128, dropout: 0.1 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 360 }, data: { label: 'Decoder Block 1', layerType: 'TransformerDecoder', config: { dModel: 128, nHead: 4, dimFeedforward: 512, numLayers: 1 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 480 }, data: { label: 'Decoder Block 2', layerType: 'TransformerDecoder', config: { dModel: 128, nHead: 4, dimFeedforward: 512, numLayers: 1 } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 600 }, data: { label: 'Layer Norm', layerType: 'LayerNorm', config: { normalizedShape: 128 } } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 720 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.1 } } },
+      { id: 'node_7', type: 'layerNode', position: { x: 0, y: 840 }, data: { label: 'Output (Vocab)', layerType: 'Output', config: { inputSize: 128, numClasses: 65, activation: 'softmax' } } },
+    ],
+    edges: [
+      { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
+      { id: 'e1-2', source: 'node_1', target: 'node_2', animated: true },
+      { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
+      { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
+      { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
+      { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
+      { id: 'e6-7', source: 'node_6', target: 'node_7', animated: true },
+    ]
+  },
   {
     id: 'mlp',
     name: 'Simple MLP',
