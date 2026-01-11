@@ -15,7 +15,36 @@ import {
   ArrowUpFromLine,
   AlignJustify,
   Plus,
-  GitMerge
+  GitMerge,
+  // New unique icons for each layer
+  Box,
+  LayoutGrid,
+  Shrink,
+  Shuffle,
+  Hash,
+  Type,
+  TrendingUp,
+  Repeat,
+  Cpu,
+  Brain,
+  Sparkles,
+  Radio,
+  Waves,
+  Network,
+  CircuitBoard,
+  Binary,
+  SlidersHorizontal,
+  Gauge,
+  ArrowRightLeft,
+  Combine,
+  Split,
+  ChevronDownSquare,
+  Square,
+  RectangleHorizontal,
+  Grip,
+  SquareStack,
+  Podcast,
+  AudioWaveform
 } from 'lucide-react';
 
 // Layers that support multiple inputs (for skip connections)
