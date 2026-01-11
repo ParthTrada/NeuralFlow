@@ -650,6 +650,23 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       });
     }
     
+    // Adjust first Conv2D layer for image data (input channels)
+    if (datasetInfo.category === 'image' && conv2dNodes.length > 0) {
+      const firstConv = conv2dNodes[0];
+      const convIdx = updatedNodes.findIndex(n => n.id === firstConv.id);
+      updatedNodes[convIdx] = {
+        ...firstConv,
+        data: {
+          ...firstConv.data,
+          config: {
+            ...firstConv.data.config,
+            inChannels: imgConfig.channels
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
     // Adjust first Dense layer input size for tabular data
     if (datasetInfo.category === 'tabular' && denseNodes.length > 0) {
       const firstDense = denseNodes[0];
