@@ -355,8 +355,11 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">
+                  <div className="font-medium text-sm truncate flex items-center gap-2">
                     {template.name}
+                    {template.isNew && (
+                      <span className="text-[10px] font-bold text-white bg-violet-500 px-1.5 py-0.5 rounded">NEW</span>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {template.description}
