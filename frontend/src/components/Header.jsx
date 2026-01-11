@@ -39,6 +39,7 @@ export const Header = ({
   canRedo
 }) => {
   const { user, login, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   // const { restartTour } = useProductTour(); // Commented out - Product Tour disabled
 
   return (
