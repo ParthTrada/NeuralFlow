@@ -146,3 +146,9 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [x] Pre-built architectures/templates ✅ COMPLETED
 - [ ] Training history persistence
 - [ ] Model comparison tools
+- [ ] Sentiment analysis pre-training for Text Classifier
+- [ ] More PDF document types support (scanned PDFs with OCR)
+
+## Test Reports
+- Latest test run: Jan 11, 2025 - 9 tests passed (pytest)
+- Test file: /app/tests/test_pdf_qa_and_text_classifier.py
