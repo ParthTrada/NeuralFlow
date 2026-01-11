@@ -289,6 +289,13 @@ export const layerCategories = {
         color: 'hsl(330, 81%, 60%)',
         description: 'Long Short-Term Memory for sequences',
         tip: 'Remembers long-term dependencies in sequential data. Has "gates" to control information flow. Great for text, time-series, and speech.',
+        learnMore: {
+          whatItDoes: 'Processes sequences step-by-step, maintaining a "cell state" that carries information across long distances. Gates control what to remember/forget.',
+          whenToUse: 'For sequential data: text classification, sentiment analysis, time-series forecasting, speech recognition.',
+          gates: 'Forget gate (what to discard), Input gate (what to store), Output gate (what to output). Solves vanishing gradient problem of vanilla RNNs.',
+          vsTransformer: 'LSTMs process sequentially (slower but less memory). Transformers process in parallel (faster but O(n²) memory). Transformers often win for NLP.',
+          bidirectional: 'Enable for tasks where future context helps (classification). Disable for generation (can\'t see future).'
+        },
         defaultConfig: {
           inputSize: 256,
           hiddenSize: 128,
@@ -303,6 +310,12 @@ export const layerCategories = {
         color: 'hsl(280, 68%, 60%)',
         description: 'Gated Recurrent Unit for sequences',
         tip: 'Simpler alternative to LSTM with fewer parameters. Often performs similarly but trains faster. Good choice for smaller datasets.',
+        learnMore: {
+          whatItDoes: 'Similar to LSTM but with fewer gates (2 instead of 3). Merges cell state and hidden state into one.',
+          whenToUse: 'When you want LSTM-like performance with fewer parameters. Good for smaller datasets or when training speed matters.',
+          vsLSTM: 'GRU: 2 gates, fewer params, trains faster. LSTM: 3 gates, more expressive, better for very long sequences.',
+          keyInsight: 'In practice, GRU and LSTM perform similarly on most tasks. Try both and pick the one that works better for your data.'
+        },
         defaultConfig: {
           inputSize: 256,
           hiddenSize: 128,
