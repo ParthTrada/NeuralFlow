@@ -1530,6 +1530,211 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-24">
+              
+              {/* Pre-trained Mini-GPT Section */}
+              {isMiniGPTTemplate && (
+                <div className="space-y-4">
+                  {/* Pre-trained Badge */}
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-violet-500/10 border border-violet-500/30">
+                    <Sparkles className="w-5 h-5 text-violet-400" />
+                    <div>
+                      <p className="font-semibold text-sm text-violet-300">Pre-trained Model Ready</p>
+                      <p className="text-xs text-muted-foreground">No training required - start generating text immediately!</p>
+                    </div>
+                  </div>
+                  
+                  {/* Model Specifications */}
+                  <div className="p-4 rounded-lg bg-card border border-border space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-primary" />
+                      <h3 className="font-semibold text-sm">Model Specifications</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Parameters</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.parameters}</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Architecture</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.layers} Layers</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Embed Dim</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.embedDim}</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Attention Heads</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.heads}</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sequence Length</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.seqLength} chars</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Vocabulary</p>
+                        <p className="text-sm font-mono font-bold">{MINI_GPT_SPECS.vocabSize} chars</p>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Training Info */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-blue-400" />
+                        <h4 className="font-medium text-xs">Training Details</h4>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
+                          <p className="text-lg font-bold text-blue-400">{MINI_GPT_SPECS.epochs}</p>
+                          <p className="text-[10px] text-muted-foreground">Epochs</p>
+                        </div>
+                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
+                          <p className="text-lg font-bold text-green-400">{MINI_GPT_SPECS.finalAccuracy}</p>
+                          <p className="text-[10px] text-muted-foreground">Accuracy</p>
+                        </div>
+                        <div className="p-2 rounded bg-orange-500/10 border border-orange-500/20 text-center">
+                          <p className="text-lg font-bold text-orange-400">{MINI_GPT_SPECS.finalLoss}</p>
+                          <p className="text-[10px] text-muted-foreground">Loss</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Trained on: {MINI_GPT_SPECS.trainingData}
+                      </p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Why Pre-trained */}
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="flex items-start gap-2">
+                        <Zap className="w-4 h-4 text-amber-400 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-medium text-amber-300">Why is this pre-trained?</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Training transformer models in the browser is slow and resource-intensive. 
+                            We've pre-trained this Mini-GPT on Shakespeare text so you can explore 
+                            text generation instantly. The exported PyTorch code can be trained on 
+                            your own data with a GPU.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Text Generation Section */}
+                  <div className="space-y-3 p-4 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-violet-400" />
+                      <span className="font-semibold text-sm text-violet-300">Generate Shakespeare-Style Text</span>
+                    </div>
+                    
+                    {isLoadingMiniGPT ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading model...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Prompt (seed text)</Label>
+                          <textarea
+                            placeholder="Enter starting text..."
+                            value={generationPrompt}
+                            onChange={(e) => setGenerationPrompt(e.target.value)}
+                            className="w-full h-24 p-3 rounded-lg bg-secondary border border-border text-sm resize-none font-mono"
+                            style={{ fontSize: '13px' }}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Temperature: {generationTemp.toFixed(2)}</Label>
+                            <Slider
+                              value={[generationTemp]}
+                              onValueChange={([val]) => setGenerationTemp(val)}
+                              min={0.1}
+                              max={2.0}
+                              step={0.1}
+                              className="py-2"
+                            />
+                            <p className="text-[9px] text-muted-foreground">Lower = predictable, Higher = creative</p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Length: {generationLength}</Label>
+                            <Slider
+                              value={[generationLength]}
+                              onValueChange={([val]) => setGenerationLength(val)}
+                              min={50}
+                              max={500}
+                              step={50}
+                              className="py-2"
+                            />
+                            <p className="text-[9px] text-muted-foreground">Characters to generate</p>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleTextGeneration}
+                          disabled={isGenerating || !generationPrompt.trim() || !isMiniGPTLoaded}
+                          className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate Text
+                            </>
+                          )}
+                        </Button>
+                        
+                        {/* Generated Output */}
+                        {generatedText && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Generated Output</Label>
+                            <div className="p-3 rounded-lg bg-card border border-border max-h-64 overflow-y-auto">
+                              <p className="text-sm font-mono whitespace-pre-wrap text-foreground leading-relaxed">
+                                <span className="text-muted-foreground">{generationPrompt}</span>
+                                <span className="text-violet-400">{generatedText}</span>
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                navigator.clipboard.writeText(generationPrompt + generatedText);
+                                toast.success('Copied to clipboard!');
+                              }}
+                            >
+                              Copy Full Text
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Info about exporting */}
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs text-blue-300">
+                      <strong>Want to train on your own data?</strong> Click "View Code" in the header to export 
+                      production-ready PyTorch code. Train it on any GPU with your custom text corpus!
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Regular Training Section (hidden for Mini-GPT) */}
+              {!isMiniGPTTemplate && (
+              <>
               {/* Network Requirements Summary */}
               {networkReqs && (
                 <div className="space-y-2">
