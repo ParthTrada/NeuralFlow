@@ -279,14 +279,13 @@ export default function Landing() {
                     setMobileMenuOpen(false);
                     navigate('/guide');
                   }}
-                  className={`flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  className={`block w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     isDark 
                       ? 'text-zinc-300 hover:text-white hover:bg-white/5' 
                       : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
                   }`}
                   data-testid="guide-link-mobile"
                 >
-                  <BookOpen className="w-4 h-4" />
                   Guide
                 </button>
                 {[
