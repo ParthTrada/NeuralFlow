@@ -591,8 +591,8 @@ export default function Builder() {
         trainedWeights={trainedWeights}
       />
 
-      {/* Product Tour for first-time users */}
-      <ProductTour isDark={isDarkMode} />
+      {/* Product Tour for first-time users - Disabled for now */}
+      {/* <ProductTour isDark={isDarkMode} /> */}
     </div>
   );
 }
