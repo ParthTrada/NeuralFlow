@@ -388,6 +388,72 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   };
 
+  // Handle sample dataset selection from Dataset Browser
+  const handleSelectSampleDataset = async (datasetInfo) => {
+    setStatus('loading');
+    setErrorMessage('');
+    setSelectedDatasetInfo(datasetInfo);
+    
+    try {
+      const rawData = datasetInfo.rawData;
+      const isTextDataset = datasetInfo.category === 'text';
+      const isSequenceDataset = datasetInfo.category === 'sequence';
+      
+      if (isTextDataset) {
+        // Process as text dataset
+        const processed = processTextCSVData(
+          rawData, 
+          datasetInfo.textColumn, 
+          datasetInfo.targetColumn,
+          { maxLength: networkReqs?.seqLength || 100, vocabSize: networkReqs?.vocabSize || 10000 }
+        );
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'text'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTextColumn(datasetInfo.textColumn);
+        setTargetColumn(datasetInfo.targetColumn);
+      } else if (isSequenceDataset) {
+        // Process as sequence dataset
+        const processed = processCSVData(rawData, datasetInfo.targetColumn, {
+          normalize: true,
+          oneHotEncode: true,
+          isSequenceModel: true,
+          seqLength: networkReqs?.seqLength || 10
+        });
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'sequence'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
+      } else {
+        // Process as tabular dataset
+        const processed = processCSVData(rawData, datasetInfo.targetColumn, {
+          normalize: true,
+          oneHotEncode: true
+        });
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'csv'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
+      }
+      
+      setStatus('ready');
+      toast.success(`Loaded ${datasetInfo.name} dataset (${rawData.length} samples)`);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error.message);
+      toast.error(`Failed to load dataset: ${error.message}`);
+    }
+  };
+
   // Start training
   const handleStartTraining = async () => {
     if (!processedData) {
