@@ -143,7 +143,7 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 
 ### P1 (High Priority)
 - [x] TensorFlow/Keras code generation option ✅ COMPLETED
-- [ ] Undo/Redo functionality
+- [x] Undo/Redo functionality ✅ COMPLETED
 - [ ] Backend-based training for larger models
 
 ### P2 (Medium Priority)
