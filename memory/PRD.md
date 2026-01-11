@@ -13,7 +13,9 @@ Build a visual deep-learning tool that allows users to design, train, and export
 ### Implemented ✅
 - **Visual Network Builder** - Drag-and-drop canvas for neural network design
 - **Layer Palette** - Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, Embedding, Flatten, MaxPooling2D, Transformer Encoder/Decoder, LayerNorm, PositionalEncoding
-- **Model Templates** - Pre-built architectures (MLP, CNN, RNN, Transformer, Autoencoder, Text Classifier, ResNet Block, **Mini-GPT**)
+- **Model Templates** - Pre-built architectures (MLP, CNN, RNN, Transformer, Autoencoder, Text Classifier, ResNet Block)
+- **Pre-Trained Models Section (NEW)** - Separate section for ready-to-use models
+  - **Mini-GPT** - Shakespeare-style text generation using Markov chain (~2.1M params architecture)
 - **In-Browser Training** - TensorFlow.js based training with real-time metrics
 - **Sample Datasets** - Iris, MNIST, Fashion-MNIST, CIFAR-10, Sentiment, Movie Reviews, News Categories, Intent Classification, Shakespeare (text generation)
 - **Auto-Adjustment** - Model layers automatically adapt to selected dataset specifications
@@ -24,7 +26,7 @@ Build a visual deep-learning tool that allows users to design, train, and export
 - **Guide Page** - Visual tutorial with real platform screenshots
 - **Admin Panel** - Debug interface at `/admin` (password protected)
 - **Mobile Responsive** - Adapted UI for mobile devices
-- **Mini-GPT Template (NEW)** - Pre-trained decoder-only transformer for Shakespeare-style text generation
+- **Markov Chain Text Generation** - High-quality Shakespeare-style text generation (instant, no training required)
 
 ### Product Tour (Ready but Disabled)
 - First-time user onboarding tour
