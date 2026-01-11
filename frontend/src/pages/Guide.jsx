@@ -355,33 +355,16 @@ const Guide = () => {
               viewport={{ once: true }}
               className="order-1 lg:order-2"
             >
-              <GuideCard className="p-0 overflow-hidden">
-                <div className="bg-white/5 px-4 py-2 border-b border-white/5 flex items-center gap-2">
-                  <Code className="w-4 h-4 text-zinc-400" />
-                  <span className="text-xs text-zinc-400">model.py</span>
-                </div>
-                <pre className="p-4 text-xs text-zinc-300 font-mono overflow-x-auto">
-{`import torch.nn as nn
-
-class NeuralNetwork(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.layer1 = nn.Linear(4, 64)
-        self.layer2 = nn.Linear(64, 32)
-        self.output = nn.Linear(32, 3)
-    
-    def forward(self, x):
-        x = torch.relu(self.layer1(x))
-        x = torch.relu(self.layer2(x))
-        return self.output(x)`}
-                </pre>
-              </GuideCard>
+              <ScreenshotCard 
+                src={SCREENSHOTS.code} 
+                alt="Generated PyTorch code with copy and download options" 
+              />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Final CTA - Simple text with button */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4 text-center">
           <motion.div
@@ -389,19 +372,17 @@ class NeuralNetwork(nn.Module):
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <GuideCard className="max-w-2xl mx-auto py-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Build?</h2>
-              <p className="text-zinc-400 mb-8 max-w-md mx-auto">
-                Start with a template and have your first model running in under a minute.
-              </p>
-              <Link to="/builder">
-                <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-lg px-8 py-6" data-testid="start-building-cta">
-                  <Brain className="w-5 h-5 mr-2" />
-                  Start Building
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-            </GuideCard>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Build?</h2>
+            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+              Start with a template and have your first model running in under a minute.
+            </p>
+            <Link to="/builder">
+              <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-lg px-8 py-6" data-testid="start-building-cta">
+                <Brain className="w-5 h-5 mr-2" />
+                Start Building
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </section>
