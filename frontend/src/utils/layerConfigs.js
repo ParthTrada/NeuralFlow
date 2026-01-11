@@ -130,6 +130,12 @@ export const layerCategories = {
         color: 'hsl(263, 70%, 50%)',
         description: 'Flatten multi-dimensional input to 1D',
         tip: 'Converts 2D/3D feature maps into a 1D vector. Required before Dense layers when coming from Conv2D layers.',
+        learnMore: {
+          whatItDoes: 'Reshapes multi-dimensional input (like 7x7x64 feature maps) into a 1D vector (3136 features).',
+          whenToUse: 'Between Conv2D/MaxPool layers and Dense layers. Dense layers expect 1D input.',
+          example: '[batch, 7, 7, 64] → [batch, 3136]. The spatial structure is lost but all information is preserved.',
+          alternative: 'For sequences, consider GlobalAvgPool1D instead - it averages rather than flattening.'
+        },
         defaultConfig: {}
       },
       {
