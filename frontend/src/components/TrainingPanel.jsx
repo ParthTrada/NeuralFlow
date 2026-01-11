@@ -1668,31 +1668,29 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       <span className="font-semibold text-sm text-violet-300">Generate Shakespeare-Style Text</span>
                     </div>
                     
-                    {isLoadingMiniGPT ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
-                        <span className="ml-2 text-sm text-muted-foreground">Loading model...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2">
-                          <Label className="text-xs">Prompt (seed text)</Label>
-                          <textarea
-                            placeholder="Enter starting text..."
-                            value={generationPrompt}
-                            onChange={(e) => setGenerationPrompt(e.target.value)}
-                            className="w-full h-24 p-3 rounded-lg bg-secondary border border-border text-sm resize-none font-mono"
-                            style={{ fontSize: '13px' }}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Temperature: {generationTemp.toFixed(2)}</Label>
-                            <Slider
-                              value={[generationTemp]}
-                              onValueChange={([val]) => setGenerationTemp(val)}
-                              min={0.1}
+                    <p className="text-xs text-muted-foreground">
+                      Uses a statistical language model trained on Shakespeare's works. Enter a prompt to continue the text in his style.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs">Prompt (seed text)</Label>
+                      <textarea
+                        placeholder="To be or not to be..."
+                        value={generationPrompt}
+                        onChange={(e) => setGenerationPrompt(e.target.value)}
+                        className="w-full h-24 p-3 rounded-lg bg-secondary border border-border text-sm resize-none font-mono"
+                        style={{ fontSize: '13px' }}
+                        data-testid="generation-prompt"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Temperature: {generationTemp.toFixed(2)}</Label>
+                        <Slider
+                          value={[generationTemp]}
+                          onValueChange={([val]) => setGenerationTemp(val)}
+                          min={0.1}
                               max={2.0}
                               step={0.1}
                               className="py-2"
