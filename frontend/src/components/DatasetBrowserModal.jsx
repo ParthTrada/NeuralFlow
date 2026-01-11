@@ -26,6 +26,7 @@ const categoryIcons = {
   text: MessageSquare,
   sequence: LineChart,
   image: Image,
+  'text-generation': MessageSquare,
 };
 
 const categoryLabels = {
@@ -33,6 +34,7 @@ const categoryLabels = {
   text: 'Text/NLP',
   sequence: 'Time Series',
   image: 'Image',
+  'text-generation': 'Text Generation',
 };
 
 // Short labels for mobile
@@ -41,6 +43,7 @@ const categoryLabelsShort = {
   text: 'Text',
   sequence: 'Series',
   image: 'Image',
+  'text-generation': 'GenText',
 };
 
 export const DatasetBrowserModal = ({ 
