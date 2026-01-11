@@ -452,6 +452,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         const labels = rawData.map(row => row[datasetInfo.targetColumn]);
         const uniqueLabels = [...new Set(labels)];
         
+        // Check if model has Conv2D layers (for determining input shape)
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
         setProcessedData({
           raw: rawData,
           type: 'image',
@@ -466,7 +469,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           targetColumn: datasetInfo.targetColumn,
           uniqueLabels,
           numClasses: uniqueLabels.length,
-          inputShape: hasConv2D ? [28, 28, 1] : [pixelColumns.length]
+          inputShape: modelHasConv2D ? [28, 28, 1] : [pixelColumns.length]
         });
         setColumns(Object.keys(rawData[0]));
         setTargetColumn(datasetInfo.targetColumn);
