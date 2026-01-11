@@ -11,7 +11,7 @@ import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
 import { useHistory } from '../hooks/useHistory';
-import { ProductTour } from '../components/ProductTour';
+// import { ProductTour } from '../components/ProductTour'; // Commented out - Demo guide disabled for now
 import { generatePyTorchCode, generateKerasCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
 
