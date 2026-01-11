@@ -6,7 +6,6 @@ import {
   Square, 
   FileSpreadsheet, 
   Image, 
-  Sparkles,
   TrendingUp,
   AlertCircle,
   CheckCircle2,
