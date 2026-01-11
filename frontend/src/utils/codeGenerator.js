@@ -201,6 +201,18 @@ export const generatePyTorchCode = (nodes, edges) => {
         }
         break;
 
+      case 'Add':
+        // Add layer combines multiple inputs - find all incoming edges
+        layerCode = `# ${label} - Skip Connection (element-wise addition)`;
+        forwardCode = `${varName} = {{inputs_add}}  # Add skip connection`;
+        break;
+
+      case 'Concatenate':
+        const axis = config.axis !== undefined ? config.axis : -1;
+        layerCode = `# ${label} - Concatenate along axis ${axis}`;
+        forwardCode = `${varName} = torch.cat({{inputs_cat}}, dim=${axis})  # Concatenate`;
+        break;
+
       default:
         // Handle custom labeled layers (like "Encoder 1", "Decoder 1", etc.)
         // These are usually Dense layers with custom names
@@ -221,14 +233,40 @@ export const generatePyTorchCode = (nodes, edges) => {
     if (layerCode) {
       layerDefs.push(layerCode);
       
-      // Find input for this layer
-      const incomingEdge = edges.find(e => e.target === node.id);
-      let inputVar = 'x';
-      if (incomingEdge && processedNodes.has(incomingEdge.source)) {
-        inputVar = processedNodes.get(incomingEdge.source);
+      // Find inputs for this layer
+      const incomingEdges = edges.filter(e => e.target === node.id);
+      
+      if (node.data.layerType === 'Add' || node.data.layerType === 'Concatenate') {
+        // Multi-input layer - collect all inputs
+        const inputVars = incomingEdges.map(edge => {
+          if (processedNodes.has(edge.source)) {
+            return processedNodes.get(edge.source);
+          }
+          return 'x';
+        });
+        
+        if (inputVars.length < 2) {
+          // Not enough inputs, use placeholder
+          inputVars.push('x');
+        }
+        
+        if (node.data.layerType === 'Add') {
+          const addExpr = inputVars.join(' + ');
+          forwardSteps.push(forwardCode.replace('{{inputs_add}}', addExpr));
+        } else {
+          const catExpr = `[${inputVars.join(', ')}]`;
+          forwardSteps.push(forwardCode.replace('{{inputs_cat}}', catExpr));
+        }
+      } else {
+        // Single input layer
+        const incomingEdge = incomingEdges[0];
+        let inputVar = 'x';
+        if (incomingEdge && processedNodes.has(incomingEdge.source)) {
+          inputVar = processedNodes.get(incomingEdge.source);
+        }
+        forwardSteps.push(forwardCode.replace(/{{input}}/g, inputVar));
       }
       
-      forwardSteps.push(forwardCode.replace(/{{input}}/g, inputVar));
       processedNodes.set(node.id, varName);
       layerIndex++;
     }
