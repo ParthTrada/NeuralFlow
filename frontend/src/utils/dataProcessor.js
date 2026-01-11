@@ -47,7 +47,7 @@ export const textToCharIndices = (text, charToIdx, maxLength = 64) => {
 
 // Process character-level text generation data
 export const processCharLevelData = (textData, options = {}) => {
-  const { seqLength = 64 } = options;
+  const { seqLength = 64, targetVocabSize = null } = options;
   
   // Handle different data formats
   let fullText = '';
@@ -67,7 +67,11 @@ export const processCharLevelData = (textData, options = {}) => {
   
   // Build character vocabulary
   const { charToIdx, idxToChar, vocabSize } = buildCharVocabulary(fullText);
-  console.log(`Built char vocabulary with ${vocabSize} characters:`, Object.keys(charToIdx).slice(0, 20).join(''));
+  
+  // Use target vocab size if provided (for matching model), otherwise use actual
+  const finalVocabSize = targetVocabSize || vocabSize;
+  
+  console.log(`Built char vocabulary with ${vocabSize} characters (using ${finalVocabSize} for training)`);
   
   // Create training sequences
   const sequences = [];
@@ -91,20 +95,22 @@ export const processCharLevelData = (textData, options = {}) => {
   
   // Create tensors
   const xTensor = tf.tensor2d(sequences, [sequences.length, seqLength], 'int32');
-  const yTensor = tf.oneHot(tf.tensor1d(targets, 'int32'), vocabSize);
+  const yTensor = tf.oneHot(tf.tensor1d(targets, 'int32'), finalVocabSize);
   
   return {
     xTrain: xTensor,
     yTrain: yTensor,
     inputShape: [seqLength],
-    numClasses: vocabSize,
+    numClasses: finalVocabSize,
     charToIdx,
     idxToChar,
-    vocabSize,
+    vocabSize: finalVocabSize,
+    actualVocabSize: vocabSize,
     seqLength,
     type: 'text-generation',
     fullText,
-    description: `Character-level generation (${seqLength} chars, ${vocabSize} vocab)`,
+    sampleCount: sequences.length,
+    description: `Character-level generation (${seqLength} chars, ${finalVocabSize} vocab)`,
   };
 };
 
