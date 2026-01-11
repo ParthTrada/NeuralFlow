@@ -163,6 +163,74 @@ export const buildTFModel = (nodes, edges) => {
           }));
           break;
 
+        case 'PositionalEncoding':
+          // TensorFlow.js doesn't have built-in positional encoding
+          // We simulate it with a learnable embedding added as a Lambda layer
+          // For simplicity, we add dropout only (position info comes from embedding order)
+          model.add(tf.layers.dropout({
+            rate: config.dropout || 0.1,
+          }));
+          break;
+
+        case 'GlobalAvgPool1D':
+          model.add(tf.layers.globalAveragePooling1d());
+          break;
+
+        case 'LayerNorm':
+          // TensorFlow.js has layerNormalization
+          model.add(tf.layers.layerNormalization({
+            axis: -1,
+          }));
+          break;
+
+        case 'MultiHeadAttention':
+          // TensorFlow.js doesn't have native MultiHeadAttention in sequential API
+          // We'll use dense layers as approximation for the demo
+          model.add(tf.layers.dense({
+            units: config.embedDim || 256,
+            activation: 'relu',
+            inputShape: isFirstLayer ? inputShape : undefined,
+          }));
+          break;
+
+        case 'TransformerEncoder':
+          // Simplified transformer encoder for TF.js sequential model
+          // Real transformer needs functional API for skip connections
+          const encUnits = config.dModel || 256;
+          const encLayers = config.numLayers || 2;
+          for (let i = 0; i < encLayers; i++) {
+            // Self-attention approximation with dense layers
+            model.add(tf.layers.dense({
+              units: config.dimFeedforward || 1024,
+              activation: 'relu',
+            }));
+            model.add(tf.layers.dropout({ rate: 0.1 }));
+            model.add(tf.layers.dense({
+              units: encUnits,
+              activation: 'linear',
+            }));
+            model.add(tf.layers.layerNormalization({ axis: -1 }));
+          }
+          break;
+
+        case 'TransformerDecoder':
+          // Simplified transformer decoder for TF.js sequential model
+          const decUnits = config.dModel || 256;
+          const decLayers = config.numLayers || 2;
+          for (let i = 0; i < decLayers; i++) {
+            model.add(tf.layers.dense({
+              units: config.dimFeedforward || 1024,
+              activation: 'relu',
+            }));
+            model.add(tf.layers.dropout({ rate: 0.1 }));
+            model.add(tf.layers.dense({
+              units: decUnits,
+              activation: 'linear',
+            }));
+            model.add(tf.layers.layerNormalization({ axis: -1 }));
+          }
+          break;
+
         case 'Output':
           model.add(tf.layers.dense({
             units: config.numClasses || 10,
