@@ -352,6 +352,10 @@ class NeuralFlowAPITester:
             200
         )
 
+    def test_clone_model_unauthenticated(self):
+        """Test clone model without authentication"""
+        return self.run_test("Clone Model (Unauthenticated)", "POST", "auth/models/test_id/clone", 401)
+
 def main():
     print("🚀 Starting NeuralFlow API Tests...")
     print("=" * 50)
