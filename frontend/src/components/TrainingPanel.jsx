@@ -321,6 +321,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       toast.error('Training failed. Switching to Markov chain fallback.');
       setUseMarkovFallback(true);
       setIsMiniGPTLoaded(true);
+      setIsTraining(false);
+      setMiniGPTTrainingComplete(false);
       setStatus('complete');
     } finally {
       setIsLoadingMiniGPT(false);
