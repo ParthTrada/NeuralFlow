@@ -9,6 +9,7 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
+  CheckCircle,
   Loader2,
   X,
   Save,
@@ -22,7 +23,8 @@ import {
   Download,
   Cpu,
   Zap,
-  BookOpen
+  BookOpen,
+  Brain
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
