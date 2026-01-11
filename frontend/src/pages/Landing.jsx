@@ -14,8 +14,7 @@ import {
   Moon,
   Menu,
   X,
-  Github,
-  BookOpen
+  Github
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { NetworkShowcase } from '../components/NetworkShowcase';
