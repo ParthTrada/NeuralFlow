@@ -174,8 +174,18 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
   - ResNet Block template demonstrating skip connections
   - PyTorch code generation with proper skip connection handling
   - Keras code generation with Add/Concatenate layers
+- [x] **Arbitrary Graph Topologies:** ✅ COMPLETED
+  - Topological sorting for DAG (Directed Acyclic Graph) processing
+  - Support for branching (one output to multiple inputs)
+  - Support for merging (multiple inputs to one output via Add/Concatenate)
+  - Code generators handle complex graph structures
+- [x] **Undo/Redo System:** ✅ COMPLETED
+  - History stack with 50 state limit
+  - Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Shift+Z (redo)
+  - UI buttons in header with visual disabled states
+  - Debounced recording for continuous changes (dragging)
+  - Immediate recording for discrete actions (add/delete)
 - [ ] **Graph Architecture Enhancements (Future):**
-  - Branching and merging paths (arbitrary graph topologies)
   - Parallel layer execution visualization
 
 ## Test Reports
