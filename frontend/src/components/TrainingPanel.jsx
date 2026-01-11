@@ -577,6 +577,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setErrorMessage('');
     setColumns([]);
     setTargetColumn('');
+    setTextColumn('');
     setPredictionInput('');
     setPredictionResult(null);
     setTestImage(null);
