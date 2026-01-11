@@ -202,6 +202,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [miniGPTTrainingProgress, setMiniGPTTrainingProgress] = useState({ epoch: 0, loss: 0, accuracy: 0 });
   const [useMarkovFallback, setUseMarkovFallback] = useState(false);
   const [miniGPTTrainingComplete, setMiniGPTTrainingComplete] = useState(false);
+  const [miniGPTTrainingFailed, setMiniGPTTrainingFailed] = useState(false);
+  const [miniGPTTrainingError, setMiniGPTTrainingError] = useState('');
   
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
