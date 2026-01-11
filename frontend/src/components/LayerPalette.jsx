@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText, GitMerge, Wand2 } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText, GitMerge, Wand2, Cpu } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -13,17 +13,17 @@ import { layerCategories } from '../utils/layerConfigs';
 import { cn } from '../lib/utils';
 import { ResizablePanel } from './ResizablePanel';
 
-// Template definitions
-const templates = [
+// Pre-trained models (ready to use, no training required)
+const preTrainedModels = [
   {
     id: 'mini-gpt',
     name: 'Mini-GPT',
-    description: 'Decoder-only LLM for text generation',
-    tip: 'A simplified GPT architecture that generates text character-by-character. Train on Shakespeare or any text to see it write! ~2M parameters, trainable in browser.',
+    description: 'Shakespeare text generation (~2M params)',
+    tip: 'Pre-trained on Shakespeare plays. Generate text immediately without training! Export the PyTorch code to train on your own data.',
     icon: Wand2,
     color: '#a855f7',
     layers: 8,
-    isNew: true,
+    isPreTrained: true,
     nodes: [
       { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 65, seqLength: 64 } } },
       { id: 'node_1', type: 'layerNode', position: { x: 0, y: 120 }, data: { label: 'Token Embedding', layerType: 'Embedding', config: { vocabSize: 65, embedDim: 128 } } },
@@ -44,6 +44,10 @@ const templates = [
       { id: 'e6-7', source: 'node_6', target: 'node_7', animated: true },
     ]
   },
+];
+
+// Template definitions (trainable architectures)
+const templates = [
   {
     id: 'mlp',
     name: 'Simple MLP',
