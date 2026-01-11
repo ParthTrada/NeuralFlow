@@ -100,13 +100,17 @@ export const processCSVData = (data, targetColumn, options = {}) => {
   let yTensor;
   const uniqueTargets = [...new Set(targets)];
   
-  if (oneHotEncode && uniqueTargets.length <= 20) {
+  // Need at least 2 classes for one-hot encoding
+  if (oneHotEncode && uniqueTargets.length >= 2 && uniqueTargets.length <= 20) {
     // One-hot encode for classification
     const targetIndices = targets.map(t => uniqueTargets.indexOf(t));
     yTensor = tf.oneHot(tf.tensor1d(targetIndices, 'int32'), uniqueTargets.length);
+  } else if (uniqueTargets.length === 1) {
+    // Only 1 class - this is likely an error in the data
+    throw new Error(`Only 1 class found in target column. Classification requires at least 2 classes. Found: "${uniqueTargets[0]}"`);
   } else {
     // Regression or too many classes
-    yTensor = tf.tensor2d(targets.map(t => [typeof t === 'number' ? t : 0]));
+    yTensor = tf.tensor2d(targets.map(t => [typeof t === 'number' ? t : parseFloat(t) || 0]));
   }
 
   return {
