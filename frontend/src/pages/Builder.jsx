@@ -304,12 +304,19 @@ export default function Builder() {
         ...edge,
         id: `e_${timestamp}_${index}`,
         source: idMap[edge.source],
-        target: idMap[edge.target]
+        target: idMap[edge.target],
+        targetHandle: edge.targetHandle // Preserve target handle for multi-input nodes
       }));
       
       // Add to existing nodes and edges
-      setNodes((nds) => [...nds, ...newNodes]);
-      setEdges((eds) => [...eds, ...newEdges]);
+      const updatedNodes = [...nodes, ...newNodes];
+      const updatedEdges = [...edges, ...newEdges];
+      
+      setNodes(updatedNodes);
+      setEdges(updatedEdges);
+      
+      // Record to history
+      recordHistory(updatedNodes, updatedEdges, true);
       
       toast.success(`Added ${template.name} template!`);
       return;
@@ -338,13 +345,18 @@ export default function Builder() {
       },
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Record to history
+    recordHistory(updatedNodes, edges, true);
+    
     toast.success(`Added ${layer.label} layer`);
     
     if (isMobile) {
       setShowLayerPalette(false);
     }
-  }, [setNodes, setEdges, isMobile]);
+  }, [nodes, edges, setNodes, setEdges, isMobile, recordHistory]);
 
   // Add layer via tap (mobile)
   const handleAddLayer = useCallback((layer) => {
