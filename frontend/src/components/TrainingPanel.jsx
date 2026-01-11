@@ -230,12 +230,26 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const initializeMiniGPT = async () => {
     setIsLoadingMiniGPT(true);
     setMiniGPTTrainingComplete(false);
+    setMiniGPTTrainingFailed(false);
+    setMiniGPTTrainingError('');
     setMiniGPTTrainingProgress({ epoch: 0, loss: 0, accuracy: 0 });
     
     try {
+      // Use the fixed vocab size from model specs (must match model's output layer)
+      const MODEL_VOCAB_SIZE = MINI_GPT_SPECS.vocabSize; // 65
+      const MODEL_SEQ_LENGTH = MINI_GPT_SPECS.seqLength; // 64
+      
       // Build vocabulary from Shakespeare text
-      const { charToIdx, idxToChar, vocabSize } = buildCharVocabulary(shakespeareText);
-      setMiniGPTVocab({ charToIdx, idxToChar, vocabSize, seqLength: 64 });
+      const { charToIdx, idxToChar, vocabSize: actualVocabSize } = buildCharVocabulary(shakespeareText);
+      
+      // Ensure vocab mapping covers all indices up to MODEL_VOCAB_SIZE
+      // Fill any missing indices with space character
+      const extendedIdxToChar = { ...idxToChar };
+      for (let i = actualVocabSize; i < MODEL_VOCAB_SIZE; i++) {
+        extendedIdxToChar[i] = ' '; // Map unused indices to space
+      }
+      
+      setMiniGPTVocab({ charToIdx, idxToChar: extendedIdxToChar, vocabSize: MODEL_VOCAB_SIZE, seqLength: MODEL_SEQ_LENGTH });
       
       // Build the model architecture
       if (nodes.length > 0) {
@@ -247,17 +261,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         });
         modelRef.current = model;
         
-        // Process Shakespeare data for training
+        // Process Shakespeare data for training with MODEL_VOCAB_SIZE to match model output
         toast.info('Preparing training data...', { duration: 2000 });
         const trainingData = processCharLevelData(shakespeareText, {
-          seqLength: 64,
-          targetVocabSize: vocabSize
+          seqLength: MODEL_SEQ_LENGTH,
+          targetVocabSize: MODEL_VOCAB_SIZE // Use model's expected vocab size
         });
         
         setProcessedData({
           ...trainingData,
           isTextGeneration: true,
           charToIdx,
+          idxToChar: extendedIdxToChar,
+          vocabSize: MODEL_VOCAB_SIZE,
+          seqLength: MODEL_SEQ_LENGTH,
+          fullText: shakespeareText,
+        });
           idxToChar,
           vocabSize,
           seqLength: 64,
