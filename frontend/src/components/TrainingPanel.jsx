@@ -1999,6 +1999,98 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       4. Test Model
                     </h3>
                     
+                    {/* Text Generation UI - Show for text-generation models */}
+                    {processedData?.isTextGeneration && (
+                      <div className="space-y-3 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-violet-400" />
+                          <span className="font-medium text-sm text-violet-300">Generate Text</span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-xs">Prompt (seed text)</Label>
+                          <textarea
+                            placeholder="Enter starting text..."
+                            value={generationPrompt}
+                            onChange={(e) => setGenerationPrompt(e.target.value)}
+                            className="w-full h-20 p-3 rounded-lg bg-secondary border border-border text-sm resize-none font-mono"
+                            style={{ fontSize: '14px' }}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Temperature: {generationTemp.toFixed(2)}</Label>
+                            <Slider
+                              value={[generationTemp]}
+                              onValueChange={([val]) => setGenerationTemp(val)}
+                              min={0.1}
+                              max={2.0}
+                              step={0.1}
+                              className="py-2"
+                            />
+                            <p className="text-[9px] text-muted-foreground">Lower = predictable, Higher = creative</p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Length: {generationLength}</Label>
+                            <Slider
+                              value={[generationLength]}
+                              onValueChange={([val]) => setGenerationLength(val)}
+                              min={50}
+                              max={500}
+                              step={50}
+                              className="py-2"
+                            />
+                            <p className="text-[9px] text-muted-foreground">Characters to generate</p>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleTextGeneration}
+                          disabled={isGenerating || !generationPrompt.trim()}
+                          className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate Text
+                            </>
+                          )}
+                        </Button>
+                        
+                        {/* Generated Output */}
+                        {generatedText && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Generated Output</Label>
+                            <div className="p-3 rounded-lg bg-card border border-border max-h-48 overflow-y-auto">
+                              <p className="text-sm font-mono whitespace-pre-wrap text-foreground">
+                                <span className="text-muted-foreground">{generationPrompt}</span>
+                                <span className="text-violet-400">{generatedText}</span>
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                navigator.clipboard.writeText(generationPrompt + generatedText);
+                                toast.success('Copied to clipboard!');
+                              }}
+                            >
+                              Copy Full Text
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Standard prediction UI for non-text-generation models */}
+                    {!processedData?.isTextGeneration && (
                     <div className="space-y-3">
                       {/* Input Type Tabs */}
                       <Tabs defaultValue="csv" className="w-full">
