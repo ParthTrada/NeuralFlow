@@ -1719,26 +1719,93 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     
                     <Separator />
                     
-                    {/* Training Info */}
+                    {/* Training Progress or Info */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-blue-400" />
-                        <h4 className="font-medium text-xs">Training Details</h4>
+                        <h4 className="font-medium text-xs">Training Status</h4>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
-                          <p className="text-lg font-bold text-blue-400">{MINI_GPT_SPECS.epochs}</p>
-                          <p className="text-[10px] text-muted-foreground">Epochs</p>
-                        </div>
-                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
-                          <p className="text-lg font-bold text-green-400">{MINI_GPT_SPECS.finalAccuracy}</p>
-                          <p className="text-[10px] text-muted-foreground">Accuracy</p>
-                        </div>
-                        <div className="p-2 rounded bg-orange-500/10 border border-orange-500/20 text-center">
-                          <p className="text-lg font-bold text-orange-400">{MINI_GPT_SPECS.finalLoss}</p>
-                          <p className="text-[10px] text-muted-foreground">Loss</p>
-                        </div>
-                      </div>
+                      
+                      {isLoadingMiniGPT || isTraining ? (
+                        <>
+                          {/* Training in Progress */}
+                          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-blue-300">Training in progress...</span>
+                              <span className="text-xs text-muted-foreground">
+                                Epoch {miniGPTTrainingProgress.epoch}/{miniGPTTrainingProgress.totalEpochs || 30}
+                              </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2 mb-2">
+                              <div 
+                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(miniGPTTrainingProgress.epoch / (miniGPTTrainingProgress.totalEpochs || 30)) * 100}%` }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Loss: </span>
+                                <span className="font-mono text-orange-400">{miniGPTTrainingProgress.loss || '—'}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Accuracy: </span>
+                                <span className="font-mono text-green-400">{miniGPTTrainingProgress.accuracy || '0'}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-center">
+                            <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
+                            Please wait ~1-2 minutes for training to complete
+                          </p>
+                        </>
+                      ) : miniGPTTrainingComplete ? (
+                        <>
+                          {/* Training Complete - Show Live Results */}
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
+                              <p className="text-lg font-bold text-blue-400">{trainingHistory.length || 30}</p>
+                              <p className="text-[10px] text-muted-foreground">Epochs</p>
+                            </div>
+                            <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
+                              <p className="text-lg font-bold text-green-400">
+                                {trainingHistory.length > 0 ? `${(trainingHistory[trainingHistory.length - 1].accuracy * 100).toFixed(1)}%` : '—'}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">Accuracy</p>
+                            </div>
+                            <div className="p-2 rounded bg-orange-500/10 border border-orange-500/20 text-center">
+                              <p className="text-lg font-bold text-orange-400">
+                                {trainingHistory.length > 0 ? trainingHistory[trainingHistory.length - 1].loss.toFixed(3) : '—'}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">Loss</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 rounded bg-green-500/10 border border-green-500/20">
+                            <CheckCircle className="w-4 h-4 text-green-400" />
+                            <p className="text-xs text-green-300">Training complete! Model ready for text generation.</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* Using Markov Chain (fallback or default) */}
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="p-2 rounded bg-violet-500/10 border border-violet-500/20 text-center">
+                              <p className="text-lg font-bold text-violet-400">~3.4K</p>
+                              <p className="text-[10px] text-muted-foreground">States</p>
+                            </div>
+                            <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
+                              <p className="text-lg font-bold text-green-400">Order 4</p>
+                              <p className="text-[10px] text-muted-foreground">Markov</p>
+                            </div>
+                            <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
+                              <p className="text-lg font-bold text-blue-400">Instant</p>
+                              <p className="text-[10px] text-muted-foreground">Ready</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Using statistical model (Markov chain) for instant generation.
+                          </p>
+                        </>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         Trained on: {MINI_GPT_SPECS.trainingData}
                       </p>
@@ -1746,17 +1813,43 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     
                     <Separator />
                     
-                    {/* Why Pre-trained */}
+                    {/* Toggle between Neural Network and Markov Chain */}
+                    {miniGPTTrainingComplete && (
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <Brain className="w-4 h-4 text-violet-400" />
+                          <span className="text-xs">Use Markov Chain (faster, more readable)</span>
+                        </div>
+                        <button
+                          onClick={() => setUseMarkovFallback(!useMarkovFallback)}
+                          className={cn(
+                            "relative w-10 h-5 rounded-full transition-colors",
+                            useMarkovFallback ? "bg-violet-500" : "bg-muted-foreground/30"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                              useMarkovFallback ? "translate-x-5" : "translate-x-0.5"
+                            )}
+                          />
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Info about generation method */}
                     <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                       <div className="flex items-start gap-2">
                         <Zap className="w-4 h-4 text-amber-400 mt-0.5" />
                         <div>
-                          <p className="text-xs font-medium text-amber-300">Why is this pre-trained?</p>
+                          <p className="text-xs font-medium text-amber-300">
+                            {useMarkovFallback || !miniGPTTrainingComplete ? 'Statistical Model' : 'Neural Network Active'}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Training transformer models in the browser is slow and resource-intensive. 
-                            We've pre-trained this Mini-GPT on Shakespeare text so you can explore 
-                            text generation instantly. The exported PyTorch code can be trained on 
-                            your own data with a GPU.
+                            {useMarkovFallback || !miniGPTTrainingComplete 
+                              ? 'Using Markov chain for instant, readable Shakespeare-style text. Fast and reliable!'
+                              : 'Using the trained neural network. May produce more creative but sometimes less coherent output.'
+                            }
                           </p>
                         </div>
                       </div>
