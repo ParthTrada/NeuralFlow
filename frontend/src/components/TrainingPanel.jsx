@@ -380,10 +380,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         const isTextGeneration = datasetInfo.isTextGeneration || datasetInfo.category === 'text-generation';
         
         if (isTextGeneration) {
+          // Get target vocab size from Output layer in the model
+          const outputNode = nodes.find(n => n.data.layerType === 'Output');
+          const targetVocabSize = outputNode?.data?.config?.numClasses || datasetInfo.vocabSize || 65;
+          
           // Process as character-level text generation dataset
           const textGenData = datasetInfo.getData();
           const processed = processCharLevelData(textGenData, {
-            seqLength: datasetInfo.seqLength || 64
+            seqLength: datasetInfo.seqLength || 64,
+            targetVocabSize: targetVocabSize
           });
           
           setProcessedData({
@@ -394,6 +399,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             charToIdx: processed.charToIdx,
             idxToChar: processed.idxToChar,
             fullText: processed.fullText,
+            sampleCount: processed.sampleCount,
           });
           setColumns(['input', 'target']);
           setTextColumn('input');
@@ -401,6 +407,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           
           // Set a default generation prompt from the dataset
           setGenerationPrompt(processed.fullText.slice(0, 64));
+          
+          setStatus('ready');
+          toast.success(`Loaded ${datasetInfo.name} dataset (${processed.sampleCount} samples)`);
+          return; // Exit early for text generation datasets
         } else {
           // Process as text classification dataset - use SAME seqLength as auto-adjustment
           const processed = processTextCSVData(
