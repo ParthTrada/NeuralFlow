@@ -196,6 +196,12 @@ export const layerCategories = {
         color: 'hsl(158, 64%, 40%)',
         description: 'Output layer for predictions',
         tip: 'Final layer producing predictions. Use Softmax for multi-class classification, Sigmoid for binary, or no activation for regression.',
+        learnMore: {
+          whatItDoes: 'The final Dense layer that produces your network\'s predictions. Activation function determines output interpretation.',
+          whenToUse: 'Always the last layer. Set numClasses to match your task.',
+          activations: 'Softmax: multi-class (probabilities sum to 1). Sigmoid: binary or multi-label. Linear: regression (continuous values).',
+          example: '10-class image classification: Output(10, softmax). Binary spam detection: Output(1, sigmoid).'
+        },
         defaultConfig: {
           inputSize: 128,
           numClasses: 10,
@@ -214,6 +220,12 @@ export const layerCategories = {
         color: 'hsl(200, 80%, 50%)',
         description: 'Converts token IDs to dense vectors',
         tip: 'Maps discrete tokens (words, characters) to continuous vectors. Essential for NLP tasks. vocab_size = number of unique tokens.',
+        learnMore: {
+          whatItDoes: 'Looks up each token ID in a learned table, returning a dense vector. Transforms sparse one-hot encoding to dense representation.',
+          whenToUse: 'First layer for any NLP task. Takes integer token IDs as input, outputs continuous vectors.',
+          keyParams: 'vocab_size: total unique tokens (e.g., 30000 for English). embed_dim: vector size (128-512 typical).',
+          example: 'Word "hello" → ID 42 → lookup → [0.2, -0.5, 0.8, ...] (256-dim vector). Similar words have similar vectors!'
+        },
         defaultConfig: {
           vocabSize: 10000,
           embedDim: 256
@@ -226,6 +238,12 @@ export const layerCategories = {
         color: 'hsl(142, 71%, 45%)',
         description: 'Batch normalization for 1D data',
         tip: 'Normalizes layer inputs to have zero mean and unit variance. Speeds up training and allows higher learning rates. Use after Dense layers.',
+        learnMore: {
+          whatItDoes: 'Normalizes each feature across the batch to zero mean and unit variance. Learns scale (γ) and shift (β) parameters.',
+          whenToUse: 'After Dense layers, before activation. Speeds up training, acts as regularization, allows higher learning rates.',
+          keyInsight: 'Reduces "internal covariate shift" - the change in layer input distributions during training.',
+          placement: 'Dense → BatchNorm → ReLU is the common pattern. Some prefer Dense → ReLU → BatchNorm.'
+        },
         defaultConfig: {
           numFeatures: 128
         }
@@ -237,6 +255,12 @@ export const layerCategories = {
         color: 'hsl(142, 71%, 45%)',
         description: 'Batch normalization for 2D data',
         tip: 'Same as BatchNorm1D but for convolutional layers. Place after Conv2D and before activation for best results.',
+        learnMore: {
+          whatItDoes: 'Normalizes each channel across the batch and spatial dimensions. Same principle as BatchNorm1D but for images.',
+          whenToUse: 'After Conv2D layers in CNNs. Almost always improves training stability and speed.',
+          keyInsight: 'Made training very deep networks (like ResNet) practical. Now standard in most CNN architectures.',
+          placement: 'Conv2D → BatchNorm2D → ReLU → MaxPool is typical.'
+        },
         defaultConfig: {
           numFeatures: 32
         }
@@ -248,6 +272,12 @@ export const layerCategories = {
         color: 'hsl(142, 71%, 45%)',
         description: 'Layer normalization (used in Transformers)',
         tip: 'Normalizes across features instead of batch. Preferred in Transformers and RNNs. Works well with small batch sizes.',
+        learnMore: {
+          whatItDoes: 'Normalizes across the feature dimension for each sample independently. Unlike BatchNorm, doesn\'t depend on batch statistics.',
+          whenToUse: 'In Transformers (after attention and FFN). In RNNs. When batch size is small or variable.',
+          vsBatchNorm: 'BatchNorm: normalizes across batch (needs large batches). LayerNorm: normalizes across features (works with any batch size).',
+          keyInsight: 'Transformers use "Pre-LN" (before attention) or "Post-LN" (after attention). Pre-LN trains more stably.'
+        },
         defaultConfig: {
           normalizedShape: 256
         }
