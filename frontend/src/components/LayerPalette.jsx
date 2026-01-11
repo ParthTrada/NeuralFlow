@@ -230,7 +230,7 @@ const templates = [
 ];
 
 // Export templates for drag handling
-export { templates };
+export { templates, preTrainedModels };
 
 export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemplate }) => {
   const onDragStart = (event, layer) => {
