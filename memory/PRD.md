@@ -167,10 +167,15 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
   - TransformerDecoderBlock composite layer
   - GlobalAvgPool1D for sequence pooling
   - Updated Transformer template to BERT-style (Embedding → PosEnc → Encoder → Pool → Output)
-- [ ] **Graph Architecture Enhancements:**
-  - Multi-input/multi-output node connections (for skip connections)
-  - Residual/Skip connections (Add layers with multiple inputs)
-  - Branching and merging paths
+- [x] **Multi-Input Connections (Skip Connections):** ✅ COMPLETED
+  - Add layer with multiple input handles for residual connections
+  - Concatenate layer for feature fusion
+  - Visual distinction (green handles for skip connections)
+  - ResNet Block template demonstrating skip connections
+  - PyTorch code generation with proper skip connection handling
+  - Keras code generation with Add/Concatenate layers
+- [ ] **Graph Architecture Enhancements (Future):**
+  - Branching and merging paths (arbitrary graph topologies)
   - Parallel layer execution visualization
 
 ## Test Reports
