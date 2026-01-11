@@ -276,8 +276,8 @@ export const getConfigFields = (layerType, config = {}) => {
     } else if (inputType === 'sequence') {
       return [
         ...baseFields,
-        { key: 'seqLength', label: 'Sequence Length', type: 'number', min: 1 },
-        { key: 'features', label: 'Features', type: 'number', min: 1 }
+        { key: 'seqLength', label: 'Sequence Length', type: 'number', min: 1, description: 'Number of timesteps (e.g., 50 for 50 time steps)' },
+        { key: 'features', label: 'Features per Step', type: 'number', min: 1, description: 'Number of features at each timestep (e.g., 10 sensor readings)' }
       ];
     }
     return baseFields;
