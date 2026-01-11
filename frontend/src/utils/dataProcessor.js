@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import Papa from 'papaparse';
 
-// Simple tokenizer for text data
+// Simple tokenizer for text data (word-level)
 const simpleTokenize = (text) => {
   if (!text || typeof text !== 'string') return [];
   return text
@@ -10,6 +10,171 @@ const simpleTokenize = (text) => {
     .split(/\s+/)
     .filter(w => w.length > 0);
 };
+
+// Character-level tokenizer for text generation
+export const charTokenize = (text) => {
+  if (!text || typeof text !== 'string') return [];
+  return text.split('');
+};
+
+// Build character vocabulary from text
+export const buildCharVocabulary = (text) => {
+  const chars = [...new Set(text.split(''))].sort();
+  const charToIdx = { '<PAD>': 0 };
+  chars.forEach((char, idx) => {
+    charToIdx[char] = idx + 1;
+  });
+  
+  const idxToChar = Object.fromEntries(
+    Object.entries(charToIdx).map(([char, idx]) => [idx, char])
+  );
+  
+  return { charToIdx, idxToChar, vocabSize: chars.length + 1 };
+};
+
+// Convert text to character indices
+export const textToCharIndices = (text, charToIdx, maxLength = 64) => {
+  const chars = text.split('').slice(0, maxLength);
+  const indices = chars.map(c => charToIdx[c] || 0);
+  
+  // Pad to maxLength
+  while (indices.length < maxLength) {
+    indices.push(0);
+  }
+  
+  return indices;
+};
+
+// Process character-level text generation data
+export const processCharLevelData = (textData, options = {}) => {
+  const { seqLength = 64 } = options;
+  
+  // Handle different data formats
+  let fullText = '';
+  
+  if (typeof textData === 'string') {
+    fullText = textData;
+  } else if (textData.sequences) {
+    // Shakespeare dataset format
+    fullText = textData.sequences.map(s => s.input).join('');
+  } else if (Array.isArray(textData)) {
+    fullText = textData.map(item => item.input || item.text || '').join('');
+  }
+  
+  if (!fullText || fullText.length < seqLength + 1) {
+    throw new Error('Text too short for character-level training');
+  }
+  
+  // Build character vocabulary
+  const { charToIdx, idxToChar, vocabSize } = buildCharVocabulary(fullText);
+  console.log(`Built char vocabulary with ${vocabSize} characters:`, Object.keys(charToIdx).slice(0, 20).join(''));
+  
+  // Create training sequences
+  const sequences = [];
+  const targets = [];
+  const step = Math.max(1, Math.floor(seqLength / 4)); // Overlapping sequences
+  
+  for (let i = 0; i < fullText.length - seqLength; i += step) {
+    const inputSeq = fullText.slice(i, i + seqLength);
+    const targetChar = fullText[i + seqLength];
+    
+    const inputIndices = inputSeq.split('').map(c => charToIdx[c] || 0);
+    const targetIdx = charToIdx[targetChar] || 0;
+    
+    sequences.push(inputIndices);
+    targets.push(targetIdx);
+    
+    if (sequences.length >= 500) break; // Limit for browser performance
+  }
+  
+  console.log(`Created ${sequences.length} training sequences`);
+  
+  // Create tensors
+  const xTensor = tf.tensor2d(sequences, [sequences.length, seqLength], 'int32');
+  const yTensor = tf.oneHot(tf.tensor1d(targets, 'int32'), vocabSize);
+  
+  return {
+    xTrain: xTensor,
+    yTrain: yTensor,
+    inputShape: [seqLength],
+    numClasses: vocabSize,
+    charToIdx,
+    idxToChar,
+    vocabSize,
+    seqLength,
+    type: 'text-generation',
+    fullText,
+    description: `Character-level generation (${seqLength} chars, ${vocabSize} vocab)`,
+  };
+};
+
+// Generate text using trained model
+export const generateText = async (model, seedText, charToIdx, idxToChar, options = {}) => {
+  const { 
+    length = 200, 
+    temperature = 0.8,
+    seqLength = 64,
+    onToken = null // Callback for streaming
+  } = options;
+  
+  let currentText = seedText;
+  
+  // Ensure seed text is at least seqLength
+  while (currentText.length < seqLength) {
+    currentText = ' ' + currentText;
+  }
+  
+  let generated = '';
+  
+  for (let i = 0; i < length; i++) {
+    // Get last seqLength characters
+    const inputText = currentText.slice(-seqLength);
+    const inputIndices = inputText.split('').map(c => charToIdx[c] || 0);
+    
+    // Create input tensor
+    const inputTensor = tf.tensor2d([inputIndices], [1, seqLength], 'int32');
+    
+    // Get prediction
+    const prediction = model.predict(inputTensor);
+    const logits = await prediction.data();
+    
+    // Apply temperature and sample
+    const scaledLogits = logits.map(l => l / temperature);
+    const expLogits = scaledLogits.map(l => Math.exp(l - Math.max(...scaledLogits)));
+    const sumExp = expLogits.reduce((a, b) => a + b, 0);
+    const probs = expLogits.map(e => e / sumExp);
+    
+    // Sample from distribution
+    const random = Math.random();
+    let cumSum = 0;
+    let sampledIdx = 0;
+    for (let j = 0; j < probs.length; j++) {
+      cumSum += probs[j];
+      if (random < cumSum) {
+        sampledIdx = j;
+        break;
+      }
+    }
+    
+    // Get character
+    const nextChar = idxToChar[sampledIdx] || ' ';
+    generated += nextChar;
+    currentText += nextChar;
+    
+    // Cleanup tensors
+    inputTensor.dispose();
+    prediction.dispose();
+    
+    // Call streaming callback if provided
+    if (onToken) {
+      onToken(nextChar, generated);
+    }
+  }
+  
+  return generated;
+};
+
+// Build vocabulary from text data (word-level)
 
 // Build vocabulary from text data
 export const buildVocabulary = (texts, maxVocabSize = 10000) => {
