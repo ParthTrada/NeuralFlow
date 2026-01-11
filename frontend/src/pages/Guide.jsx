@@ -419,47 +419,4 @@ const FeatureItem = ({ icon: Icon, text }) => (
   </div>
 );
 
-const NodeBlock = ({ label, sublabel, color }) => (
-  <div className={`px-4 py-3 rounded-xl bg-gradient-to-br ${color} shadow-lg min-w-[80px] text-center`}>
-    <div className="font-semibold text-sm text-white">{label}</div>
-    <div className="text-[10px] text-white/70">{sublabel}</div>
-  </div>
-);
-
-const ConnectionArrow = () => (
-  <div className="hidden sm:flex items-center">
-    <div className="w-6 h-0.5 bg-white/20" />
-    <ChevronRight className="w-3 h-3 text-white/30 -ml-1" />
-  </div>
-);
-
-const DatasetPill = ({ icon, name }) => (
-  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-violet-500/30 transition-colors">
-    <span>{icon}</span>
-    <span className="text-sm text-zinc-300">{name}</span>
-  </div>
-);
-
-const TemplateRow = ({ icon, name, desc, active }) => (
-  <div className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${active ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-white/5 border border-white/5 hover:border-white/10'}`}>
-    <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-lg">{icon}</div>
-    <div className="flex-1">
-      <div className="font-medium text-sm">{name}</div>
-      <div className="text-xs text-zinc-500">{desc}</div>
-    </div>
-    {active && <div className="w-2 h-2 bg-violet-500 rounded-full" />}
-  </div>
-);
-
-const DatasetRow = ({ icon, name, desc, match }) => (
-  <div className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${match ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-white/5 border border-white/5'}`}>
-    <span className="text-xl">{icon}</span>
-    <div className="flex-1">
-      <div className="font-medium text-sm">{name}</div>
-      <div className="text-xs text-zinc-500">{desc}</div>
-    </div>
-    {match && <span className="px-2 py-0.5 bg-violet-500 rounded text-[10px] font-medium">Match</span>}
-  </div>
-);
-
 export default Guide;
