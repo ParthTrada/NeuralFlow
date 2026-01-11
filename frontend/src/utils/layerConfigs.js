@@ -244,7 +244,8 @@ export const activationFunctions = [
 export const inputTypes = [
   { value: 'flat', label: 'Flat (Vector)' },
   { value: 'image', label: 'Image (C, H, W)' },
-  { value: 'sequence', label: 'Sequence (Len, Feat)' }
+  { value: 'sequence', label: 'Sequence (Len, Feat)' },
+  { value: 'text', label: 'Text (Token IDs)' }
 ];
 
 export const getLayerConfig = (layerType) => {
@@ -278,6 +279,12 @@ export const getConfigFields = (layerType, config = {}) => {
         ...baseFields,
         { key: 'seqLength', label: 'Sequence Length', type: 'number', min: 1, description: 'Number of timesteps (e.g., 50 for 50 time steps)' },
         { key: 'features', label: 'Features per Step', type: 'number', min: 1, description: 'Number of features at each timestep (e.g., 10 sensor readings)' }
+      ];
+    } else if (inputType === 'text') {
+      return [
+        ...baseFields,
+        { key: 'vocabSize', label: 'Vocabulary Size', type: 'number', min: 100, description: 'Max number of unique words/tokens' },
+        { key: 'seqLength', label: 'Max Sequence Length', type: 'number', min: 1, description: 'Maximum number of tokens per text (e.g., 100)' }
       ];
     }
     return baseFields;
