@@ -377,6 +377,66 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
           })}
         </AccordionContent>
       </AccordionItem>
+
+      {/* Pre-Trained Models Section */}
+      <AccordionItem value="pretrained" className="border-border">
+        <AccordionTrigger 
+          className="text-sm font-semibold hover:no-underline px-2"
+          data-testid="accordion-pretrained"
+        >
+          <span className="flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-violet-400" />
+            Pre-Trained Models
+          </span>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-1 px-1">
+          <p className="text-xs text-muted-foreground px-2 pb-2">
+            Ready to use - no training required!
+          </p>
+          {preTrainedModels.map((model) => {
+            const Icon = model.icon;
+            return (
+              <motion.div
+                key={model.id}
+                draggable={!isMobile}
+                onDragStart={(e) => !isMobile && onTemplateDragStart(e, model)}
+                onClick={() => handleTemplateClick(model)}
+                whileHover={!isMobile ? { scale: 1.02, x: 4 } : undefined}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg",
+                  isMobile ? "cursor-pointer" : "cursor-grab",
+                  "bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30",
+                  "hover:border-violet-500/50 transition-all duration-200"
+                )}
+                data-testid={`pretrained-${model.id}`}
+              >
+                <div 
+                  className="p-2 rounded-md flex-shrink-0"
+                  style={{ backgroundColor: `${model.color}30` }}
+                >
+                  <Icon 
+                    className="w-4 h-4" 
+                    style={{ color: model.color }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate flex items-center gap-2">
+                    {model.name}
+                    <span className="text-[10px] font-bold text-violet-300 bg-violet-500/30 px-1.5 py-0.5 rounded">PRE-TRAINED</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {model.description}
+                  </div>
+                </div>
+                <span className="text-xs text-violet-300 bg-violet-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {model.layers}
+                </span>
+              </motion.div>
+            );
+          })}
+        </AccordionContent>
+      </AccordionItem>
     </Accordion>
   );
 
