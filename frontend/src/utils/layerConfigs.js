@@ -307,6 +307,13 @@ export const layerCategories = {
         color: 'hsl(280, 80%, 55%)',
         description: 'Full Transformer decoder block',
         tip: 'Decoder with masked self-attention + cross-attention + feed-forward. Used in GPT for text generation. Attends to encoder output.',
+        learnMore: {
+          whatItDoes: 'Each layer: Masked Self-Attention → Cross-Attention (to encoder) → Feed-Forward. Generates output autoregressively.',
+          whenToUse: 'For text generation (GPT), translation (encoder-decoder), and any sequence generation task.',
+          architecture: 'Masked attention prevents looking at future tokens. Cross-attention allows attending to encoder output.',
+          keyInsight: 'GPT uses decoder-only with masked self-attention. Full Transformer (translation) uses encoder + decoder with cross-attention.',
+          maskedAttention: 'Each position can only attend to previous positions - ensures autoregressive property for generation.'
+        },
         defaultConfig: {
           dModel: 256,
           nHead: 8,
