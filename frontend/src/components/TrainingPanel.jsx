@@ -1691,68 +1691,68 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                           value={[generationTemp]}
                           onValueChange={([val]) => setGenerationTemp(val)}
                           min={0.1}
-                              max={2.0}
-                              step={0.1}
-                              className="py-2"
-                            />
-                            <p className="text-[9px] text-muted-foreground">Lower = predictable, Higher = creative</p>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Length: {generationLength}</Label>
-                            <Slider
-                              value={[generationLength]}
-                              onValueChange={([val]) => setGenerationLength(val)}
-                              min={50}
-                              max={500}
-                              step={50}
-                              className="py-2"
-                            />
-                            <p className="text-[9px] text-muted-foreground">Characters to generate</p>
-                          </div>
+                          max={2.0}
+                          step={0.1}
+                          className="py-2"
+                        />
+                        <p className="text-[9px] text-muted-foreground">Lower = predictable, Higher = creative</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Length: {generationLength}</Label>
+                        <Slider
+                          value={[generationLength]}
+                          onValueChange={([val]) => setGenerationLength(val)}
+                          min={50}
+                          max={500}
+                          step={50}
+                          className="py-2"
+                        />
+                        <p className="text-[9px] text-muted-foreground">Characters to generate</p>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleMarkovGeneration}
+                      disabled={isGenerating || !generationPrompt.trim()}
+                      className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                      data-testid="generate-text-btn"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Text
+                        </>
+                      )}
+                    </Button>
+                    
+                    {/* Generated Output */}
+                    {generatedText && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Generated Output</Label>
+                        <div className="p-3 rounded-lg bg-card border border-border max-h-64 overflow-y-auto">
+                          <p className="text-sm font-mono whitespace-pre-wrap text-foreground leading-relaxed">
+                            <span className="text-muted-foreground">{generationPrompt}</span>
+                            <span className="text-violet-400">{generatedText}</span>
+                          </p>
                         </div>
-                        
-                        <Button 
-                          onClick={handleMarkovGeneration}
-                          disabled={isGenerating || !generationPrompt.trim()}
-                          className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-                          data-testid="generate-text-btn"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => {
+                            navigator.clipboard.writeText(generationPrompt + generatedText);
+                            toast.success('Copied to clipboard!');
+                          }}
                         >
-                          {isGenerating ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Generate Text
-                            </>
-                          )}
+                          Copy Full Text
                         </Button>
-                        
-                        {/* Generated Output */}
-                        {generatedText && (
-                          <div className="space-y-2">
-                            <Label className="text-xs">Generated Output</Label>
-                            <div className="p-3 rounded-lg bg-card border border-border max-h-64 overflow-y-auto">
-                              <p className="text-sm font-mono whitespace-pre-wrap text-foreground leading-relaxed">
-                                <span className="text-muted-foreground">{generationPrompt}</span>
-                                <span className="text-violet-400">{generatedText}</span>
-                              </p>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-xs"
-                              onClick={() => {
-                                navigator.clipboard.writeText(generationPrompt + generatedText);
-                                toast.success('Copied to clipboard!');
-                              }}
-                            >
-                              Copy Full Text
-                            </Button>
-                          </div>
-                        )}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Info about exporting */}
