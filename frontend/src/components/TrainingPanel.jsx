@@ -38,12 +38,89 @@ import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
 import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
 
+// Analyze network to determine data requirements
+const analyzeNetworkRequirements = (nodes) => {
+  if (!nodes || nodes.length === 0) {
+    return null;
+  }
+  
+  const inputNode = nodes.find(n => n.data.layerType === 'Input');
+  const outputNode = nodes.find(n => n.data.layerType === 'Output');
+  const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+  const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+  const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
+  
+  const inputConfig = inputNode?.data?.config || {};
+  const outputConfig = outputNode?.data?.config || {};
+  
+  // Determine model type
+  let modelType = 'MLP'; // Default
+  let dataFormat = 'csv';
+  let taskType = 'classification';
+  
+  if (hasLSTM) {
+    modelType = 'RNN/LSTM';
+    dataFormat = 'sequence';
+  } else if (hasConv2D) {
+    modelType = 'CNN';
+    dataFormat = 'image';
+  } else if (hasEmbedding) {
+    modelType = 'NLP';
+    dataFormat = 'text';
+  }
+  
+  // Determine task type from output
+  const outputActivation = outputConfig.activation || 'softmax';
+  const numClasses = outputConfig.numClasses || 10;
+  
+  if (outputActivation === 'softmax' || numClasses > 1) {
+    taskType = 'classification';
+  } else if (outputActivation === 'linear' || outputActivation === 'none' || numClasses === 1) {
+    taskType = 'regression';
+  }
+  
+  // Get input shape details
+  let inputShape = [];
+  let inputDescription = '';
+  
+  if (inputConfig.inputType === 'sequence' || hasLSTM) {
+    const seqLength = inputConfig.seqLength || 50;
+    const features = inputConfig.features || 10;
+    inputShape = [seqLength, features];
+    inputDescription = `${seqLength} timesteps × ${features} features`;
+  } else if (inputConfig.inputType === 'image' || hasConv2D) {
+    const height = inputConfig.height || 28;
+    const width = inputConfig.width || 28;
+    const channels = inputConfig.channels || 1;
+    inputShape = [height, width, channels];
+    inputDescription = `${height}×${width} ${channels === 1 ? 'grayscale' : 'RGB'} images`;
+  } else {
+    const inputSize = inputConfig.inputSize || 784;
+    inputShape = [inputSize];
+    inputDescription = `${inputSize} features (numeric values)`;
+  }
+  
+  return {
+    modelType,
+    dataFormat,
+    taskType,
+    inputShape,
+    inputDescription,
+    numClasses,
+    hasLSTM,
+    hasConv2D,
+    seqLength: inputConfig.seqLength || 50,
+    features: inputConfig.features || 10,
+  };
+};
+
 export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData }) => {
   const [dataType, setDataType] = useState('csv');
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
   const [targetColumn, setTargetColumn] = useState('');
   const [columns, setColumns] = useState([]);
+  const [showDataGuide, setShowDataGuide] = useState(false);
   
   // Training config
   const [epochs, setEpochs] = useState(10);
@@ -76,6 +153,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const lastModelIdRef = useRef(null);
+  
+  // Analyze network requirements
+  const networkReqs = useMemo(() => analyzeNetworkRequirements(nodes), [nodes]);
 
   // Restore or reset training state when a different model is loaded
   useEffect(() => {
