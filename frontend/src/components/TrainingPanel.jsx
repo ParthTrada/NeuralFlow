@@ -500,29 +500,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       // Check if we need to adjust the output layer
       const configuredClasses = outputNode?.data?.config?.numClasses || 3;
       if (actualNumClasses && actualNumClasses !== configuredClasses) {
-        console.log(`Adjusting output layer: ${configuredClasses} -> ${actualNumClasses} classes`);
-        toast.info(`Adjusting model for ${actualNumClasses} classes (dataset has ${actualNumClasses} unique labels)`);
+        throw new Error(
+          `Output layer mismatch: Your data has ${actualNumClasses} classes, but the Output layer is configured for ${configuredClasses} classes. ` +
+          `Please update the Output layer's "Classes" setting to ${actualNumClasses}, or modify your dataset to have ${configuredClasses} classes.`
+        );
       }
       
-      // NOW build the model with potentially adjusted output
-      // Create a modified nodes array with correct output classes
-      const adjustedNodes = actualNumClasses ? nodes.map(node => {
-        if (node.data.layerType === 'Output') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              config: {
-                ...node.data.config,
-                numClasses: actualNumClasses
-              }
-            }
-          };
-        }
-        return node;
-      }) : nodes;
-      
-      modelRef.current = buildTFModel(adjustedNodes, edges);
+      // Build the model
+      modelRef.current = buildTFModel(nodes, edges);
       
       const isClassification = actualNumClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
