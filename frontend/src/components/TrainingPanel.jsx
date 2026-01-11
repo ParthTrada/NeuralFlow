@@ -2614,6 +2614,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                   </div>
                 </>
               )}
+              </>
+              )}
             </div>
           </div>
         </motion.div>
