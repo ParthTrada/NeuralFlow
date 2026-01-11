@@ -316,10 +316,23 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       let xTrain, yTrain;
       
+      // Check if this is an LSTM/GRU model
+      const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+      const inputNode = nodes.find(n => n.data.layerType === 'Input');
+      const seqLength = inputNode?.data?.config?.seqLength || 10;
+      
       if (processedData.type === 'csv' && processedData.raw) {
-        const processed = processCSVData(processedData.raw, targetColumn);
+        const processed = processCSVData(processedData.raw, targetColumn, {
+          normalize: true,
+          oneHotEncode: true,
+          isSequenceModel: hasLSTM,
+          seqLength: hasLSTM ? seqLength : 1
+        });
         xTrain = processed.xTrain;
         yTrain = processed.yTrain;
+        
+        // Log the shape for debugging
+        console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM);
       } else {
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
