@@ -108,7 +108,12 @@ export const layerCategories = {
         icon: Minimize2,
         color: 'hsl(263, 70%, 50%)',
         description: 'Global average pooling for sequences',
-        tip: 'Averages across the sequence dimension, converting [batch, seq_len, features] to [batch, features]. Used after Transformer encoder for classification.',
+        tip: 'Averages across the sequence dimension, converting [batch, seq_len, features] to [batch, features]. Used after Transformer encoder for classification. Unlike Flatten, it reduces sequence length to 1 by taking the mean, preserving the feature dimension.',
+        learnMore: {
+          whatItDoes: 'Takes the average of all positions in a sequence, producing a single vector that represents the entire sequence.',
+          whenToUse: 'After Transformer/LSTM layers when you need a fixed-size output for classification. Better than Flatten for variable-length sequences.',
+          example: 'Input: [batch, 128 tokens, 256 features] → Output: [batch, 256 features]'
+        },
         defaultConfig: {}
       },
       {
@@ -118,6 +123,12 @@ export const layerCategories = {
         color: 'hsl(142, 71%, 45%)',
         description: 'Adds multiple inputs element-wise',
         tip: 'Combines multiple inputs by adding them element-wise. Used for skip/residual connections in ResNet and Transformers. All inputs must have the same shape.',
+        learnMore: {
+          whatItDoes: 'Performs element-wise addition of two or more tensors: output = input1 + input2 + ...',
+          whenToUse: 'For residual/skip connections that help train very deep networks (50+ layers). Allows gradients to flow directly through the network.',
+          example: 'ResNet: x + F(x), where F(x) is the output of Conv layers. If F learns nothing useful, the network can still pass x through unchanged.',
+          keyInsight: 'Skip connections solve the vanishing gradient problem and enable training of very deep networks.'
+        },
         defaultConfig: {
           numInputs: 2
         },
@@ -130,6 +141,12 @@ export const layerCategories = {
         color: 'hsl(200, 80%, 50%)',
         description: 'Concatenates multiple inputs along an axis',
         tip: 'Joins multiple inputs along a specified axis. Used in U-Net, DenseNet, and feature fusion. Inputs must match in all dimensions except the concatenation axis.',
+        learnMore: {
+          whatItDoes: 'Joins tensors along a specified dimension. Unlike Add, it preserves all information from both inputs.',
+          whenToUse: 'For feature fusion (combining features from different sources), U-Net skip connections, or DenseNet dense connections.',
+          example: 'Two [batch, 128] tensors concatenated on axis=-1 → [batch, 256]. Doubles the feature dimension.',
+          vsAdd: 'Add: requires same shape, outputs same shape. Concatenate: combines shapes, outputs larger tensor.'
+        },
         defaultConfig: {
           numInputs: 2,
           axis: -1
