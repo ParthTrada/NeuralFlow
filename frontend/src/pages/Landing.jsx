@@ -262,21 +262,6 @@ export default function Landing() {
               }`}
             >
               <div className="px-4 py-4 space-y-2">
-                {/* Guide Link */}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate('/guide');
-                  }}
-                  className={`block w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                    isDark 
-                      ? 'text-zinc-300 hover:text-white hover:bg-white/5' 
-                      : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
-                  }`}
-                  data-testid="guide-link-mobile"
-                >
-                  Guide
-                </button>
                 {[
                   { name: 'Features', href: '#features' },
                   { name: 'How It Works', href: '#how-it-works' },
