@@ -20,16 +20,38 @@ export const buildTFModel = (nodes, edges) => {
   const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
   let inputShape = null;
   
-  if (inputNode?.data?.config?.inputShape) {
-    const shapeStr = inputNode.data.config.inputShape;
-    if (typeof shapeStr === 'string') {
-      try {
-        inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
-      } catch {
-        inputShape = [parseInt(shapeStr) || 784];
+  if (inputNode?.data?.config) {
+    const inputConfig = inputNode.data.config;
+    
+    // Check for sequence input (LSTM/RNN)
+    if (inputConfig.inputType === 'sequence' || inputConfig.seqLength) {
+      const seqLength = inputConfig.seqLength || 50;
+      const features = inputConfig.features || inputConfig.inputSize || 100;
+      inputShape = [seqLength, features];
+    }
+    // Check for image input (CNN)
+    else if (inputConfig.inputType === 'image' || (inputConfig.height && inputConfig.width)) {
+      const height = inputConfig.height || 28;
+      const width = inputConfig.width || 28;
+      const channels = inputConfig.channels || 1;
+      inputShape = [height, width, channels];
+    }
+    // Check for explicit inputShape
+    else if (inputConfig.inputShape) {
+      const shapeStr = inputConfig.inputShape;
+      if (typeof shapeStr === 'string') {
+        try {
+          inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
+        } catch {
+          inputShape = [parseInt(shapeStr) || 784];
+        }
+      } else if (Array.isArray(shapeStr)) {
+        inputShape = shapeStr;
       }
-    } else if (Array.isArray(shapeStr)) {
-      inputShape = shapeStr;
+    }
+    // Check for inputSize (flat vector)
+    else if (inputConfig.inputSize) {
+      inputShape = [inputConfig.inputSize];
     }
   }
   
@@ -45,6 +67,8 @@ export const buildTFModel = (nodes, edges) => {
   if (!inputShape) {
     inputShape = [784];
   }
+  
+  console.log('Building model with input shape:', inputShape);
 
   const model = tf.sequential();
   let isFirstLayer = true;
