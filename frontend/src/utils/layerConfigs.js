@@ -202,7 +202,7 @@ export const layerCategories = {
       {
         type: 'Concatenate',
         label: 'Concatenate',
-        icon: GitMerge,
+        icon: Combine,
         color: 'hsl(200, 80%, 50%)',
         description: 'Concatenates multiple inputs along an axis',
         tip: 'Joins multiple inputs along a specified axis. Used in U-Net, DenseNet, and feature fusion. Inputs must match in all dimensions except the concatenation axis.',
@@ -245,7 +245,7 @@ export const layerCategories = {
       {
         type: 'Embedding',
         label: 'Embedding',
-        icon: FileText,
+        icon: Type,
         color: 'hsl(200, 80%, 50%)',
         description: 'Converts token IDs to dense vectors',
         tip: 'Maps discrete tokens (words, characters) to continuous vectors. Essential for NLP tasks. vocab_size = number of unique tokens.',
@@ -263,7 +263,7 @@ export const layerCategories = {
       {
         type: 'BatchNorm1D',
         label: 'BatchNorm1D',
-        icon: BarChart3,
+        icon: TrendingUp,
         color: 'hsl(142, 71%, 45%)',
         description: 'Batch normalization for 1D data',
         tip: 'Normalizes layer inputs to have zero mean and unit variance. Speeds up training and allows higher learning rates. Use after Dense layers.',
