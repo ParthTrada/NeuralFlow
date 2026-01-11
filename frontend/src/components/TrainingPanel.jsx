@@ -1236,7 +1236,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 </h3>
                 
                 <Tabs value={dataType} onValueChange={setDataType}>
-                  <TabsList className="grid grid-cols-3 w-full h-9 sm:h-10">
+                  <TabsList className="grid grid-cols-4 w-full h-9 sm:h-10">
+                    <TabsTrigger value="datasets" className="text-xs sm:text-sm" data-testid="tab-datasets">
+                      <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Datasets
+                    </TabsTrigger>
                     <TabsTrigger value="csv" className="text-xs sm:text-sm" data-testid="tab-csv">
                       <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       CSV
@@ -1247,9 +1251,67 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </TabsTrigger>
                     <TabsTrigger value="sample" className="text-xs sm:text-sm" data-testid="tab-sample">
                       <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      Sample
+                      Generate
                     </TabsTrigger>
                   </TabsList>
+
+                  {/* Sample Datasets Tab */}
+                  <TabsContent value="datasets" className="space-y-3 mt-3 sm:mt-4">
+                    {/* Quick Dataset Cards */}
+                    <div className="space-y-2">
+                      {sampleDatasets
+                        .filter(ds => !currentTemplateId || ds.compatibleTemplates.includes(currentTemplateId))
+                        .slice(0, 4)
+                        .map((dataset) => (
+                          <div
+                            key={dataset.id}
+                            className={`p-3 rounded-lg border cursor-pointer transition-all hover:border-primary/50 ${
+                              selectedDatasetInfo?.id === dataset.id 
+                                ? 'bg-primary/10 border-primary' 
+                                : 'bg-secondary/30 border-border'
+                            }`}
+                            onClick={() => handleSelectSampleDataset({
+                              ...dataset,
+                              rawData: dataset.getData()
+                            })}
+                            data-testid={`quick-dataset-${dataset.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{dataset.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm truncate">{dataset.name}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {dataset.description}
+                                </div>
+                              </div>
+                              {selectedDatasetInfo?.id === dataset.id && (
+                                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* Browse All Button */}
+                    <Button
+                      variant="outline"
+                      className="w-full text-xs sm:text-sm"
+                      onClick={() => setShowDatasetBrowser(true)}
+                      data-testid="browse-all-datasets-btn"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-2" />
+                      Browse All Datasets
+                    </Button>
+                    
+                    {/* Dataset Info */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">🎯 Recommended:</strong> Datasets shown are compatible with your current model template.
+                        <br />
+                        <strong className="text-foreground/80">💾 Download:</strong> Click "Browse All" to preview data and download CSVs.
+                      </p>
+                    </div>
+                  </TabsContent>
 
                   <TabsContent value="csv" className="space-y-3 mt-3 sm:mt-4">
                     <input
