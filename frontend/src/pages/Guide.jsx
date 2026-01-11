@@ -18,10 +18,10 @@ import { Button } from '../components/ui/button';
 
 // Real platform screenshots
 const SCREENSHOTS = {
-  templates: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/4yd9qtsv_Screenshot%202026-01-11%20at%202.24.00%E2%80%AFAM.png',
+  templates: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/hsdt4rak_Screenshot%202026-01-11%20at%202.37.06%E2%80%AFAM.png',
   canvas: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/r71b3f5q_Screenshot%202026-01-11%20at%202.25.09%E2%80%AFAM.png',
   datasets: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/dgaibmco_Screenshot%202026-01-11%20at%202.25.40%E2%80%AFAM.png',
-  training: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/l99zcwk3_Screenshot%202026-01-11%20at%202.26.27%E2%80%AFAM.png',
+  training: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/uimg73xe_Screenshot%202026-01-11%20at%202.37.58%E2%80%AFAM.png',
   code: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/725etyvq_Screenshot%202026-01-11%20at%202.27.14%E2%80%AFAM.png',
 };
 
