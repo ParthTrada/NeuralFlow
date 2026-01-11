@@ -294,35 +294,10 @@ const Guide = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <GuideCard>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium">Training Progress</span>
-                  <span className="text-xs text-emerald-400">Epoch 8/10</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
-                  <div className="h-full w-4/5 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" />
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white/5 rounded-xl p-4 text-center border border-white/5">
-                    <div className="text-3xl font-bold text-emerald-400">94.2%</div>
-                    <div className="text-xs text-zinc-400 mt-1">Accuracy</div>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 text-center border border-white/5">
-                    <div className="text-3xl font-bold text-violet-400">0.18</div>
-                    <div className="text-xs text-zinc-400 mt-1">Loss</div>
-                  </div>
-                </div>
-                {/* Mini chart */}
-                <div className="h-16 flex items-end gap-1">
-                  {[40, 55, 65, 72, 78, 85, 88, 91, 93, 94].map((h, i) => (
-                    <div 
-                      key={i} 
-                      className="flex-1 bg-gradient-to-t from-violet-500/30 to-violet-500 rounded-t transition-all duration-300"
-                      style={{ height: `${h}%` }}
-                    />
-                  ))}
-                </div>
-              </GuideCard>
+              <ScreenshotCard 
+                src={SCREENSHOTS.training} 
+                alt="Training panel showing epochs, learning rate, and accuracy/loss chart" 
+              />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
@@ -334,12 +309,12 @@ const Guide = () => {
                 Train & Watch it Learn
               </h2>
               <p className="text-zinc-400 text-lg mb-6">
-                Click "Start Training" and watch your model learn in real-time. Track accuracy and loss as it improves.
+                Click "Train" and watch your model learn in real-time. Track accuracy and loss as it improves epoch by epoch.
               </p>
               <div className="space-y-3">
                 <FeatureItem icon={Play} text="Training happens in your browser" />
                 <FeatureItem icon={Zap} text="Real-time accuracy & loss charts" />
-                <FeatureItem icon={Database} text="Save and restore trained models" />
+                <FeatureItem icon={Database} text="Configure epochs, batch size, learning rate" />
               </div>
             </motion.div>
           </div>
