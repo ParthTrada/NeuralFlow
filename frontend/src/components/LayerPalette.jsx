@@ -263,7 +263,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
   };
 
   const renderContent = () => (
-    <Accordion type="multiple" defaultValue={['basic', 'advanced', 'templates']} className="w-full">
+    <Accordion type="multiple" defaultValue={['basic', 'advanced', 'templates', 'pretrained']} className="w-full">
       {Object.entries(layerCategories).map(([key, category]) => (
         <AccordionItem key={key} value={key} className="border-border">
           <AccordionTrigger 
