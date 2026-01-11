@@ -1714,9 +1714,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         </div>
                         
                         <Button 
-                          onClick={handleTextGeneration}
-                          disabled={isGenerating || !generationPrompt.trim() || !isMiniGPTLoaded}
+                          onClick={handleMarkovGeneration}
+                          disabled={isGenerating || !generationPrompt.trim()}
                           className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                          data-testid="generate-text-btn"
                         >
                           {isGenerating ? (
                             <>
