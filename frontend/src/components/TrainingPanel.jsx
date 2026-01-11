@@ -127,6 +127,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
   const [targetColumn, setTargetColumn] = useState('');
+  const [textColumn, setTextColumn] = useState('');
   const [columns, setColumns] = useState([]);
   const [showDataGuide, setShowDataGuide] = useState(false);
   
