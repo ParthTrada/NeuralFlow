@@ -125,7 +125,7 @@ export const layerCategories = {
       {
         type: 'MaxPool2D',
         label: 'MaxPool2D',
-        icon: ChevronDownSquare,
+        icon: ArrowDownNarrowWide,
         color: 'hsl(200, 70%, 50%)',
         description: 'Max pooling operation',
         tip: 'Reduces spatial dimensions by taking the maximum value in each region. Makes the network more efficient and adds translation invariance.',
@@ -160,7 +160,7 @@ export const layerCategories = {
       {
         type: 'Flatten',
         label: 'Flatten',
-        icon: RectangleHorizontal,
+        icon: AlignVerticalSpaceAround,
         color: 'hsl(280, 60%, 55%)',
         description: 'Flatten multi-dimensional input to 1D',
         tip: 'Converts 2D/3D feature maps into a 1D vector. Required before Dense layers when coming from Conv2D layers.',
@@ -175,7 +175,7 @@ export const layerCategories = {
       {
         type: 'GlobalAvgPool1D',
         label: 'Global Avg Pool 1D',
-        icon: Shrink,
+        icon: Scan,
         color: 'hsl(170, 60%, 45%)',
         description: 'Global average pooling for sequences',
         tip: 'Averages across the sequence dimension, converting [batch, seq_len, features] to [batch, features]. Used after Transformer encoder for classification. Unlike Flatten, it reduces sequence length to 1 by taking the mean, preserving the feature dimension.',
