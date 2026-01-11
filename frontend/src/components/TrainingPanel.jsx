@@ -58,15 +58,15 @@ const analyzeNetworkRequirements = (nodes) => {
   let dataFormat = 'csv';
   let taskType = 'classification';
   
-  if (hasLSTM) {
+  if (hasEmbedding || inputConfig.inputType === 'text') {
+    modelType = 'NLP/Text';
+    dataFormat = 'text';
+  } else if (hasLSTM) {
     modelType = 'RNN/LSTM';
     dataFormat = 'sequence';
   } else if (hasConv2D) {
     modelType = 'CNN';
     dataFormat = 'image';
-  } else if (hasEmbedding) {
-    modelType = 'NLP';
-    dataFormat = 'text';
   }
   
   // Determine task type from output
@@ -82,8 +82,14 @@ const analyzeNetworkRequirements = (nodes) => {
   // Get input shape details
   let inputShape = [];
   let inputDescription = '';
+  let vocabSize = inputConfig.vocabSize || 10000;
   
-  if (inputConfig.inputType === 'sequence' || hasLSTM) {
+  if (inputConfig.inputType === 'text' || hasEmbedding) {
+    const seqLength = inputConfig.seqLength || 100;
+    vocabSize = inputConfig.vocabSize || 10000;
+    inputShape = [seqLength];
+    inputDescription = `${seqLength} tokens (vocab: ${vocabSize})`;
+  } else if (inputConfig.inputType === 'sequence' || hasLSTM) {
     const seqLength = inputConfig.seqLength || 50;
     const features = inputConfig.features || 10;
     inputShape = [seqLength, features];
@@ -109,8 +115,10 @@ const analyzeNetworkRequirements = (nodes) => {
     numClasses,
     hasLSTM,
     hasConv2D,
+    hasEmbedding,
     seqLength: inputConfig.seqLength || 50,
     features: inputConfig.features || 10,
+    vocabSize,
   };
 };
 
