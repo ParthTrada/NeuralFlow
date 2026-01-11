@@ -399,7 +399,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const isTextDataset = datasetInfo.category === 'text';
       const isSequenceDataset = datasetInfo.category === 'sequence';
       const isImageDataset = datasetInfo.category === 'image';
-      const isTabularDataset = datasetInfo.category === 'tabular';
       
       // Auto-adjust model parameters based on dataset
       if (onUpdateNodes && nodes.length > 0) {
@@ -442,12 +441,26 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         setColumns(Object.keys(rawData[0]));
         setTargetColumn(datasetInfo.targetColumn);
       } else if (isImageDataset) {
-        // Process as image dataset - generate proper tensor data
-        const processed = processImageDataset(rawData, datasetInfo);
+        // Store metadata for image dataset - tensor creation happens during training
+        const pixelColumns = Object.keys(rawData[0]).filter(k => k.startsWith('pixel_'));
+        const labels = rawData.map(row => row[datasetInfo.targetColumn]);
+        const uniqueLabels = [...new Set(labels)];
+        
         setProcessedData({
-          ...processed,
           raw: rawData,
-          type: 'image'
+          type: 'image',
+          isImageData: true,
+          imageConfig: {
+            height: 28,
+            width: 28,
+            channels: 1,
+            numPixels: pixelColumns.length
+          },
+          pixelColumns,
+          targetColumn: datasetInfo.targetColumn,
+          uniqueLabels,
+          numClasses: uniqueLabels.length,
+          inputShape: hasConv2D ? [28, 28, 1] : [pixelColumns.length]
         });
         setColumns(Object.keys(rawData[0]));
         setTargetColumn(datasetInfo.targetColumn);
