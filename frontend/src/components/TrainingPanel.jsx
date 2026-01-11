@@ -1769,16 +1769,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       </Button>
                     </div>
                     
-                    {/* Sample Instructions */}
+                    {/* What is Generate? */}
                     <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
                       <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 2 features, 3 classes. For Dense/MLP models.
+                        <strong className="text-foreground/80">🧪 Quick Testing with Synthetic Data</strong>
                         <br />
-                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 1 feature, 1 output. For prediction models.
-                        <br />
-                        <strong className="text-foreground/80">Sequence:</strong> 500 sequences, 50 timesteps × 10 features. <strong>For LSTM/GRU models.</strong>
-                        <br />
-                        <strong className="text-foreground/80">Text/NLP:</strong> 500 texts, 100 tokens. <strong>For Embedding + LSTM models.</strong>
+                        Generate dummy datasets to quickly test if your model architecture works correctly before using real data.
+                        <br /><br />
+                        <span className="text-[9px] sm:text-[10px] opacity-80">
+                        • <strong>Classification:</strong> MLP/Dense models
+                        • <strong>Regression:</strong> Prediction models
+                        • <strong>Sequence:</strong> LSTM/GRU models
+                        • <strong>Text:</strong> Embedding + LSTM models
+                        </span>
                       </p>
                     </div>
                   </TabsContent>
