@@ -212,15 +212,18 @@ frontend:
 
   - task: "LSTM Template Model Testing"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/LayerPalette.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "LSTM template implemented with Input → LSTM → Dropout → LSTM → Dense → Output layers. Sequence data generation added to dataProcessor.js. Input shape detection fixed for sequence data in tensorflowModel.js. Training panel supports sequence data generation via 'Sequence' button."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ISSUE: LSTM template functionality is not working properly. Templates section found in left panel but clicking on templates does not load the expected network structure. When clicking on RNN (LSTM) template, no layers are added to canvas (expected 6 layers: Input → LSTM → Dropout → LSTM → Dense → Output). Template loading mechanism appears to be broken. Individual LSTM layer can be found in Advanced Layers section but this is not the same as the template functionality. The handleTemplateClick function in LayerPalette.jsx may not be properly connected or the template data is not being passed correctly to the canvas."
 
   - task: "Admin Dashboard Page"
     implemented: true
