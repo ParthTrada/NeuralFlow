@@ -20,7 +20,7 @@ export const parseCSV = (file) => {
 
 // Process CSV data for training
 export const processCSVData = (data, targetColumn, options = {}) => {
-  const { normalize = true, oneHotEncode = true } = options;
+  const { normalize = true, oneHotEncode = true, isSequenceModel = false, seqLength = 10 } = options;
   
   if (!data || data.length === 0) {
     throw new Error('No data provided');
@@ -34,20 +34,66 @@ export const processCSVData = (data, targetColumn, options = {}) => {
   data.forEach(row => {
     const featureRow = columns.map(col => {
       const val = row[col];
-      return typeof val === 'number' ? val : 0;
+      return typeof val === 'number' ? val : parseFloat(val) || 0;
     });
     features.push(featureRow);
     targets.push(row[targetColumn]);
   });
 
-  // Convert to tensors
-  let xTensor = tf.tensor2d(features);
+  // Check if we need to reshape for sequence models (LSTM/GRU)
+  const numFeatures = columns.length;
+  
+  let xTensor;
+  let inputShape;
+  
+  if (isSequenceModel) {
+    // Reshape 2D data [samples, features] into 3D [samples, timesteps, features_per_step]
+    // If user has 50 rows x 10 columns, we can interpret this as:
+    // Option 1: 50 separate sequences of 1 timestep each with 10 features -> [50, 1, 10]
+    // Option 2: Sliding window - create sequences from continuous data
+    
+    // For simplicity, treat each row as a single timestep with all features
+    // This creates [num_rows, 1, num_features] which can be expanded
+    const numSamples = features.length;
+    
+    // If seqLength is 1, each row is one timestep
+    if (seqLength === 1 || numSamples < seqLength) {
+      // Each row becomes a sequence of length 1
+      xTensor = tf.tensor3d(features.map(row => [row])); // [samples, 1, features]
+      inputShape = [1, numFeatures];
+    } else {
+      // Create overlapping sequences using sliding window
+      const sequences = [];
+      const sequenceTargets = [];
+      
+      for (let i = 0; i <= numSamples - seqLength; i++) {
+        const sequence = features.slice(i, i + seqLength);
+        sequences.push(sequence);
+        sequenceTargets.push(targets[i + seqLength - 1]); // Use last target in sequence
+      }
+      
+      xTensor = tf.tensor3d(sequences); // [num_sequences, seqLength, features]
+      inputShape = [seqLength, numFeatures];
+      
+      // Update targets to match sequences
+      targets.length = 0;
+      targets.push(...sequenceTargets);
+    }
+  } else {
+    // Standard 2D tensor for Dense/MLP models
+    xTensor = tf.tensor2d(features);
+    inputShape = [numFeatures];
+  }
   
   // Normalize features
   if (normalize) {
-    const { mean, variance } = tf.moments(xTensor, 0);
+    const originalShape = xTensor.shape;
+    // Flatten for normalization, then reshape back
+    const flatTensor = xTensor.reshape([-1, originalShape[originalShape.length - 1]]);
+    const { mean, variance } = tf.moments(flatTensor, 0);
     const std = tf.sqrt(variance);
-    xTensor = xTensor.sub(mean).div(std.add(1e-7));
+    const normalizedFlat = flatTensor.sub(mean).div(std.add(1e-7));
+    xTensor = normalizedFlat.reshape(originalShape);
   }
 
   // Process targets
@@ -66,11 +112,12 @@ export const processCSVData = (data, targetColumn, options = {}) => {
   return {
     xTrain: xTensor,
     yTrain: yTensor,
-    inputShape: [columns.length],
+    inputShape,
     numClasses: uniqueTargets.length,
     featureColumns: columns,
     targetColumn,
     uniqueTargets,
+    isSequence: isSequenceModel,
   };
 };
 
