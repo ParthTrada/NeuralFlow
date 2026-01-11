@@ -233,13 +233,16 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
       exit={{ opacity: 0, scale: 0.95, y: -10 }}
       transition={{ duration: 0.25 }}
       className={`fixed z-[10001] rounded-2xl shadow-2xl border ${
-        isMobile ? 'w-[calc(100vw-32px)] max-w-[360px]' : 'w-[360px]'
-      } ${
         isDark 
           ? 'bg-zinc-900/95 border-zinc-700 text-white backdrop-blur-xl' 
           : 'bg-white/95 border-zinc-200 text-zinc-900 backdrop-blur-xl'
       }`}
-      style={position}
+      style={{
+        ...position,
+        width: isMobile ? 'auto' : '360px',
+        maxWidth: isMobile ? 'calc(100vw - 32px)' : '360px',
+        margin: isMobile ? '0 16px' : '0',
+      }}
     >
       <div className="p-5">
         {/* Header */}
