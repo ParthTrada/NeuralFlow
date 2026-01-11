@@ -412,6 +412,45 @@ export const generateSampleData = (type = 'classification', samples = 1000, opti
       type: 'sequence',
       description: `Sequence classification (${seqLength} steps × ${features} features)`,
     };
+  } else if (type === 'text') {
+    // Generate sample text data for NLP/Text Classification
+    const vocabSize = options.vocabSize || 1000;
+    const seqLength = options.seqLength || 100;
+    const numClasses = options.numClasses || 3;
+    
+    const sequences = [];
+    const labels = [];
+    
+    // Simulate different "topics" by using different token frequency distributions
+    for (let i = 0; i < samples; i++) {
+      const classIdx = i % numClasses;
+      const sequence = [];
+      
+      // Generate token IDs with class-dependent patterns
+      for (let t = 0; t < seqLength; t++) {
+        // Different classes have different "vocabulary" regions
+        const baseToken = Math.floor(Math.random() * (vocabSize / numClasses));
+        const classOffset = classIdx * Math.floor(vocabSize / numClasses);
+        const token = Math.min(baseToken + classOffset, vocabSize - 1);
+        sequence.push(token);
+      }
+      
+      sequences.push(sequence);
+      labels.push(classIdx);
+    }
+    
+    const xTensor = tf.tensor2d(sequences, [samples, seqLength], 'int32');
+    const yTensor = tf.oneHot(tf.tensor1d(labels, 'int32'), numClasses);
+    
+    return {
+      xTrain: xTensor,
+      yTrain: yTensor,
+      inputShape: [seqLength],
+      numClasses,
+      vocabSize,
+      type: 'text',
+      description: `Text classification (${seqLength} tokens, ${numClasses} classes)`,
+    };
   } else {
     // Generate regression dataset
     const features = [];
