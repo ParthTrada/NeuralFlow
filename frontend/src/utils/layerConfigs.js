@@ -13,8 +13,13 @@ import {
   FileText,
   ArrowDownToLine,
   ArrowUpFromLine,
-  AlignJustify
+  AlignJustify,
+  Plus,
+  GitMerge
 } from 'lucide-react';
+
+// Layers that support multiple inputs (for skip connections)
+export const multiInputLayers = ['Add', 'Concatenate'];
 
 export const layerCategories = {
   basic: {
