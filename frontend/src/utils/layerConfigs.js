@@ -112,6 +112,31 @@ export const layerCategories = {
         defaultConfig: {}
       },
       {
+        type: 'Add',
+        label: 'Add (Skip Connection)',
+        icon: Plus,
+        color: 'hsl(142, 71%, 45%)',
+        description: 'Adds multiple inputs element-wise',
+        tip: 'Combines multiple inputs by adding them element-wise. Used for skip/residual connections in ResNet and Transformers. All inputs must have the same shape.',
+        defaultConfig: {
+          numInputs: 2
+        },
+        multiInput: true
+      },
+      {
+        type: 'Concatenate',
+        label: 'Concatenate',
+        icon: GitMerge,
+        color: 'hsl(200, 80%, 50%)',
+        description: 'Concatenates multiple inputs along an axis',
+        tip: 'Joins multiple inputs along a specified axis. Used in U-Net, DenseNet, and feature fusion. Inputs must match in all dimensions except the concatenation axis.',
+        defaultConfig: {
+          numInputs: 2,
+          axis: -1
+        },
+        multiInput: true
+      },
+      {
         type: 'Output',
         label: 'Output',
         icon: Target,
