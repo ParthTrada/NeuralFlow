@@ -1765,6 +1765,62 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                             Please wait ~1-2 minutes for training to complete
                           </p>
                         </>
+                      ) : miniGPTTrainingFailed ? (
+                        <>
+                          {/* Training Failed - Show error and options */}
+                          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs font-medium text-red-300">Browser Training Failed</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {miniGPTTrainingError || 'WebGL not available or insufficient resources'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Options for the user */}
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-foreground">For better results, you can:</p>
+                            
+                            <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                              <div className="flex items-start gap-2">
+                                <Sparkles className="w-4 h-4 text-violet-400 mt-0.5" />
+                                <div>
+                                  <p className="text-xs font-medium text-violet-300">Use Markov Chain (Recommended)</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Instant Shakespeare-style text generation using statistical patterns. Fast and reliable!
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-2 text-xs h-7 border-violet-500/50 text-violet-300 hover:bg-violet-500/20"
+                                    onClick={() => setUseMarkovFallback(true)}
+                                  >
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                    Enable Markov Chain
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                              <div className="flex items-start gap-2">
+                                <Download className="w-4 h-4 text-blue-400 mt-0.5" />
+                                <div>
+                                  <p className="text-xs font-medium text-blue-300">Train Locally with GPU</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Export the PyTorch code and train on your machine with a GPU for best results.
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    Click &quot;View Code&quot; in the header to export.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       ) : miniGPTTrainingComplete ? (
                         <>
                           {/* Training Complete - Show Live Results */}
