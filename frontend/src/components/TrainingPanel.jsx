@@ -837,7 +837,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                   </TabsContent>
 
                   <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <Button 
                         variant="outline"
                         className="text-xs sm:text-sm h-9 sm:h-10"
@@ -854,16 +854,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       >
                         Regression
                       </Button>
+                      <Button 
+                        variant="outline"
+                        className="text-xs sm:text-sm h-9 sm:h-10"
+                        onClick={() => handleGenerateSample('sequence')}
+                        data-testid="generate-sequence-btn"
+                      >
+                        Sequence
+                      </Button>
                     </div>
                     
                     {/* Sample Instructions */}
                     <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
                       <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 10 features, 3 classes. Use Softmax output.
+                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 2 features, 3 classes. For Dense/MLP models.
                         <br />
-                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 10 features, 1 output. Use Linear output.
+                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 1 feature, 1 output. For prediction models.
                         <br />
-                        <strong className="text-foreground/80">Tip:</strong> Great for testing your network architecture quickly.
+                        <strong className="text-foreground/80">Sequence:</strong> 500 sequences, 50 timesteps × 10 features. <strong>For LSTM/GRU models.</strong>
                       </p>
                     </div>
                   </TabsContent>
