@@ -164,7 +164,7 @@ export const processImageFolder = async (files, options = {}) => {
 };
 
 // Generate sample data for testing
-export const generateSampleData = (type = 'classification', samples = 1000) => {
+export const generateSampleData = (type = 'classification', samples = 1000, options = {}) => {
   if (type === 'classification') {
     // Generate spiral dataset
     const numClasses = 3;
@@ -191,6 +191,46 @@ export const generateSampleData = (type = 'classification', samples = 1000) => {
       numClasses,
       type: 'classification',
       description: 'Spiral classification dataset',
+    };
+  } else if (type === 'sequence') {
+    // Generate sequence data for LSTM/RNN models
+    const seqLength = options.seqLength || 50;
+    const features = options.features || 10;
+    const numClasses = options.numClasses || 3;
+    
+    const sequences = [];
+    const labels = [];
+    
+    for (let i = 0; i < samples; i++) {
+      // Create a sequence with a pattern that determines the class
+      const classIdx = i % numClasses;
+      const sequence = [];
+      
+      for (let t = 0; t < seqLength; t++) {
+        const step = [];
+        for (let f = 0; f < features; f++) {
+          // Generate pattern based on class
+          const basePattern = Math.sin((t + classIdx * 10) / 5 * (f + 1));
+          const noise = (Math.random() - 0.5) * 0.3;
+          step.push(basePattern + noise);
+        }
+        sequence.push(step);
+      }
+      
+      sequences.push(sequence);
+      labels.push(classIdx);
+    }
+    
+    const xTensor = tf.tensor3d(sequences); // [samples, seqLength, features]
+    const yTensor = tf.oneHot(tf.tensor1d(labels, 'int32'), numClasses);
+    
+    return {
+      xTrain: xTensor,
+      yTrain: yTensor,
+      inputShape: [seqLength, features],
+      numClasses,
+      type: 'sequence',
+      description: `Sequence classification (${seqLength} steps × ${features} features)`,
     };
   } else {
     // Generate regression dataset
