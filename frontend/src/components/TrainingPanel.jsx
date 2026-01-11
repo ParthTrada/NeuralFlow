@@ -444,7 +444,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     try {
       modelRef.current = buildTFModel(nodes, edges);
       
-      const isClassification = processedData.numClasses > 1 || processedData.type === 'classification';
+      const isClassification = processedData.numClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
       compileModel(modelRef.current, {
@@ -456,23 +456,48 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       let xTrain, yTrain;
       
-      // Check if this is an LSTM/GRU model
+      // Check model type
       const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+      const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
       const inputNode = nodes.find(n => n.data.layerType === 'Input');
-      const seqLength = inputNode?.data?.config?.seqLength || 10;
+      const seqLength = inputNode?.data?.config?.seqLength || 100;
+      const vocabSize = inputNode?.data?.config?.vocabSize || 10000;
+      const isTextModel = hasEmbedding || inputNode?.data?.config?.inputType === 'text';
       
       if (processedData.type === 'csv' && processedData.raw) {
-        const processed = processCSVData(processedData.raw, targetColumn, {
-          normalize: true,
-          oneHotEncode: true,
-          isSequenceModel: hasLSTM,
-          seqLength: hasLSTM ? seqLength : 1
-        });
-        xTrain = processed.xTrain;
-        yTrain = processed.yTrain;
-        
-        // Log the shape for debugging
-        console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM);
+        if (isTextModel && textColumn) {
+          // Use text processor for NLP models
+          console.log(`Processing text data: text="${textColumn}", target="${targetColumn}"`);
+          const processed = processTextCSVData(processedData.raw, textColumn, targetColumn, {
+            maxLength: seqLength,
+            vocabSize: vocabSize
+          });
+          xTrain = processed.xTrain;
+          yTrain = processed.yTrain;
+          
+          // Store vocab for prediction
+          setProcessedData(prev => ({
+            ...prev,
+            ...processed,
+            type: 'text'
+          }));
+          
+          console.log('Processed text data shape:', xTrain.shape, 'vocab size:', processed.vocabSize);
+          toast.info(`Vocabulary: ${processed.vocabSize} words, ${processed.numClasses} classes`);
+        } else {
+          // Use numeric processor for standard models
+          const processed = processCSVData(processedData.raw, targetColumn, {
+            normalize: true,
+            oneHotEncode: true,
+            isSequenceModel: hasLSTM && !hasEmbedding,
+            seqLength: hasLSTM ? seqLength : 1
+          });
+          xTrain = processed.xTrain;
+          yTrain = processed.yTrain;
+          
+          // Log the shape for debugging
+          console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM);
+        }
       } else {
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
