@@ -354,7 +354,7 @@ export const layerCategories = {
       {
         type: 'MultiHeadAttention',
         label: 'Multi-Head Attention',
-        icon: Zap,
+        icon: Sparkles,
         color: 'hsl(45, 93%, 47%)',
         description: 'Transformer attention mechanism',
         tip: 'Learns which parts of the input to focus on. Multiple "heads" capture different relationships. Core of modern NLP models like GPT and BERT.',
@@ -372,7 +372,7 @@ export const layerCategories = {
       {
         type: 'PositionalEncoding',
         label: 'Positional Encoding',
-        icon: AlignJustify,
+        icon: Hash,
         color: 'hsl(160, 70%, 45%)',
         description: 'Adds position information to embeddings',
         tip: 'Injects information about token positions into the embeddings. Essential for Transformers since attention has no inherent sense of order.',
@@ -391,7 +391,7 @@ export const layerCategories = {
       {
         type: 'TransformerEncoder',
         label: 'Transformer Encoder',
-        icon: ArrowDownToLine,
+        icon: Cpu,
         color: 'hsl(220, 80%, 55%)',
         description: 'Full Transformer encoder block',
         tip: 'Complete encoder with self-attention + feed-forward + normalization. Used in BERT for understanding text. Stack multiple for deeper models.',
@@ -411,7 +411,7 @@ export const layerCategories = {
       {
         type: 'TransformerDecoder',
         label: 'Transformer Decoder',
-        icon: ArrowUpFromLine,
+        icon: Brain,
         color: 'hsl(280, 80%, 55%)',
         description: 'Full Transformer decoder block',
         tip: 'Decoder with masked self-attention + cross-attention + feed-forward. Used in GPT for text generation. Attends to encoder output.',
