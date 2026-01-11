@@ -113,14 +113,14 @@ const AnimatedBackground = () => {
 };
 
 // Screenshot Card with glow effect
-const ScreenshotCard = ({ src, alt, className = '', maxHeight = '' }) => (
+const ScreenshotCard = ({ src, alt, className = '' }) => (
   <div className={`relative group ${className}`}>
     <div className="absolute -inset-1 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
-    <div className={`relative rounded-xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-sm ${maxHeight}`}>
+    <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-sm">
       <img 
         src={src} 
         alt={alt} 
-        className={`w-full h-auto object-cover ${maxHeight ? 'object-top' : ''}`}
+        className="w-full h-auto object-cover"
         loading="lazy"
       />
     </div>
