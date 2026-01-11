@@ -264,11 +264,10 @@ const Guide = () => {
               <p className="text-zinc-400 text-lg mb-6">
                 Use built-in datasets or upload your own CSV. The model auto-adjusts parameters to match your data!
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <DatasetPill icon="🌸" name="Iris Flowers" />
-                <DatasetPill icon="🔢" name="MNIST Digits" />
-                <DatasetPill icon="💬" name="Sentiment" />
-                <DatasetPill icon="📰" name="News Headlines" />
+              <div className="space-y-3">
+                <FeatureItem icon={Database} text="Browse sample datasets with smart matching" />
+                <FeatureItem icon={Layers} text="Filter by type: Tabular, Image, Text" />
+                <FeatureItem icon={Zap} text="Auto-adjust model to fit your data" />
               </div>
             </motion.div>
             <motion.div
@@ -277,19 +276,10 @@ const Guide = () => {
               viewport={{ once: true }}
               className="order-1 lg:order-2"
             >
-              <GuideCard>
-                <div className="flex gap-2 mb-4">
-                  <div className="px-3 py-1.5 bg-violet-500 rounded-lg text-xs font-medium">Datasets</div>
-                  <div className="px-3 py-1.5 bg-white/5 rounded-lg text-xs text-zinc-400">CSV</div>
-                  <div className="px-3 py-1.5 bg-white/5 rounded-lg text-xs text-zinc-400">Images</div>
-                </div>
-                <div className="space-y-2">
-                  <DatasetRow icon="🌸" name="Iris Flowers" desc="150 samples • 4 features" match />
-                  <DatasetRow icon="🔢" name="MNIST Digits" desc="100 samples • Image" match />
-                  <DatasetRow icon="💬" name="Sentiment Analysis" desc="45 samples • Text" />
-                  <DatasetRow icon="📰" name="News Headlines" desc="80 samples • Text" />
-                </div>
-              </GuideCard>
+              <ScreenshotCard 
+                src={SCREENSHOTS.datasets} 
+                alt="Sample datasets browser showing Iris, MNIST, Fashion Items" 
+              />
             </motion.div>
           </div>
         </div>
