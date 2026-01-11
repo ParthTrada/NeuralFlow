@@ -98,6 +98,15 @@ export const layerCategories = {
         defaultConfig: {}
       },
       {
+        type: 'GlobalAvgPool1D',
+        label: 'Global Avg Pool 1D',
+        icon: Minimize2,
+        color: 'hsl(263, 70%, 50%)',
+        description: 'Global average pooling for sequences',
+        tip: 'Averages across the sequence dimension, converting [batch, seq_len, features] to [batch, features]. Used after Transformer encoder for classification.',
+        defaultConfig: {}
+      },
+      {
         type: 'Output',
         label: 'Output',
         icon: Target,
