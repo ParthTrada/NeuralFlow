@@ -240,6 +240,18 @@ export const buildTFModel = (nodes, edges) => {
           }));
           break;
 
+        case 'Add':
+          // In sequential model, Add is a pass-through (skip connections handled externally)
+          // For functional API support, this would merge multiple inputs
+          console.log('Add layer - skip connections require functional API for full support');
+          break;
+
+        case 'Concatenate':
+          // In sequential model, Concatenate is a pass-through
+          // For functional API support, this would concatenate multiple inputs
+          console.log('Concatenate layer - requires functional API for full support');
+          break;
+
         default:
           console.warn(`Unknown layer type: ${layerType}`);
           return;
