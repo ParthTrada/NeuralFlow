@@ -832,7 +832,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <br />
                         <strong className="text-foreground/80">Example:</strong> feature1, feature2, ..., label
                         <br />
-                        <strong className="text-foreground/80">Tip:</strong> Numeric values work best. Match input size to your Input layer.
+                        <strong className="text-foreground/80">For LSTM:</strong> Each row = 1 timestep. Use sliding window for sequences.
                       </p>
                     </div>
                     
