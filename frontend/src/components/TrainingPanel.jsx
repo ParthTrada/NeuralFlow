@@ -2294,6 +2294,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         </motion.div>
                       )}
                     </div>
+                    )}
                     
                     {/* Save Training Results Button */}
                     {trainingHistory.length > 0 && onSaveTrainingData && (
