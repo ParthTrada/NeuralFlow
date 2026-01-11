@@ -250,6 +250,12 @@ export const layerCategories = {
         color: 'hsl(45, 93%, 47%)',
         description: 'Transformer attention mechanism',
         tip: 'Learns which parts of the input to focus on. Multiple "heads" capture different relationships. Core of modern NLP models like GPT and BERT.',
+        learnMore: {
+          whatItDoes: 'Computes attention scores between all positions in a sequence, allowing each position to "look at" every other position.',
+          whenToUse: 'For sequence-to-sequence tasks, NLP, and anywhere long-range dependencies matter. The foundation of Transformers.',
+          howItWorks: 'Splits input into Q (query), K (key), V (value). Attention = softmax(QK^T/√d) × V. Multiple heads learn different patterns.',
+          keyInsight: 'Unlike RNNs, attention processes all positions in parallel and can directly connect distant tokens.'
+        },
         defaultConfig: {
           embedDim: 256,
           numHeads: 8
@@ -262,6 +268,12 @@ export const layerCategories = {
         color: 'hsl(160, 70%, 45%)',
         description: 'Adds position information to embeddings',
         tip: 'Injects information about token positions into the embeddings. Essential for Transformers since attention has no inherent sense of order.',
+        learnMore: {
+          whatItDoes: 'Adds position-dependent values to embeddings so the model knows word order. Without this, "dog bites man" = "man bites dog".',
+          whenToUse: 'Always after Embedding layer and before Transformer encoder/decoder. Required because attention is position-agnostic.',
+          types: 'Sinusoidal (fixed, from original paper) or Learned (trainable embeddings for each position). Learned is often better.',
+          keyInsight: 'Enables Transformers to understand sequence order without recurrence.'
+        },
         defaultConfig: {
           maxLen: 512,
           dModel: 256,
@@ -275,6 +287,12 @@ export const layerCategories = {
         color: 'hsl(220, 80%, 55%)',
         description: 'Full Transformer encoder block',
         tip: 'Complete encoder with self-attention + feed-forward + normalization. Used in BERT for understanding text. Stack multiple for deeper models.',
+        learnMore: {
+          whatItDoes: 'Each layer: Self-Attention → Add & Norm → Feed-Forward → Add & Norm. Processes input bidirectionally.',
+          whenToUse: 'For understanding/encoding text (BERT-style), classification, question answering, named entity recognition.',
+          architecture: 'Input → [Multi-Head Self-Attention + Residual] → [FFN + Residual] → Output. Repeated N times.',
+          keyInsight: 'BERT uses encoder-only. Each token can attend to all other tokens (bidirectional context).'
+        },
         defaultConfig: {
           dModel: 256,
           nHead: 8,
