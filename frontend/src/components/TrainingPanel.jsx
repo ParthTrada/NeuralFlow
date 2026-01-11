@@ -442,28 +442,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     stopTrainingRef.current = false;
 
     try {
-      modelRef.current = buildTFModel(nodes, edges);
-      
-      const isClassification = processedData.numClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
-      const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
-      
-      compileModel(modelRef.current, {
-        optimizer,
-        learningRate,
-        loss,
-        metrics: ['acc'],
-      });
-
       let xTrain, yTrain;
+      let actualNumClasses = null;
       
       // Check model type
       const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
       const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
       const inputNode = nodes.find(n => n.data.layerType === 'Input');
+      const outputNode = nodes.find(n => n.data.layerType === 'Output');
       const seqLength = inputNode?.data?.config?.seqLength || 100;
       const vocabSize = inputNode?.data?.config?.vocabSize || 10000;
       const isTextModel = hasEmbedding || inputNode?.data?.config?.inputType === 'text';
       
+      // FIRST: Process data to get actual number of classes
       if (processedData.type === 'csv' && processedData.raw) {
         if (isTextModel && textColumn) {
           // Use text processor for NLP models
@@ -474,6 +465,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           });
           xTrain = processed.xTrain;
           yTrain = processed.yTrain;
+          actualNumClasses = processed.numClasses;
           
           // Store vocab for prediction
           setProcessedData(prev => ({
@@ -482,8 +474,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             type: 'text'
           }));
           
-          console.log('Processed text data shape:', xTrain.shape, 'vocab size:', processed.vocabSize);
-          toast.info(`Vocabulary: ${processed.vocabSize} words, ${processed.numClasses} classes`);
+          console.log('Processed text data shape:', xTrain.shape, 'vocab size:', processed.vocabSize, 'classes:', actualNumClasses);
+          toast.info(`Vocabulary: ${processed.vocabSize} words, ${actualNumClasses} classes`);
         } else {
           // Use numeric processor for standard models
           const processed = processCSVData(processedData.raw, targetColumn, {
@@ -494,14 +486,53 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           });
           xTrain = processed.xTrain;
           yTrain = processed.yTrain;
+          actualNumClasses = processed.numClasses;
           
           // Log the shape for debugging
-          console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM);
+          console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM, 'classes:', actualNumClasses);
         }
       } else {
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
+        actualNumClasses = processedData.numClasses;
       }
+      
+      // Check if we need to adjust the output layer
+      const configuredClasses = outputNode?.data?.config?.numClasses || 3;
+      if (actualNumClasses && actualNumClasses !== configuredClasses) {
+        console.log(`Adjusting output layer: ${configuredClasses} -> ${actualNumClasses} classes`);
+        toast.info(`Adjusting model for ${actualNumClasses} classes (dataset has ${actualNumClasses} unique labels)`);
+      }
+      
+      // NOW build the model with potentially adjusted output
+      // Create a modified nodes array with correct output classes
+      const adjustedNodes = actualNumClasses ? nodes.map(node => {
+        if (node.data.layerType === 'Output') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              config: {
+                ...node.data.config,
+                numClasses: actualNumClasses
+              }
+            }
+          };
+        }
+        return node;
+      }) : nodes;
+      
+      modelRef.current = buildTFModel(adjustedNodes, edges);
+      
+      const isClassification = actualNumClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
+      const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
+      
+      compileModel(modelRef.current, {
+        optimizer,
+        learningRate,
+        loss,
+        metrics: ['acc'],
+      });
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
