@@ -261,6 +261,193 @@ const newsCategoryData = [
   { headline: "Concert venue opens after major renovation project", category: "entertainment" },
 ];
 
+// Shakespeare character-level text generation dataset (for Mini-GPT template)
+const shakespeareText = `ROMEO: But, soft! what light through yonder window breaks?
+It is the east, and Juliet is the sun.
+Arise, fair sun, and kill the envious moon,
+Who is already sick and pale with grief,
+That thou her maid art far more fair than she:
+Be not her maid, since she is envious;
+Her vestal livery is but sick and green
+And none but fools do wear it; cast it off.
+It is my lady, O, it is my love!
+O, that she knew she were!
+She speaks yet she says nothing: what of that?
+Her eye discourses; I will answer it.
+I am too bold, 'tis not to me she speaks:
+Two of the fairest stars in all the heaven,
+Having some business, do entreat her eyes
+To twinkle in their spheres till they return.
+What if her eyes were there, they in her head?
+The brightness of her cheek would shame those stars,
+As daylight doth a lamp; her eyes in heaven
+Would through the airy region stream so bright
+That birds would sing and think it were not night.
+See, how she leans her cheek upon her hand!
+O, that I were a glove upon that hand,
+That I might touch that cheek!
+
+JULIET: Ay me!
+
+ROMEO: She speaks:
+O, speak again, bright angel! for thou art
+As glorious to this night, being o'er my head
+As is a winged messenger of heaven.
+
+JULIET: O Romeo, Romeo! wherefore art thou Romeo?
+Deny thy father and refuse thy name;
+Or, if thou wilt not, be but sworn my love,
+And I'll no longer be a Capulet.
+
+ROMEO: Shall I hear more, or shall I speak at this?
+
+JULIET: 'Tis but thy name that is my enemy;
+Thou art thyself, though not a Montague.
+What's Montague? it is nor hand, nor foot,
+Nor arm, nor face, nor any other part
+Belonging to a man. O, be some other name!
+What's in a name? that which we call a rose
+By any other name would smell as sweet;
+So Romeo would, were he not Romeo call'd,
+Retain that dear perfection which he owes
+Without that title. Romeo, doff thy name,
+And for that name which is no part of thee
+Take all myself.
+
+ROMEO: I take thee at thy word:
+Call me but love, and I'll be new baptized;
+Henceforth I never will be Romeo.
+
+HAMLET: To be, or not to be: that is the question:
+Whether 'tis nobler in the mind to suffer
+The slings and arrows of outrageous fortune,
+Or to take arms against a sea of troubles,
+And by opposing end them? To die: to sleep;
+No more; and by a sleep to say we end
+The heart-ache and the thousand natural shocks
+That flesh is heir to, 'tis a consummation
+Devoutly to be wish'd. To die, to sleep;
+To sleep: perchance to dream: ay, there's the rub;
+For in that sleep of death what dreams may come
+When we have shuffled off this mortal coil,
+Must give us pause: there's the respect
+That makes calamity of so long life;
+For who would bear the whips and scorns of time,
+The oppressor's wrong, the proud man's contumely,
+The pangs of despised love, the law's delay,
+The insolence of office and the spurns
+That patient merit of the unworthy takes,
+When he himself might his quietus make
+With a bare bodkin? who would fardels bear,
+To grunt and sweat under a weary life,
+But that the dread of something after death,
+The undiscover'd country from whose bourn
+No traveller returns, puzzles the will
+And makes us rather bear those ills we have
+Than fly to others that we know not of?
+Thus conscience does make cowards of us all;
+And thus the native hue of resolution
+Is sicklied o'er with the pale cast of thought,
+And enterprises of great pith and moment
+With this regard their currents turn awry,
+And lose the name of action.
+
+MACBETH: Tomorrow, and tomorrow, and tomorrow,
+Creeps in this petty pace from day to day,
+To the last syllable of recorded time;
+And all our yesterdays have lighted fools
+The way to dusty death. Out, out, brief candle!
+Life's but a walking shadow, a poor player
+That struts and frets his hour upon the stage
+And then is heard no more. It is a tale
+Told by an idiot, full of sound and fury,
+Signifying nothing.
+
+KING LEAR: Blow, winds, and crack your cheeks! rage! blow!
+You cataracts and hurricanoes, spout
+Till you have drench'd our steeples, drown'd the cocks!
+You sulphurous and thought-executing fires,
+Vaunt-couriers to oak-cleaving thunderbolts,
+Singe my white head! And thou, all-shaking thunder,
+Smite flat the thick rotundity o' the world!
+Crack nature's moulds, an germens spill at once,
+That make ingrateful man!
+
+PROSPERO: Our revels now are ended. These our actors,
+As I foretold you, were all spirits and
+Are melted into air, into thin air:
+And, like the baseless fabric of this vision,
+The cloud-capp'd towers, the gorgeous palaces,
+The solemn temples, the great globe itself,
+Ye all which it inherit, shall dissolve
+And, like this insubstantial pageant faded,
+Leave not a rack behind. We are such stuff
+As dreams are made on, and our little life
+Is rounded with a sleep.
+
+OTHELLO: It is the cause, it is the cause, my soul,
+Let me not name it to you, you chaste stars!
+It is the cause. Yet I'll not shed her blood;
+Nor scar that whiter skin of hers than snow,
+And smooth as monumental alabaster.
+Yet she must die, else she'll betray more men.
+Put out the light, and then put out the light.
+
+ANTONY: Friends, Romans, countrymen, lend me your ears;
+I come to bury Caesar, not to praise him.
+The evil that men do lives after them;
+The good is oft interred with their bones;
+So let it be with Caesar. The noble Brutus
+Hath told you Caesar was ambitious:
+If it were so, it was a grievous fault,
+And grievously hath Caesar answer'd it.
+Here, under leave of Brutus and the rest
+For Brutus is an honourable man;
+So are they all, all honourable men
+Come I to speak in Caesar's funeral.
+He was my friend, faithful and just to me:
+But Brutus says he was ambitious;
+And Brutus is an honourable man.`;
+
+// Generate character-level training data from Shakespeare text
+const generateShakespeareData = (seqLength = 64) => {
+  // Get unique characters (vocabulary)
+  const chars = [...new Set(shakespeareText.split(''))].sort();
+  const charToIdx = Object.fromEntries(chars.map((c, i) => [c, i]));
+  const idxToChar = Object.fromEntries(chars.map((c, i) => [i, c]));
+  
+  const data = [];
+  const text = shakespeareText;
+  
+  // Create training sequences
+  for (let i = 0; i < text.length - seqLength; i += Math.floor(seqLength / 2)) {
+    const inputSeq = text.slice(i, i + seqLength);
+    const targetChar = text[i + seqLength];
+    
+    // Convert to indices
+    const inputIndices = inputSeq.split('').map(c => charToIdx[c]);
+    const targetIdx = charToIdx[targetChar];
+    
+    data.push({
+      input: inputSeq,
+      input_indices: inputIndices.join(','),
+      target: targetChar,
+      target_idx: targetIdx
+    });
+    
+    if (data.length >= 200) break; // Limit samples for browser performance
+  }
+  
+  return {
+    sequences: data,
+    vocab: chars,
+    vocabSize: chars.length,
+    charToIdx,
+    idxToChar,
+    seqLength
+  };
+};
+
 // Intent Classification dataset (for chatbots)
 const intentClassificationData = [
   // Greeting
