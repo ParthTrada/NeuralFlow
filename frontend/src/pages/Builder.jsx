@@ -377,27 +377,42 @@ export default function Builder() {
       },
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Record to history
+    recordHistory(updatedNodes, edges, true);
+    
     toast.success(`Added ${layer.label} layer`);
-  }, [setNodes, nodes.length]);
+  }, [setNodes, nodes, edges, recordHistory]);
 
   const handleUpdateNode = useCallback((nodeId, newData) => {
-    setNodes((nds) =>
-      nds.map((node) =>
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
         node.id === nodeId
           ? { ...node, data: newData }
           : node
-      )
-    );
+      );
+      // Record to history (debounced for continuous changes)
+      recordHistory(updatedNodes, edges, false);
+      return updatedNodes;
+    });
     setSelectedNode(prev => prev?.id === nodeId ? { ...prev, data: newData } : prev);
-  }, [setNodes]);
+  }, [setNodes, edges, recordHistory]);
 
   const handleDeleteNode = useCallback((nodeId) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    const updatedNodes = nodes.filter((node) => node.id !== nodeId);
+    const updatedEdges = edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+    
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
     setSelectedNode(null);
+    
+    // Record to history
+    recordHistory(updatedNodes, updatedEdges, true);
+    
     toast.success('Layer deleted');
-  }, [setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, recordHistory]);
 
   const handleCloseProperties = useCallback(() => {
     setSelectedNode(null);
@@ -408,12 +423,16 @@ export default function Builder() {
       toast.info('Canvas is already empty');
       return;
     }
+    
+    // Record current state before clearing
+    recordHistory([], [], true);
+    
     setNodes([]);
     setEdges([]);
     setSelectedNode(null);
     nodeId = 0;
     toast.success('Canvas cleared');
-  }, [nodes.length, setNodes, setEdges]);
+  }, [nodes.length, setNodes, setEdges, recordHistory]);
 
   const handleShowCode = useCallback(() => {
     const pytorchCode = generatePyTorchCode(nodes, edges);
