@@ -238,10 +238,16 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
           : 'bg-white/95 border-zinc-200 text-zinc-900 backdrop-blur-xl'
       }`}
       style={{
-        ...position,
-        width: isMobile ? 'auto' : '360px',
-        maxWidth: isMobile ? 'calc(100vw - 32px)' : '360px',
-        margin: isMobile ? '0 16px' : '0',
+        ...(isMobile && position.transform ? {
+          top: '50%',
+          left: '16px',
+          right: '16px',
+          transform: 'translateY(-50%)',
+          width: 'auto',
+        } : {
+          ...position,
+          width: '360px',
+        }),
       }}
     >
       <div className="p-5">
