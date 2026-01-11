@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -9,21 +9,19 @@ import {
   MousePointerClick,
   Settings,
   Code2,
-  Play,
-  Save,
-  Share2,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from 'lucide-react';
 import { Button } from './ui/button';
 
 const TOUR_STORAGE_KEY = 'neuralflows_tour_completed';
 
-// Tour steps configuration
+// Tour steps configuration - matched to actual UI elements
 const tourSteps = [
   {
     id: 'welcome',
     title: 'Welcome to NeuralFlows! 🎉',
-    description: 'Let\'s take a quick tour to help you build your first neural network. This will only take 30 seconds!',
+    description: 'Build neural networks visually without writing code. Let\'s take a 30-second tour to get you started!',
     icon: Sparkles,
     position: 'center',
     target: null,
@@ -31,202 +29,178 @@ const tourSteps = [
   {
     id: 'layer-palette',
     title: 'Layer Palette',
-    description: 'Drag layers from here onto the canvas. Choose from Dense, Conv2D, LSTM, Attention, and more. Use templates for quick starts!',
+    description: 'Find all your neural network layers here - Dense, Conv2D, LSTM, Attention, and more. Use Templates at the top for quick starts!',
     icon: Layers,
     position: 'right',
     target: '[data-tour="layer-palette"]',
-    highlight: { top: 56, left: 0, width: 280, height: 'calc(100vh - 56px)' },
   },
   {
     id: 'canvas',
     title: 'Design Canvas',
-    description: 'This is where you build your network. Drop layers here and connect them by dragging from output to input handles.',
+    description: 'Drag layers here and connect them by drawing lines between the handles. Your network architecture takes shape visually!',
     icon: MousePointerClick,
-    position: 'center',
+    position: 'left',
     target: '[data-tour="canvas"]',
-    highlight: { top: 56, left: 280, width: 'calc(100vw - 560px)', height: 'calc(100vh - 56px)' },
   },
   {
     id: 'properties',
     title: 'Properties Panel',
-    description: 'Click any layer to configure it here. Adjust units, activation functions, kernel sizes, and more.',
+    description: 'Click any layer on the canvas to configure it here. Adjust units, activations, kernel sizes, and more.',
     icon: Settings,
     position: 'left',
     target: '[data-tour="properties-panel"]',
-    highlight: { top: 56, right: 0, width: 280, height: 'calc(100vh - 56px)' },
-  },
-  {
-    id: 'generate-code',
-    title: 'Generate PyTorch Code',
-    description: 'Click here to see the auto-generated PyTorch code for your network. Download it anytime!',
-    icon: Code2,
-    position: 'bottom',
-    target: '[data-tour="generate-code"]',
-    arrowPosition: 'top',
   },
   {
     id: 'train',
     title: 'Train Your Model',
-    description: 'Train your network right in the browser! Upload data, set parameters, and watch it learn in real-time.',
-    icon: Play,
-    position: 'bottom',
+    description: 'Train your network in the browser! Load datasets, configure training parameters, and watch accuracy improve in real-time.',
+    icon: GraduationCap,
+    position: 'bottom-left',
     target: '[data-tour="train-btn"]',
-    arrowPosition: 'top',
   },
   {
-    id: 'save',
-    title: 'Save & Share',
-    description: 'Sign in to save your models and share them with others via unique links. Your work is always safe!',
-    icon: Save,
-    position: 'bottom',
-    target: '[data-tour="save-btn"]',
-    arrowPosition: 'top',
+    id: 'view-code',
+    title: 'Export Code',
+    description: 'Generate production-ready PyTorch or Keras code from your design. Copy to clipboard or download as a file!',
+    icon: Code2,
+    position: 'bottom-left',
+    target: '[data-testid="view-code-btn"]',
+  },
+  {
+    id: 'tutorial',
+    title: 'Need Help?',
+    description: 'Click this book icon anytime to access our detailed tutorial with screenshots and examples.',
+    icon: BookOpen,
+    position: 'bottom-left',
+    target: '[data-testid="tutorial-btn"]',
   },
   {
     id: 'complete',
-    title: 'You\'re Ready! 🚀',
-    description: 'Start by dragging an Input layer onto the canvas, or pick a template from the palette. Have fun building!',
-    icon: GraduationCap,
+    title: 'You\'re All Set! 🚀',
+    description: 'Start by choosing a template from the Layer Palette, or drag an Input layer onto the canvas. Happy building!',
+    icon: Sparkles,
     position: 'center',
     target: null,
   },
 ];
 
-// Spotlight overlay component
-const Spotlight = ({ highlight, isDark }) => {
-  if (!highlight) return null;
-  
-  return (
-    <div className="fixed inset-0 z-[9998] pointer-events-none">
-      {/* Dark overlay with cutout */}
-      <svg className="w-full h-full">
-        <defs>
-          <mask id="spotlight-mask">
-            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            <rect 
-              x={highlight.left || 'auto'} 
-              y={highlight.top || 'auto'}
-              width={highlight.width}
-              height={highlight.height}
-              rx="12"
-              fill="black"
-              style={{
-                right: highlight.right ? highlight.right : 'auto'
-              }}
-            />
-          </mask>
-        </defs>
-        <rect 
-          x="0" 
-          y="0" 
-          width="100%" 
-          height="100%" 
-          fill={isDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.75)'}
-          mask="url(#spotlight-mask)" 
-        />
-      </svg>
-      
-      {/* Highlight border */}
-      <div 
-        className="absolute border-2 border-primary rounded-xl animate-pulse"
-        style={{
-          top: highlight.top,
-          left: highlight.left,
-          right: highlight.right,
-          width: highlight.width,
-          height: highlight.height,
-        }}
-      />
-    </div>
-  );
+// Create context for tour state
+const ProductTourContext = createContext(null);
+
+export const useProductTour = () => {
+  const context = useContext(ProductTourContext);
+  if (!context) {
+    // Return dummy functions if used outside provider
+    return {
+      restartTour: () => {
+        if (window.restartProductTour) {
+          window.restartProductTour();
+        }
+      },
+      resetTour: () => {
+        localStorage.removeItem(TOUR_STORAGE_KEY);
+      }
+    };
+  }
+  return context;
 };
 
 // Tour tooltip component
 const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, onComplete, isDark }) => {
   const Icon = step.icon;
   const isFirst = currentStep === 0;
-  const isLast = currentStep === totalSteps - 1;
   const isWelcome = step.id === 'welcome';
   const isComplete = step.id === 'complete';
+  const actualSteps = totalSteps - 2; // Exclude welcome and complete
+  const actualCurrentStep = currentStep - 1; // Adjust for welcome step
   
-  // Position styles based on step configuration
-  const getPositionStyles = () => {
-    if (step.position === 'center') {
-      return {
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      };
+  // Calculate position based on target element
+  const [position, setPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+  
+  useEffect(() => {
+    if (step.position === 'center' || !step.target) {
+      setPosition({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+      return;
     }
     
-    // For targeted elements, position near them
-    const target = step.target ? document.querySelector(step.target) : null;
-    if (target) {
-      const rect = target.getBoundingClientRect();
-      
-      if (step.position === 'right') {
-        return {
-          top: Math.min(rect.top + 100, window.innerHeight - 300),
-          left: rect.right + 20,
-        };
-      }
-      if (step.position === 'left') {
-        return {
-          top: Math.min(rect.top + 100, window.innerHeight - 300),
-          right: window.innerWidth - rect.left + 20,
-        };
-      }
-      if (step.position === 'bottom') {
-        return {
-          top: rect.bottom + 15,
-          left: Math.max(rect.left - 100, 20),
-        };
-      }
+    const target = document.querySelector(step.target);
+    if (!target) {
+      setPosition({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+      return;
     }
     
-    return {
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-    };
-  };
-  
-  const positionStyles = getPositionStyles();
+    const rect = target.getBoundingClientRect();
+    const tooltipWidth = 360;
+    const tooltipHeight = 280;
+    const padding = 16;
+    
+    let newPosition = {};
+    
+    switch (step.position) {
+      case 'right':
+        newPosition = {
+          top: Math.min(Math.max(rect.top, padding), window.innerHeight - tooltipHeight - padding),
+          left: rect.right + padding,
+        };
+        break;
+      case 'left':
+        newPosition = {
+          top: Math.min(Math.max(rect.top, padding), window.innerHeight - tooltipHeight - padding),
+          left: Math.max(rect.left - tooltipWidth - padding, padding),
+        };
+        break;
+      case 'bottom':
+        newPosition = {
+          top: rect.bottom + padding,
+          left: Math.max(rect.left - (tooltipWidth / 2) + (rect.width / 2), padding),
+        };
+        break;
+      case 'bottom-left':
+        newPosition = {
+          top: rect.bottom + padding,
+          left: Math.max(rect.left - tooltipWidth + rect.width, padding),
+        };
+        break;
+      default:
+        newPosition = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    }
+    
+    // Ensure tooltip stays within viewport
+    if (newPosition.left + tooltipWidth > window.innerWidth - padding) {
+      newPosition.left = window.innerWidth - tooltipWidth - padding;
+    }
+    
+    setPosition(newPosition);
+  }, [step, currentStep]);
   
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      key={step.id}
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: 10 }}
-      transition={{ duration: 0.2 }}
-      className={`fixed z-[9999] w-[340px] rounded-2xl shadow-2xl border ${
+      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+      transition={{ duration: 0.25 }}
+      className={`fixed z-[10001] w-[360px] rounded-2xl shadow-2xl border ${
         isDark 
-          ? 'bg-zinc-900 border-zinc-700 text-white' 
-          : 'bg-white border-zinc-200 text-zinc-900'
+          ? 'bg-zinc-900/95 border-zinc-700 text-white backdrop-blur-xl' 
+          : 'bg-white/95 border-zinc-200 text-zinc-900 backdrop-blur-xl'
       }`}
-      style={positionStyles}
+      style={position}
     >
-      {/* Arrow for positioned tooltips */}
-      {step.arrowPosition === 'top' && (
-        <div 
-          className={`absolute -top-2 left-8 w-4 h-4 rotate-45 ${
-            isDark ? 'bg-zinc-900 border-l border-t border-zinc-700' : 'bg-white border-l border-t border-zinc-200'
-          }`}
-        />
-      )}
-      
       <div className="p-5">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-xl ${isDark ? 'bg-primary/20' : 'bg-primary/10'}`}>
-              <Icon className="w-5 h-5 text-primary" />
+            <div className={`p-2.5 rounded-xl ${
+              isDark ? 'bg-violet-500/20' : 'bg-violet-100'
+            }`}>
+              <Icon className="w-5 h-5 text-violet-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">{step.title}</h3>
+              <h3 className="font-bold text-lg leading-tight">{step.title}</h3>
               {!isWelcome && !isComplete && (
-                <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                  Step {currentStep} of {totalSteps - 2}
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                  Step {actualCurrentStep + 1} of {actualSteps}
                 </p>
               )}
             </div>
@@ -235,8 +209,9 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
             <button
               onClick={onSkip}
               className={`p-1.5 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'
+                isDark ? 'hover:bg-white/10 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-500'
               }`}
+              aria-label="Skip tour"
             >
               <X className="w-4 h-4" />
             </button>
@@ -250,15 +225,15 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         
         {/* Progress dots */}
         {!isWelcome && !isComplete && (
-          <div className="flex justify-center gap-1.5 mb-4">
+          <div className="flex justify-center gap-1.5 mb-5">
             {tourSteps.slice(1, -1).map((_, idx) => (
               <div
                 key={idx}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === currentStep - 1
-                    ? 'w-6 bg-primary'
-                    : idx < currentStep - 1
-                    ? 'w-1.5 bg-primary/50'
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  idx === actualCurrentStep
+                    ? 'w-6 bg-violet-500'
+                    : idx < actualCurrentStep
+                    ? 'w-1.5 bg-violet-500/50'
                     : `w-1.5 ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`
                 }`}
               />
@@ -268,62 +243,116 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {!isFirst && !isWelcome && !isComplete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPrev}
-              className={`flex-1 ${isDark ? 'border-zinc-700' : ''}`}
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
-          )}
-          
-          {isWelcome && (
+          {isWelcome ? (
             <>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onSkip}
-                className={`flex-1 ${isDark ? 'border-zinc-700' : ''}`}
+                className={`flex-1 ${isDark ? 'border-zinc-700 hover:bg-zinc-800' : ''}`}
               >
-                Skip Tour
+                Skip
               </Button>
               <Button
                 size="sm"
                 onClick={onNext}
-                className="flex-1 bg-primary hover:bg-primary/90"
+                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white"
               >
-                Start Tour
+                Let's Go!
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </>
-          )}
-          
-          {isComplete && (
+          ) : isComplete ? (
             <Button
               size="sm"
               onClick={onComplete}
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Start Building!
             </Button>
-          )}
-          
-          {!isWelcome && !isComplete && (
-            <Button
-              size="sm"
-              onClick={isLast ? onComplete : onNext}
-              className="flex-1 bg-primary hover:bg-primary/90"
-            >
-              {isLast ? 'Finish' : 'Next'}
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+          ) : (
+            <>
+              {!isFirst && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPrev}
+                  className={`${isDark ? 'border-zinc-700 hover:bg-zinc-800' : ''}`}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={onNext}
+                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                Next
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </>
           )}
         </div>
       </div>
+    </motion.div>
+  );
+};
+
+// Highlight ring around target element
+const TargetHighlight = ({ target, isDark }) => {
+  const [rect, setRect] = useState(null);
+  
+  useEffect(() => {
+    if (!target) {
+      setRect(null);
+      return;
+    }
+    
+    const element = document.querySelector(target);
+    if (!element) {
+      setRect(null);
+      return;
+    }
+    
+    const updateRect = () => {
+      const newRect = element.getBoundingClientRect();
+      setRect(newRect);
+    };
+    
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect);
+    
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect);
+    };
+  }, [target]);
+  
+  if (!rect) return null;
+  
+  const padding = 8;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="fixed z-[10000] pointer-events-none"
+      style={{
+        top: rect.top - padding,
+        left: rect.left - padding,
+        width: rect.width + padding * 2,
+        height: rect.height + padding * 2,
+      }}
+    >
+      {/* Animated ring */}
+      <div className="absolute inset-0 rounded-xl border-2 border-violet-500 animate-pulse" />
+      <div className="absolute inset-0 rounded-xl bg-violet-500/10" />
+      
+      {/* Glow effect */}
+      <div className="absolute -inset-2 rounded-2xl bg-violet-500/20 blur-md" />
     </motion.div>
   );
 };
@@ -346,7 +375,7 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
       // Small delay to let the page render first
       const timer = setTimeout(() => {
         setIsActive(true);
-      }, 1000);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [forceShow]);
@@ -381,7 +410,7 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
     setIsActive(true);
   };
   
-  // Expose restart method
+  // Expose restart method globally
   useEffect(() => {
     window.restartProductTour = restartTour;
     return () => {
@@ -394,20 +423,22 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
   const currentStepData = tourSteps[currentStep];
   
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isActive && (
         <>
-          {/* Backdrop / Spotlight */}
-          {currentStepData.position === 'center' ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9998] bg-black/80"
-              onClick={currentStep === 0 ? undefined : handleSkip}
-            />
-          ) : (
-            <Spotlight highlight={currentStepData.highlight} isDark={isDark} />
+          {/* Dark overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] bg-black/70"
+            onClick={currentStep === 0 ? undefined : handleSkip}
+          />
+          
+          {/* Target highlight */}
+          {currentStepData.target && (
+            <TargetHighlight target={currentStepData.target} isDark={isDark} />
           )}
           
           {/* Tooltip */}
@@ -427,8 +458,8 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
   );
 };
 
-// Hook to control tour from other components
-export const useProductTour = () => {
+// Provider component for tour context
+export const ProductTourProvider = ({ children }) => {
   const restartTour = () => {
     if (window.restartProductTour) {
       window.restartProductTour();
@@ -439,7 +470,11 @@ export const useProductTour = () => {
     localStorage.removeItem(TOUR_STORAGE_KEY);
   };
   
-  return { restartTour, resetTour };
+  return (
+    <ProductTourContext.Provider value={{ restartTour, resetTour }}>
+      {children}
+    </ProductTourContext.Provider>
+  );
 };
 
 export default ProductTour;
