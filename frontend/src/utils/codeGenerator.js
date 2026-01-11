@@ -338,10 +338,15 @@ export const generatePyTorchCode = (nodes, edges) => {
         const dModel = inputShape?.features || config.dModel || 256;
         const nHead = config.nHead || 8;
         const dimFF = config.dimFeedforward || 1024;
-        const numLayers = config.numLayers || 2;
-        layerCode = `${layerName}_layer = nn.TransformerDecoderLayer(d_model=${dModel}, nhead=${nHead}, dim_feedforward=${dimFF}, batch_first=True)
-        ${layerName} = nn.TransformerDecoder(${layerName}_layer, num_layers=${numLayers})  # ${label}`;
-        forwardCode = `${varName} = ${layerName}(${inputVar}, ${inputVar})  # (target, memory)`;
+        const numLayers = config.numLayers || 1;
+        // For GPT-style decoder-only models, use causal self-attention
+        layerCode = `# Transformer Decoder Block (${label}) - with causal masking for autoregressive generation
+        ${layerName}_layer = nn.TransformerEncoderLayer(d_model=${dModel}, nhead=${nHead}, dim_feedforward=${dimFF}, batch_first=True, dropout=0.1)
+        ${layerName} = nn.TransformerEncoder(${layerName}_layer, num_layers=${numLayers})`;
+        forwardCode = `# Generate causal mask for autoregressive attention
+        seq_len = ${inputVar}.size(1)
+        causal_mask = torch.triu(torch.ones(seq_len, seq_len, device=${inputVar}.device) * float('-inf'), diagonal=1)
+        ${varName} = ${layerName}(${inputVar}, mask=causal_mask)`;
         break;
       }
 
