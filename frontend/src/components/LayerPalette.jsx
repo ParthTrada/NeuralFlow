@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
