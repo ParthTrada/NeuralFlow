@@ -891,6 +891,26 @@ export const sampleDatasets = [
     getData: () => intentClassificationData,
     previewColumns: ['text', 'intent'],
   },
+  {
+    id: 'shakespeare',
+    name: 'Shakespeare Text',
+    description: '~200 sequences, character-level, 65 chars',
+    longDescription: 'Character-level text generation dataset from Shakespeare plays. Train a Mini-GPT to generate Shakespeare-like text! Includes Romeo & Juliet, Hamlet, Macbeth, and more.',
+    category: 'text-generation',
+    compatibleTemplates: ['mini-gpt'],
+    features: 'text',
+    classes: 65,
+    samples: 200,
+    icon: '📜',
+    color: '#a855f7',
+    targetColumn: 'target',
+    textColumn: 'input',
+    getData: () => generateShakespeareData(64),
+    previewColumns: ['input', 'target'],
+    isTextGeneration: true,
+    vocabSize: 65,
+    seqLength: 64,
+  },
 ];
 
 // Get datasets compatible with a template
