@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone
 from auth_routes import create_auth_routes
 from admin_routes import create_admin_routes
+from pdf_qa_routes import create_pdf_qa_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
