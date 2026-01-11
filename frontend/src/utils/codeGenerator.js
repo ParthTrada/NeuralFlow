@@ -1,5 +1,62 @@
 // PyTorch Code Generator for Neural Network
 
+// Topological sort for DAG (Directed Acyclic Graph)
+const topologicalSort = (nodes, edges) => {
+  // Build adjacency list and in-degree count
+  const adjacency = {};
+  const inDegree = {};
+  const nodeMap = {};
+  
+  nodes.forEach(node => {
+    adjacency[node.id] = [];
+    inDegree[node.id] = 0;
+    nodeMap[node.id] = node;
+  });
+  
+  edges.forEach(edge => {
+    if (adjacency[edge.source]) {
+      adjacency[edge.source].push(edge.target);
+      inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
+    }
+  });
+  
+  // Find all nodes with no incoming edges
+  const queue = nodes.filter(node => inDegree[node.id] === 0);
+  const sorted = [];
+  
+  while (queue.length > 0) {
+    // Sort queue by position for consistent ordering
+    queue.sort((a, b) => {
+      const yDiff = a.position.y - b.position.y;
+      if (Math.abs(yDiff) > 50) return yDiff;
+      return a.position.x - b.position.x;
+    });
+    
+    const node = queue.shift();
+    sorted.push(node);
+    
+    // Process all outgoing edges
+    adjacency[node.id].forEach(targetId => {
+      inDegree[targetId]--;
+      if (inDegree[targetId] === 0) {
+        queue.push(nodeMap[targetId]);
+      }
+    });
+  }
+  
+  // If not all nodes are sorted, there's a cycle
+  if (sorted.length !== nodes.length) {
+    console.warn('Graph has a cycle, falling back to position-based sorting');
+    return [...nodes].sort((a, b) => {
+      const yDiff = a.position.y - b.position.y;
+      if (Math.abs(yDiff) > 50) return yDiff;
+      return a.position.x - b.position.x;
+    });
+  }
+  
+  return sorted;
+};
+
 export const generatePyTorchCode = (nodes, edges) => {
   if (!nodes || nodes.length === 0) {
     return `# No layers defined yet
@@ -7,18 +64,18 @@ export const generatePyTorchCode = (nodes, edges) => {
 `;
   }
 
-  // Sort nodes by position (top to bottom, left to right)
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const yDiff = a.position.y - b.position.y;
-    if (Math.abs(yDiff) > 50) return yDiff;
-    return a.position.x - b.position.x;
-  });
+  // Use topological sort for proper DAG ordering
+  const sortedNodes = topologicalSort(nodes, edges);
 
-  // Build adjacency list from edges
+  // Build adjacency list from edges (source -> targets)
   const adjacency = {};
+  const reverseAdjacency = {}; // target -> sources (for multi-input layers)
   edges.forEach(edge => {
     if (!adjacency[edge.source]) adjacency[edge.source] = [];
-    adjacency[edge.source].push(edge.target);
+    adjacency[edge.source].push({ target: edge.target, handle: edge.targetHandle });
+    
+    if (!reverseAdjacency[edge.target]) reverseAdjacency[edge.target] = [];
+    reverseAdjacency[edge.target].push({ source: edge.source, handle: edge.targetHandle });
   });
 
   // Find input nodes (nodes with no incoming edges)
