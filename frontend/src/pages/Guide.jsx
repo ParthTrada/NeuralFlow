@@ -1,407 +1,435 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  Layers,
-  MousePointer2,
-  Link2,
+  ArrowRight,
   Play,
+  ChevronRight,
+  Sparkles,
+  Brain,
+  MousePointer2,
+  Layers,
   Database,
   Code,
-  Download,
-  Sparkles,
-  ChevronRight,
-  ChevronDown,
-  Lightbulb,
-  Target,
-  Zap,
-  Box,
-  GitBranch,
-  Brain,
-  CheckCircle2
+  Zap
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 
 const Guide = () => {
-  const [expandedSection, setExpandedSection] = useState('getting-started');
-
-  const toggleSection = (section) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Back to Home</span>
           </Link>
           <Link to="/builder">
-            <Button size="sm" data-testid="start-building-btn">
+            <Button className="bg-violet-600 hover:bg-violet-700" data-testid="start-building-btn">
               Start Building
-              <ChevronRight className="w-4 h-4 ml-1" />
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 sm:py-16 border-b border-border">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-16 sm:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-600/10 to-transparent" />
+        <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4">
-              <Lightbulb className="w-3 h-3 mr-1" />
-              Beginner Friendly
-            </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              How to Use <span className="text-primary">NeuralFlow</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 mb-6">
+              <Sparkles className="w-4 h-4 text-violet-400" />
+              <span className="text-sm text-violet-300">Learn in 5 minutes</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+              Build Your First <br />
+              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                Neural Network
+              </span>
             </h1>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-              Learn how to build, train, and export neural networks visually — no coding required!
+            <p className="text-lg text-zinc-400 max-w-xl mx-auto">
+              A visual guide to creating, training, and exporting neural networks without writing code.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Quick Overview */}
-      <section className="py-10 sm:py-12 border-b border-border bg-muted/30">
+      {/* Step 1: Choose a Template */}
+      <section className="py-16 border-t border-white/5">
         <div className="container mx-auto px-4">
-          <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">4 Simple Steps</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: Layers, title: '1. Add Layers', desc: 'Drag & drop layers', color: 'text-blue-500' },
-              { icon: Link2, title: '2. Connect', desc: 'Link layers together', color: 'text-green-500' },
-              { icon: Database, title: '3. Load Data', desc: 'Use sample datasets', color: 'text-purple-500' },
-              { icon: Play, title: '4. Train', desc: 'Watch it learn!', color: 'text-orange-500' },
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card border border-border rounded-xl p-4 text-center"
-              >
-                <div className={`w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center ${step.color}`}>
-                  <step.icon className="w-6 h-6" />
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 lg:order-1"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-400 font-bold">
+                  1
                 </div>
-                <h3 className="font-semibold text-sm sm:text-base">{step.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
-              </motion.div>
-            ))}
+                <span className="text-sm text-violet-400 font-medium uppercase tracking-wider">Step One</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Start with a Template
+              </h2>
+              <p className="text-zinc-400 text-lg mb-6">
+                Choose from pre-built architectures designed for different tasks. Each template is optimized and ready to train.
+              </p>
+              <div className="space-y-3">
+                <FeatureItem icon={Brain} text="Simple MLP for tabular data classification" />
+                <FeatureItem icon={Layers} text="CNN for image recognition" />
+                <FeatureItem icon={Zap} text="Transformer for text analysis" />
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 lg:order-2"
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800/80 flex items-center px-3 gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <img 
+                  src="https://dag-ml-builder.preview.emergentagent.com/api/placeholder/templates"
+                  alt="Template Selection"
+                  className="w-full pt-8"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `
+                      <div class="pt-8 p-8 text-center">
+                        <div class="bg-zinc-800 rounded-xl p-6 space-y-3">
+                          <div class="flex items-center gap-3 p-3 bg-zinc-700/50 rounded-lg border border-violet-500/30">
+                            <div class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center">🧠</div>
+                            <div class="text-left"><div class="font-medium text-sm">Simple MLP</div><div class="text-xs text-zinc-400">3 layers, 128 neurons</div></div>
+                          </div>
+                          <div class="flex items-center gap-3 p-3 bg-zinc-700/50 rounded-lg">
+                            <div class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">🖼️</div>
+                            <div class="text-left"><div class="font-medium text-sm">CNN - Image Classifier</div><div class="text-xs text-zinc-400">Conv2D + Pooling</div></div>
+                          </div>
+                          <div class="flex items-center gap-3 p-3 bg-zinc-700/50 rounded-lg">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">📈</div>
+                            <div class="text-left"><div class="font-medium text-sm">RNN - Sequence Model</div><div class="text-xs text-zinc-400">LSTM layers</div></div>
+                          </div>
+                          <div class="flex items-center gap-3 p-3 bg-zinc-700/50 rounded-lg">
+                            <div class="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">📝</div>
+                            <div class="text-left"><div class="font-medium text-sm">Text Classifier</div><div class="text-xs text-zinc-400">Embedding + LSTM</div></div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }}
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Detailed Guide Sections */}
-      <section className="py-10 sm:py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          
-          {/* Getting Started */}
-          <GuideSection
-            id="getting-started"
-            title="Getting Started"
-            icon={Target}
-            isExpanded={expandedSection === 'getting-started'}
-            onToggle={() => toggleSection('getting-started')}
-          >
-            <div className="space-y-6">
-              <p className="text-muted-foreground">
-                NeuralFlow lets you build neural networks by dragging and dropping layers onto a canvas. 
-                No coding experience needed!
-              </p>
-              
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-500" />
-                  Quick Start (30 seconds)
-                </h4>
-                <ol className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">1</span>
-                    <span>Click <strong>"Start Building"</strong> on the home page</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">2</span>
-                    <span>In the left panel, click <strong>"Simple MLP"</strong> template</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">3</span>
-                    <span>Click <strong>"Train"</strong> → Select <strong>"Iris Flowers"</strong> dataset</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">4</span>
-                    <span>Click <strong>"Start Training"</strong> and watch your model learn!</span>
-                  </li>
-                </ol>
-              </div>
-
-              {/* Visual Diagram */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h4 className="font-semibold mb-4 text-center">Your First Neural Network</h4>
-                <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
-                  <NetworkBlock label="Input" sublabel="4 features" color="bg-blue-500/20 border-blue-500" />
-                  <Arrow />
-                  <NetworkBlock label="Dense" sublabel="64 neurons" color="bg-purple-500/20 border-purple-500" />
-                  <Arrow />
-                  <NetworkBlock label="Dense" sublabel="32 neurons" color="bg-purple-500/20 border-purple-500" />
-                  <Arrow />
-                  <NetworkBlock label="Output" sublabel="3 classes" color="bg-green-500/20 border-green-500" />
+      {/* Step 2: Visual Canvas */}
+      <section className="py-16 border-t border-white/5 bg-gradient-to-b from-zinc-900/50 to-transparent">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800/80 flex items-center px-3 gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
                 </div>
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  This simple network can classify Iris flowers into 3 species!
-                </p>
-              </div>
-            </div>
-          </GuideSection>
-
-          {/* Understanding Layers */}
-          <GuideSection
-            id="layers"
-            title="Understanding Layers"
-            icon={Layers}
-            isExpanded={expandedSection === 'layers'}
-            onToggle={() => toggleSection('layers')}
-          >
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Layers are the building blocks of neural networks. Each layer transforms data in a specific way.
-              </p>
-              
-              <div className="grid gap-3">
-                <LayerCard 
-                  name="Input" 
-                  desc="Entry point for your data. Configure the shape based on your dataset."
-                  useCase="Always start with this layer"
-                  color="blue"
-                />
-                <LayerCard 
-                  name="Dense (Linear)" 
-                  desc="Fully connected layer. Each neuron connects to all neurons in the previous layer."
-                  useCase="Basic classification, regression"
-                  color="purple"
-                />
-                <LayerCard 
-                  name="Conv2D" 
-                  desc="Convolutional layer for image processing. Detects patterns like edges and shapes."
-                  useCase="Image classification, object detection"
-                  color="cyan"
-                />
-                <LayerCard 
-                  name="LSTM" 
-                  desc="Long Short-Term Memory. Remembers patterns over time sequences."
-                  useCase="Time series, stock prediction"
-                  color="green"
-                />
-                <LayerCard 
-                  name="Embedding" 
-                  desc="Converts words/tokens into numerical vectors."
-                  useCase="Text classification, NLP"
-                  color="orange"
-                />
-                <LayerCard 
-                  name="Output" 
-                  desc="Final layer that produces predictions. Set the number of classes."
-                  useCase="Always end with this layer"
-                  color="emerald"
-                />
-              </div>
-            </div>
-          </GuideSection>
-
-          {/* Templates */}
-          <GuideSection
-            id="templates"
-            title="Using Templates"
-            icon={Box}
-            isExpanded={expandedSection === 'templates'}
-            onToggle={() => toggleSection('templates')}
-          >
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Templates are pre-built architectures for common tasks. Start with a template and customize it!
-              </p>
-              
-              <div className="grid sm:grid-cols-2 gap-3">
-                <TemplateCard 
-                  name="Simple MLP"
-                  desc="Multi-layer perceptron for tabular data classification"
-                  datasets={['Iris Flowers', 'MNIST (flat)']}
-                />
-                <TemplateCard 
-                  name="CNN - Image Classifier"
-                  desc="Convolutional network for image recognition"
-                  datasets={['MNIST', 'Fashion', 'CIFAR-10']}
-                />
-                <TemplateCard 
-                  name="RNN - Sequence Model"
-                  desc="LSTM network for time series prediction"
-                  datasets={['Stock Trends']}
-                />
-                <TemplateCard 
-                  name="Text Classifier"
-                  desc="Embedding + LSTM for text classification"
-                  datasets={['Sentiment', 'SMS Spam', 'News']}
-                />
-                <TemplateCard 
-                  name="Transformer"
-                  desc="BERT-style attention model for NLP"
-                  datasets={['Sentiment', 'Intents']}
-                />
-                <TemplateCard 
-                  name="ResNet Block"
-                  desc="Skip connections for deeper networks"
-                  datasets={['MNIST', 'Fashion', 'CIFAR-10']}
-                />
-              </div>
-            </div>
-          </GuideSection>
-
-          {/* Datasets */}
-          <GuideSection
-            id="datasets"
-            title="Sample Datasets"
-            icon={Database}
-            isExpanded={expandedSection === 'datasets'}
-            onToggle={() => toggleSection('datasets')}
-          >
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                We provide ready-to-use datasets that automatically match with your model template.
-              </p>
-              
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                <h4 className="font-semibold mb-3">How to Use Datasets</h4>
-                <ol className="space-y-2 text-sm text-muted-foreground">
-                  <li>1. Click <strong>"Train"</strong> button in the header</li>
-                  <li>2. Go to <strong>"Datasets"</strong> tab</li>
-                  <li>3. Select a dataset with <Badge variant="default" className="text-[10px] px-1.5 py-0">Match</Badge> tag</li>
-                  <li>4. Model parameters auto-adjust to fit the data!</li>
-                </ol>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <DatasetCard icon="🌸" name="Iris Flowers" type="Tabular" samples={150} />
-                <DatasetCard icon="🔢" name="MNIST Digits" type="Image" samples={100} />
-                <DatasetCard icon="👕" name="Fashion Items" type="Image" samples={100} />
-                <DatasetCard icon="💬" name="Sentiment" type="Text" samples={45} />
-                <DatasetCard icon="📰" name="News Headlines" type="Text" samples={80} />
-                <DatasetCard icon="📈" name="Stock Trends" type="Sequence" samples={1500} />
-              </div>
-            </div>
-          </GuideSection>
-
-          {/* Training */}
-          <GuideSection
-            id="training"
-            title="Training Your Model"
-            icon={Play}
-            isExpanded={expandedSection === 'training'}
-            onToggle={() => toggleSection('training')}
-          >
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Training is how your neural network learns patterns from data.
-              </p>
-              
-              <div className="bg-card border border-border rounded-lg p-4">
-                <h4 className="font-semibold mb-3">Training Parameters</h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="font-medium">Epochs</span>
-                    <span className="text-muted-foreground">How many times to go through all data (10-50)</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="font-medium">Batch Size</span>
-                    <span className="text-muted-foreground">Samples processed at once (16-64)</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="font-medium">Learning Rate</span>
-                    <span className="text-muted-foreground">How fast to learn (0.001 is good)</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="font-medium">Optimizer</span>
-                    <span className="text-muted-foreground">Adam works best for most cases</span>
+                {/* Visual representation of the canvas */}
+                <div className="pt-8 p-6">
+                  <div className="flex items-center justify-center gap-4 flex-wrap py-8">
+                    <NodeBlock label="Input" sublabel="4 features" color="from-blue-500 to-blue-600" />
+                    <ConnectionLine />
+                    <NodeBlock label="Dense" sublabel="64 units" color="from-violet-500 to-violet-600" />
+                    <ConnectionLine />
+                    <NodeBlock label="Dense" sublabel="32 units" color="from-violet-500 to-violet-600" />
+                    <ConnectionLine />
+                    <NodeBlock label="Output" sublabel="3 classes" color="from-emerald-500 to-emerald-600" />
                   </div>
                 </div>
               </div>
-
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                <h4 className="font-semibold mb-2 flex items-center gap-2 text-green-400">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Good Training Signs
-                </h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Loss decreases over epochs</li>
-                  <li>• Accuracy increases steadily</li>
-                  <li>• Training and validation curves are close</li>
-                </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
+                  2
+                </div>
+                <span className="text-sm text-cyan-400 font-medium uppercase tracking-wider">Step Two</span>
               </div>
-            </div>
-          </GuideSection>
-
-          {/* Export Code */}
-          <GuideSection
-            id="export"
-            title="Exporting Code"
-            icon={Code}
-            isExpanded={expandedSection === 'export'}
-            onToggle={() => toggleSection('export')}
-          >
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Export your visual model as PyTorch or TensorFlow/Keras code to use in your own projects.
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Connect Layers Visually
+              </h2>
+              <p className="text-zinc-400 text-lg mb-6">
+                Drag and drop layers onto the canvas. Connect them by drawing lines from output to input. Your network takes shape in real-time.
               </p>
-              
-              <div className="bg-card border border-border rounded-lg p-4">
-                <h4 className="font-semibold mb-3">Export Options</h4>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                    <h5 className="font-medium text-orange-400 mb-1">PyTorch</h5>
-                    <p className="text-xs text-muted-foreground">Industry standard for research. Flexible and Pythonic.</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                    <h5 className="font-medium text-blue-400 mb-1">TensorFlow/Keras</h5>
-                    <p className="text-xs text-muted-foreground">Great for production. Easy deployment to mobile/web.</p>
+              <div className="space-y-3">
+                <FeatureItem icon={MousePointer2} text="Drag layers from the sidebar" />
+                <FeatureItem icon={ArrowRight} text="Connect by clicking and dragging" />
+                <FeatureItem icon={Sparkles} text="Configure each layer with a click" />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Step 3: Load Dataset */}
+      <section className="py-16 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 lg:order-1"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+                  3
+                </div>
+                <span className="text-sm text-emerald-400 font-medium uppercase tracking-wider">Step Three</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Load a Dataset
+              </h2>
+              <p className="text-zinc-400 text-lg mb-6">
+                Use our built-in datasets or upload your own CSV. The model auto-adjusts to match your data!
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <DatasetPill icon="🌸" name="Iris Flowers" />
+                <DatasetPill icon="🔢" name="MNIST Digits" />
+                <DatasetPill icon="💬" name="Sentiment" />
+                <DatasetPill icon="📰" name="News Headlines" />
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 lg:order-2"
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800/80 flex items-center px-3 gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <div className="pt-8 p-6">
+                  <div className="bg-zinc-800/50 rounded-xl p-4 space-y-3">
+                    <div className="flex gap-2 mb-4">
+                      <div className="px-3 py-1.5 bg-violet-500 rounded-lg text-xs font-medium">Datasets</div>
+                      <div className="px-3 py-1.5 bg-zinc-700 rounded-lg text-xs text-zinc-400">CSV</div>
+                      <div className="px-3 py-1.5 bg-zinc-700 rounded-lg text-xs text-zinc-400">Images</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 p-3 bg-violet-500/10 rounded-lg border border-violet-500/30">
+                        <span className="text-xl">🌸</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">Iris Flowers</div>
+                          <div className="text-xs text-zinc-400">150 samples • 4 features</div>
+                        </div>
+                        <span className="px-2 py-0.5 bg-violet-500 rounded text-[10px] font-medium">Match</span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-zinc-700/30 rounded-lg">
+                        <span className="text-xl">🔢</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">MNIST Digits</div>
+                          <div className="text-xs text-zinc-400">100 samples • Image</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                <h4 className="font-semibold mb-2">How to Export</h4>
-                <ol className="text-sm text-muted-foreground space-y-1">
-                  <li>1. Build your model on the canvas</li>
-                  <li>2. Click <strong>"Code"</strong> button in the header</li>
-                  <li>3. Toggle between PyTorch and Keras</li>
-                  <li>4. Copy or download the code</li>
-                </ol>
+      {/* Step 4: Train */}
+      <section className="py-16 border-t border-white/5 bg-gradient-to-b from-zinc-900/50 to-transparent">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800/80 flex items-center px-3 gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <div className="pt-8 p-6">
+                  <div className="bg-zinc-800/50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium">Training Progress</span>
+                      <span className="text-xs text-emerald-400">Epoch 8/10</span>
+                    </div>
+                    <div className="h-2 bg-zinc-700 rounded-full mb-4 overflow-hidden">
+                      <div className="h-full w-4/5 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-zinc-700/50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-emerald-400">94.2%</div>
+                        <div className="text-xs text-zinc-400">Accuracy</div>
+                      </div>
+                      <div className="bg-zinc-700/50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-violet-400">0.18</div>
+                        <div className="text-xs text-zinc-400">Loss</div>
+                      </div>
+                    </div>
+                    {/* Mini chart */}
+                    <div className="mt-4 h-20 flex items-end gap-1">
+                      {[40, 55, 65, 72, 78, 85, 88, 91, 93, 94].map((h, i) => (
+                        <div 
+                          key={i} 
+                          className="flex-1 bg-gradient-to-t from-violet-500/50 to-violet-500 rounded-t"
+                          style={{ height: `${h}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </GuideSection>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 font-bold">
+                  4
+                </div>
+                <span className="text-sm text-fuchsia-400 font-medium uppercase tracking-wider">Step Four</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Train & Watch it Learn
+              </h2>
+              <p className="text-zinc-400 text-lg mb-6">
+                Click "Start Training" and watch your model learn in real-time. Track accuracy and loss as it improves with each epoch.
+              </p>
+              <div className="space-y-3">
+                <FeatureItem icon={Play} text="Training happens in your browser" />
+                <FeatureItem icon={Zap} text="Real-time accuracy charts" />
+                <FeatureItem icon={Database} text="Save and restore trained models" />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
+      {/* Step 5: Export */}
+      <section className="py-16 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 lg:order-1"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold">
+                  5
+                </div>
+                <span className="text-sm text-orange-400 font-medium uppercase tracking-wider">Step Five</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Export Production Code
+              </h2>
+              <p className="text-zinc-400 text-lg mb-6">
+                Export your model as PyTorch or TensorFlow/Keras code. Copy it directly into your project or download the file.
+              </p>
+              <div className="flex gap-3">
+                <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+                  <div className="text-orange-400 font-bold mb-1">PyTorch</div>
+                  <div className="text-xs text-zinc-400">Research & flexibility</div>
+                </div>
+                <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20">
+                  <div className="text-blue-400 font-bold mb-1">Keras</div>
+                  <div className="text-xs text-zinc-400">Production & mobile</div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 lg:order-2"
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800/80 flex items-center px-3 gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <div className="pt-8 p-4">
+                  <pre className="text-xs text-zinc-300 font-mono overflow-x-auto">
+{`import torch.nn as nn
+
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Linear(4, 64)
+        self.layer2 = nn.Linear(64, 32)
+        self.output = nn.Linear(32, 3)
+    
+    def forward(self, x):
+        x = torch.relu(self.layer1(x))
+        x = torch.relu(self.layer2(x))
+        return self.output(x)`}
+                  </pre>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 border-t border-border bg-muted/30">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Build?</h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Start with a template and experiment! The best way to learn is by doing.
-          </p>
-          <Link to="/builder">
-            <Button size="lg" data-testid="start-building-cta">
-              <Brain className="w-5 h-5 mr-2" />
-              Start Building Now
-            </Button>
-          </Link>
+      <section className="py-20 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-violet-600/20 to-transparent" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Build?</h2>
+            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+              Start with a template and have your first model running in under a minute.
+            </p>
+            <Link to="/builder">
+              <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-lg px-8 py-6" data-testid="start-building-cta">
+                <Brain className="w-5 h-5 mr-2" />
+                Start Building
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
@@ -409,89 +437,30 @@ const Guide = () => {
 };
 
 // Helper Components
-const GuideSection = ({ id, title, icon: Icon, isExpanded, onToggle, children }) => (
-  <div className="border border-border rounded-xl mb-4 overflow-hidden">
-    <button
-      onClick={onToggle}
-      className="w-full p-4 flex items-center justify-between bg-card hover:bg-muted/50 transition-colors"
-      data-testid={`guide-section-${id}`}
-    >
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <Icon className="w-5 h-5 text-primary" />
-        </div>
-        <span className="font-semibold">{title}</span>
-      </div>
-      {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-    </button>
-    {isExpanded && (
-      <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: 'auto', opacity: 1 }}
-        transition={{ duration: 0.2 }}
-        className="p-4 pt-0 border-t border-border"
-      >
-        {children}
-      </motion.div>
-    )}
+const FeatureItem = ({ icon: Icon, text }) => (
+  <div className="flex items-center gap-3 text-zinc-300">
+    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+      <Icon className="w-4 h-4 text-zinc-400" />
+    </div>
+    <span className="text-sm">{text}</span>
   </div>
 );
 
-const NetworkBlock = ({ label, sublabel, color }) => (
-  <div className={`px-3 py-2 rounded-lg border-2 ${color} text-center min-w-[70px]`}>
-    <div className="font-semibold text-xs sm:text-sm">{label}</div>
-    <div className="text-[10px] text-muted-foreground">{sublabel}</div>
+const NodeBlock = ({ label, sublabel, color }) => (
+  <div className={`px-4 py-3 rounded-xl bg-gradient-to-br ${color} shadow-lg min-w-[90px] text-center`}>
+    <div className="font-semibold text-sm text-white">{label}</div>
+    <div className="text-[10px] text-white/70">{sublabel}</div>
   </div>
 );
 
-const Arrow = () => (
-  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+const ConnectionLine = () => (
+  <div className="w-8 h-0.5 bg-gradient-to-r from-zinc-600 to-zinc-500 hidden sm:block" />
 );
 
-const LayerCard = ({ name, desc, useCase, color }) => {
-  const colors = {
-    blue: 'border-blue-500/30 bg-blue-500/5',
-    purple: 'border-purple-500/30 bg-purple-500/5',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5',
-    green: 'border-green-500/30 bg-green-500/5',
-    orange: 'border-orange-500/30 bg-orange-500/5',
-    emerald: 'border-emerald-500/30 bg-emerald-500/5',
-  };
-  
-  return (
-    <div className={`p-3 rounded-lg border ${colors[color]}`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <h5 className="font-semibold text-sm">{name}</h5>
-          <p className="text-xs text-muted-foreground mt-1">{desc}</p>
-        </div>
-      </div>
-      <div className="mt-2">
-        <Badge variant="secondary" className="text-[10px]">{useCase}</Badge>
-      </div>
-    </div>
-  );
-};
-
-const TemplateCard = ({ name, desc, datasets }) => (
-  <div className="p-3 rounded-lg border border-border bg-card">
-    <h5 className="font-semibold text-sm">{name}</h5>
-    <p className="text-xs text-muted-foreground mt-1">{desc}</p>
-    <div className="flex flex-wrap gap-1 mt-2">
-      {datasets.map((ds, i) => (
-        <Badge key={i} variant="outline" className="text-[10px]">{ds}</Badge>
-      ))}
-    </div>
-  </div>
-);
-
-const DatasetCard = ({ icon, name, type, samples }) => (
-  <div className="p-3 rounded-lg border border-border bg-card flex items-center gap-3">
-    <span className="text-2xl">{icon}</span>
-    <div>
-      <h5 className="font-semibold text-sm">{name}</h5>
-      <p className="text-xs text-muted-foreground">{type} • {samples} samples</p>
-    </div>
+const DatasetPill = ({ icon, name }) => (
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 border border-white/5">
+    <span>{icon}</span>
+    <span className="text-sm text-zinc-300">{name}</span>
   </div>
 );
 
