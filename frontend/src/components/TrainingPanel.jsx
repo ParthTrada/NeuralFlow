@@ -1551,7 +1551,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 </h3>
                 
                 <Tabs value={dataType} onValueChange={setDataType}>
-                  <TabsList className="grid grid-cols-4 w-full h-9 sm:h-10">
+                  <TabsList className="grid grid-cols-3 w-full h-9 sm:h-10">
                     <TabsTrigger value="datasets" className="text-xs sm:text-sm" data-testid="tab-datasets">
                       <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Datasets
@@ -1563,10 +1563,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     <TabsTrigger value="images" className="text-xs sm:text-sm" data-testid="tab-images">
                       <Image className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Images
-                    </TabsTrigger>
-                    <TabsTrigger value="sample" className="text-xs sm:text-sm" data-testid="tab-sample">
-                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      Generate
                     </TabsTrigger>
                   </TabsList>
 
