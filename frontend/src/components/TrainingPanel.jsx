@@ -400,6 +400,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const isSequenceDataset = datasetInfo.category === 'sequence';
       const isImageDataset = datasetInfo.category === 'image';
       
+      // Define consistent parameters (must match autoAdjustModelForDataset)
+      const textSeqLength = 64;
+      const textVocabSize = datasetInfo.vocabSize || 10000;
+      const seqFeatures = datasetInfo.features || 9;
+      const seqLength = 10;
+      
       // Auto-adjust model parameters based on dataset
       if (onUpdateNodes && nodes.length > 0) {
         const updatedNodes = autoAdjustModelForDataset(nodes, datasetInfo);
@@ -410,12 +416,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }
       
       if (isTextDataset) {
-        // Process as text dataset
+        // Process as text dataset - use SAME seqLength as auto-adjustment
         const processed = processTextCSVData(
           rawData, 
           datasetInfo.textColumn, 
           datasetInfo.targetColumn,
-          { maxLength: networkReqs?.seqLength || 100, vocabSize: networkReqs?.vocabSize || 10000 }
+          { maxLength: textSeqLength, vocabSize: textVocabSize }
         );
         setProcessedData({
           ...processed,
@@ -426,12 +432,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         setTextColumn(datasetInfo.textColumn);
         setTargetColumn(datasetInfo.targetColumn);
       } else if (isSequenceDataset) {
-        // Process as sequence dataset
+        // Process as sequence dataset - use SAME seqLength as auto-adjustment
         const processed = processCSVData(rawData, datasetInfo.targetColumn, {
           normalize: true,
           oneHotEncode: true,
           isSequenceModel: true,
-          seqLength: networkReqs?.seqLength || 10
+          seqLength: seqLength
         });
         setProcessedData({
           ...processed,
