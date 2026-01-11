@@ -1,8 +1,7 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { X, Download, Copy, Check } from 'lucide-react';
+import { Download, Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { 
   Dialog, 
@@ -13,17 +12,27 @@ import {
 } from './ui/dialog';
 import { toast } from 'sonner';
 
-export const CodePreviewModal = ({ isOpen, onClose, code, onDownload, isDarkMode }) => {
-  const [copied, setCopied] = React.useState(false);
+export const CodePreviewModal = ({ isOpen, onClose, code, kerasCode, onDownload, isDarkMode, onFrameworkChange }) => {
+  const [copied, setCopied] = useState(false);
+  const [framework, setFramework] = useState('pytorch');
+
+  const currentCode = framework === 'pytorch' ? code : kerasCode;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(currentCode);
       setCopied(true);
       toast.success('Code copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast.error('Failed to copy code');
+    }
+  };
+
+  const handleFrameworkChange = (newFramework) => {
+    setFramework(newFramework);
+    if (onFrameworkChange) {
+      onFrameworkChange(newFramework);
     }
   };
 
@@ -37,13 +46,38 @@ export const CodePreviewModal = ({ isOpen, onClose, code, onDownload, isDarkMode
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl font-bold">
-                Generated PyTorch Code
+                Generated {framework === 'pytorch' ? 'PyTorch' : 'TensorFlow/Keras'} Code
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground mt-1">
                 Ready to use neural network implementation
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2">
+              {/* Framework Toggle */}
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <button
+                  onClick={() => handleFrameworkChange('pytorch')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    framework === 'pytorch'
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="pytorch-tab"
+                >
+                  PyTorch
+                </button>
+                <button
+                  onClick={() => handleFrameworkChange('keras')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    framework === 'keras'
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="keras-tab"
+                >
+                  TF/Keras
+                </button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -65,7 +99,7 @@ export const CodePreviewModal = ({ isOpen, onClose, code, onDownload, isDarkMode
               <Button
                 variant="default"
                 size="sm"
-                onClick={onDownload}
+                onClick={() => onDownload(framework)}
                 className="glow-primary"
                 data-testid="download-code-btn"
               >
@@ -90,7 +124,7 @@ export const CodePreviewModal = ({ isOpen, onClose, code, onDownload, isDarkMode
             showLineNumbers
             wrapLines
           >
-            {code}
+            {currentCode || '# No code generated yet'}
           </SyntaxHighlighter>
         </div>
       </DialogContent>
