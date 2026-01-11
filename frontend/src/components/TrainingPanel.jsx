@@ -1098,7 +1098,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                   </TabsContent>
 
                   <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline"
                         className="text-xs sm:text-sm h-9 sm:h-10"
@@ -1123,6 +1123,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       >
                         Sequence
                       </Button>
+                      <Button 
+                        variant="outline"
+                        className="text-xs sm:text-sm h-9 sm:h-10"
+                        onClick={() => handleGenerateSample('text')}
+                        data-testid="generate-text-btn"
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        Text/NLP
+                      </Button>
                     </div>
                     
                     {/* Sample Instructions */}
@@ -1133,6 +1142,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <strong className="text-foreground/80">Regression:</strong> 500 samples, 1 feature, 1 output. For prediction models.
                         <br />
                         <strong className="text-foreground/80">Sequence:</strong> 500 sequences, 50 timesteps × 10 features. <strong>For LSTM/GRU models.</strong>
+                        <br />
+                        <strong className="text-foreground/80">Text/NLP:</strong> 500 texts, 100 tokens. <strong>For Embedding + LSTM models.</strong>
                       </p>
                     </div>
                   </TabsContent>
