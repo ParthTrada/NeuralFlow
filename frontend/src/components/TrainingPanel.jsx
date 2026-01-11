@@ -253,13 +253,36 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       return;
     }
 
-    const firstLayer = nodes.find(n => n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D');
-    if (firstLayer && processedData.inputShape) {
-      const expectedInput = processedData.inputShape[0];
-      const configuredInput = firstLayer.data.config?.inputSize || 784;
-      if (configuredInput !== expectedInput) {
-        toast.error(`Input size mismatch! Layer expects ${configuredInput}, data has ${expectedInput}.`);
-        return;
+    // Check input compatibility - different rules for different model types
+    const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+    const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+    const inputNode = nodes.find(n => n.data.layerType === 'Input');
+    
+    if (!hasLSTM && !hasConv2D) {
+      // For Dense/MLP models - check flat input size
+      const firstDense = nodes.find(n => n.data.layerType === 'Dense');
+      if (firstDense && processedData.inputShape && processedData.type !== 'sequence') {
+        const expectedInput = processedData.inputShape[0];
+        const configuredInput = firstDense.data.config?.inputSize || 784;
+        if (configuredInput !== expectedInput) {
+          toast.error(`Input size mismatch! Layer expects ${configuredInput}, data has ${expectedInput}.`);
+          return;
+        }
+      }
+    }
+    
+    // For LSTM/RNN models - check sequence dimensions match
+    if (hasLSTM && processedData.type === 'sequence' && inputNode?.data?.config) {
+      const dataSeqLength = processedData.inputShape[0];
+      const dataFeatures = processedData.inputShape[1];
+      const configSeqLength = inputNode.data.config.seqLength;
+      const configFeatures = inputNode.data.config.features;
+      
+      if (configSeqLength && configSeqLength !== dataSeqLength) {
+        toast.warning(`Sequence length mismatch: Input expects ${configSeqLength}, data has ${dataSeqLength}. Training anyway...`);
+      }
+      if (configFeatures && configFeatures !== dataFeatures) {
+        toast.warning(`Features mismatch: Input expects ${configFeatures}, data has ${dataFeatures}. Training anyway...`);
       }
     }
 
