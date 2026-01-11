@@ -222,7 +222,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
   // Handle template selection (tap on mobile, click on desktop adds to canvas)
   const handleTemplateClick = (template) => {
     if (onLoadTemplate) {
-      onLoadTemplate(template.nodes, template.edges, template.name);
+      onLoadTemplate(template.nodes, template.edges, template.name, template.id);
       if (isMobile) {
         onClose();
       }
