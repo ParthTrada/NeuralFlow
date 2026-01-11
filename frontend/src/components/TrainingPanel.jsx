@@ -1509,8 +1509,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   };
 
-  // Handle Markov chain text generation (for Pre-trained Mini-GPT)
-  const handleMarkovGeneration = async () => {
+  // Handle Mini-GPT text generation (uses trained model or Markov chain fallback)
+  const handleMiniGPTGeneration = async () => {
     if (!generationPrompt.trim()) {
       toast.error('Please enter a prompt');
       return;
@@ -1520,26 +1520,67 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setGeneratedText('');
 
     try {
-      // Initialize Markov chain with Shakespeare text
-      initShakespeareMarkov(shakespeareText);
-      
-      // Generate text using Markov chain (simulate streaming)
-      const result = generateShakespeareText(
-        generationPrompt,
-        {
-          length: generationLength,
-          temperature: generationTemp,
-          sourceText: shakespeareText,
-          onToken: (char, fullText) => {
-            setGeneratedText(fullText);
+      // Use trained neural network if available and training is complete
+      if (miniGPTTrainingComplete && modelRef.current && !useMarkovFallback) {
+        console.log('Using trained neural network for generation');
+        const result = await generateText(
+          modelRef.current,
+          generationPrompt,
+          processedData.charToIdx,
+          processedData.idxToChar,
+          {
+            length: generationLength,
+            temperature: generationTemp,
+            seqLength: processedData.seqLength || 64,
+            onToken: (char, fullText) => {
+              setGeneratedText(fullText);
+            }
           }
-        }
-      );
-
-      toast.success(`Generated ${result.length} characters!`);
+        );
+        toast.success(`Generated ${result.length} characters using trained model!`);
+      } else {
+        // Fallback to Markov chain
+        console.log('Using Markov chain for generation');
+        initShakespeareMarkov(shakespeareText);
+        
+        const result = generateShakespeareText(
+          generationPrompt,
+          {
+            length: generationLength,
+            temperature: generationTemp,
+            sourceText: shakespeareText,
+            onToken: (char, fullText) => {
+              setGeneratedText(fullText);
+            }
+          }
+        );
+        toast.success(`Generated ${result.length} characters!`);
+      }
     } catch (error) {
-      console.error('Markov generation error:', error);
-      toast.error(`Generation failed: ${error.message}`);
+      console.error('Generation error:', error);
+      // If neural network fails, try Markov chain
+      if (!useMarkovFallback) {
+        console.log('Neural network failed, trying Markov chain fallback');
+        try {
+          initShakespeareMarkov(shakespeareText);
+          const result = generateShakespeareText(
+            generationPrompt,
+            {
+              length: generationLength,
+              temperature: generationTemp,
+              sourceText: shakespeareText,
+              onToken: (char, fullText) => {
+                setGeneratedText(fullText);
+              }
+            }
+          );
+          toast.success(`Generated ${result.length} characters (fallback)!`);
+        } catch (fallbackError) {
+          toast.error(`Generation failed: ${fallbackError.message}`);
+        }
+      } else {
+        toast.error(`Generation failed: ${error.message}`);
+      }
     } finally {
       setIsGenerating(false);
     }
