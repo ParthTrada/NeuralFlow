@@ -455,21 +455,28 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         // Check if model has Conv2D layers (for determining input shape)
         const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
         
+        // Get image dimensions from dataset config or use defaults
+        const imgConfig = datasetInfo.imageConfig || {
+          height: 28,
+          width: 28,
+          channels: 1
+        };
+        
         setProcessedData({
           raw: rawData,
           type: 'image',
           isImageData: true,
           imageConfig: {
-            height: 28,
-            width: 28,
-            channels: 1,
+            height: imgConfig.height,
+            width: imgConfig.width,
+            channels: imgConfig.channels,
             numPixels: pixelColumns.length
           },
           pixelColumns,
           targetColumn: datasetInfo.targetColumn,
           uniqueLabels,
           numClasses: uniqueLabels.length,
-          inputShape: modelHasConv2D ? [28, 28, 1] : [pixelColumns.length]
+          inputShape: modelHasConv2D ? [imgConfig.height, imgConfig.width, imgConfig.channels] : [pixelColumns.length]
         });
         setColumns(Object.keys(rawData[0]));
         setTargetColumn(datasetInfo.targetColumn);
