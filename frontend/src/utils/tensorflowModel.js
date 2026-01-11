@@ -232,6 +232,31 @@ export const buildTFModel = (nodes, edges) => {
           break;
 
         case 'Output':
+          // Check if the previous layer outputs sequences (3D tensor)
+          // If so, we need to handle it properly for classification
+          const outputIndex = layerNodes.indexOf(node);
+          const prevLayer = outputIndex > 0 ? layerNodes[outputIndex - 1] : null;
+          const needsSequenceCollapse = prevLayer && (
+            prevLayer.data.layerType === 'TransformerEncoder' ||
+            prevLayer.data.layerType === 'TransformerDecoder' ||
+            prevLayer.data.layerType === 'LayerNorm' ||
+            prevLayer.data.layerType === 'Dropout'
+          );
+          
+          // Check if this is a text generation model (has Embedding + Transformer)
+          const hasEmbeddingLayer = layerNodes.some(n => n.data.layerType === 'Embedding');
+          const hasTransformerLayer = layerNodes.some(n => 
+            n.data.layerType === 'TransformerDecoder' || n.data.layerType === 'TransformerEncoder'
+          );
+          const isTextGenModel = hasEmbeddingLayer && hasTransformerLayer;
+          
+          // For text generation, take only the last position's output
+          if (isTextGenModel && needsSequenceCollapse) {
+            // Use a Lambda layer to extract last position
+            // Lambda not available in sequential, so use GlobalAveragePooling1D as approximation
+            model.add(tf.layers.globalAveragePooling1d());
+          }
+          
           model.add(tf.layers.dense({
             units: config.numClasses || 10,
             activation: config.activation === 'softmax' ? 'softmax' : 
