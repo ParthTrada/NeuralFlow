@@ -241,13 +241,22 @@ export default function Builder() {
   }, []);
 
   const onConnect = useCallback((params) => {
-    setEdges((eds) => addEdge({
+    const newEdge = {
       ...params,
       animated: true,
-      style: { stroke: isDarkMode ? '#8b5cf6' : '#3b82f6' }
-    }, eds));
+      style: params.targetHandle?.includes('target-1') ? 
+        { stroke: '#22c55e', strokeWidth: 2 } : // Green for skip connections
+        { stroke: isDarkMode ? '#8b5cf6' : '#3b82f6' }
+    };
+    
+    setEdges((eds) => {
+      const updatedEdges = addEdge(newEdge, eds);
+      // Record to history
+      recordHistory(nodes, updatedEdges, true);
+      return updatedEdges;
+    });
     toast.success('Layers connected!');
-  }, [setEdges, isDarkMode]);
+  }, [setEdges, isDarkMode, nodes, recordHistory]);
 
   const onNodeClick = useCallback((event, node) => {
     setSelectedNode(node);
