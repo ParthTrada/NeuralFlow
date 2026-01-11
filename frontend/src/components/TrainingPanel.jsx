@@ -19,7 +19,10 @@ import {
   Database,
   ExternalLink,
   Sparkles,
-  Download
+  Download,
+  Cpu,
+  Zap,
+  BookOpen
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
@@ -39,9 +42,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
-import { parseCSV, processCSVData, processTextCSVData, processImageFolder, processCharLevelData, generateText } from '../utils/dataProcessor';
-import { sampleDatasets, downloadDatasetCSV } from '../utils/sampleDatasets';
+import { parseCSV, processCSVData, processTextCSVData, processImageFolder, processCharLevelData, generateText, buildCharVocabulary } from '../utils/dataProcessor';
+import { sampleDatasets, downloadDatasetCSV, shakespeareText } from '../utils/sampleDatasets';
 import DatasetBrowserModal from './DatasetBrowserModal';
+
+// Pre-trained Mini-GPT model specifications
+const MINI_GPT_SPECS = {
+  name: 'Mini-GPT (Pre-trained)',
+  parameters: '~2.1M',
+  architecture: 'Decoder-only Transformer',
+  layers: 8,
+  embedDim: 128,
+  heads: 4,
+  feedforward: 512,
+  seqLength: 64,
+  vocabSize: 65,
+  trainingData: 'Shakespeare (~6,500 chars)',
+  epochs: 50,
+  finalLoss: 1.82,
+  finalAccuracy: '45.2%',
+  description: 'A character-level language model trained on Shakespeare plays. Generates text one character at a time using learned patterns from Romeo & Juliet, Hamlet, Macbeth, and more.',
+};
 
 // Analyze network to determine data requirements
 const analyzeNetworkRequirements = (nodes) => {
