@@ -126,7 +126,9 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 ## Prioritized Backlog
 
 ### P0 (Critical)
-- None - All critical features complete
+- [x] Text Classification feature ✅ COMPLETED
+- [x] PDF Q&A Chatbot ✅ COMPLETED
+- [ ] Production Google Auth reliability (user verification pending)
 
 ### P1 (High Priority)
 - [ ] TensorFlow/Keras code generation option
