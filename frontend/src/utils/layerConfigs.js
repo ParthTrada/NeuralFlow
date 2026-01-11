@@ -280,7 +280,7 @@ export const layerCategories = {
       {
         type: 'BatchNorm2D',
         label: 'BatchNorm2D',
-        icon: BarChart3,
+        icon: Gauge,
         color: 'hsl(142, 71%, 45%)',
         description: 'Batch normalization for 2D data',
         tip: 'Same as BatchNorm1D but for convolutional layers. Place after Conv2D and before activation for best results.',
@@ -297,8 +297,8 @@ export const layerCategories = {
       {
         type: 'LayerNorm',
         label: 'LayerNorm',
-        icon: AlignJustify,
-        color: 'hsl(142, 71%, 45%)',
+        icon: SlidersHorizontal,
+        color: 'hsl(50, 90%, 50%)',
         description: 'Layer normalization (used in Transformers)',
         tip: 'Normalizes across features instead of batch. Preferred in Transformers and RNNs. Works well with small batch sizes.',
         learnMore: {
@@ -314,7 +314,7 @@ export const layerCategories = {
       {
         type: 'LSTM',
         label: 'LSTM',
-        icon: Activity,
+        icon: Waves,
         color: 'hsl(330, 81%, 60%)',
         description: 'Long Short-Term Memory for sequences',
         tip: 'Remembers long-term dependencies in sequential data. Has "gates" to control information flow. Great for text, time-series, and speech.',
@@ -335,7 +335,7 @@ export const layerCategories = {
       {
         type: 'GRU',
         label: 'GRU',
-        icon: GitBranch,
+        icon: Repeat,
         color: 'hsl(280, 68%, 60%)',
         description: 'Gated Recurrent Unit for sequences',
         tip: 'Simpler alternative to LSTM with fewer parameters. Often performs similarly but trains faster. Good choice for smaller datasets.',
