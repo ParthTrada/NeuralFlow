@@ -365,6 +365,29 @@ def main():
     tester.test_validate_network()
     tester.test_generate_code()
     
+    # Test PDF Q&A endpoints
+    print("\n📄 Testing PDF Q&A Endpoints...")
+    
+    # First upload a PDF
+    upload_success, upload_response = tester.test_pdf_upload_success()
+    
+    if upload_success:
+        # Test asking questions (only if upload succeeded)
+        tester.test_ask_question_success()
+        tester.test_ask_followup_question()
+        tester.test_get_session_info_success()
+        
+        # Clean up - delete the session
+        tester.test_delete_session()
+    else:
+        print("⚠️  Skipping question tests due to upload failure")
+    
+    # Test error scenarios
+    print("\n🚫 Testing PDF Q&A Error Scenarios...")
+    tester.test_pdf_upload_invalid_file()
+    tester.test_ask_question_no_session()
+    tester.test_get_session_info_not_found()
+    
     # Test auth endpoints (unauthenticated)
     print("\n🔐 Testing Auth Endpoints (Unauthenticated)...")
     tester.test_auth_me_unauthenticated()
