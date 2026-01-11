@@ -576,6 +576,10 @@ export default function Builder() {
         savedTrainingData={savedTrainingData}
         onSaveTrainingData={handleSaveTrainingData}
         currentTemplateId={currentTemplateId}
+        onUpdateNodes={(updatedNodes) => {
+          setNodes(updatedNodes);
+          recordHistory(updatedNodes, edges, true);
+        }}
       />
 
       <SavedModelsPanel
