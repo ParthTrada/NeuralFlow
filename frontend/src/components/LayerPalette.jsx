@@ -143,6 +143,30 @@ const templates = [
       { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
     ]
   },
+  {
+    id: 'text-classifier',
+    name: 'Text Classifier',
+    description: 'For sentiment & NLP',
+    tip: 'Uses Embedding + LSTM for text classification. Great for sentiment analysis, spam detection, and intent classification.',
+    icon: FileText,
+    color: '#10b981',
+    layers: 6,
+    nodes: [
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 10000, seqLength: 100 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Embedding', layerType: 'Embedding', config: { vocabSize: 10000, embedDim: 128 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 128, hiddenSize: 64, numLayers: 1 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.3 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 64, units: 32, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 32, numClasses: 3, activation: 'softmax' } } },
+    ],
+    edges: [
+      { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
+      { id: 'e1-2', source: 'node_1', target: 'node_2', animated: true },
+      { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
+      { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
+      { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
+    ]
+  },
 ];
 
 // Export templates for drag handling
