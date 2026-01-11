@@ -398,6 +398,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const rawData = datasetInfo.rawData;
       const isTextDataset = datasetInfo.category === 'text';
       const isSequenceDataset = datasetInfo.category === 'sequence';
+      const isImageDataset = datasetInfo.category === 'image';
+      const isTabularDataset = datasetInfo.category === 'tabular';
+      
+      // Auto-adjust model parameters based on dataset
+      if (onUpdateNodes && nodes.length > 0) {
+        const updatedNodes = autoAdjustModelForDataset(nodes, datasetInfo);
+        if (updatedNodes) {
+          onUpdateNodes(updatedNodes);
+          toast.info('Model parameters auto-adjusted to match dataset');
+        }
+      }
       
       if (isTextDataset) {
         // Process as text dataset
@@ -430,6 +441,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         });
         setColumns(Object.keys(rawData[0]));
         setTargetColumn(datasetInfo.targetColumn);
+      } else if (isImageDataset) {
+        // Process as image dataset - generate proper tensor data
+        const processed = processImageDataset(rawData, datasetInfo);
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'image'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
       } else {
         // Process as tabular dataset
         const processed = processCSVData(rawData, datasetInfo.targetColumn, {
@@ -452,6 +473,167 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       setErrorMessage(error.message);
       toast.error(`Failed to load dataset: ${error.message}`);
     }
+  };
+
+  // Auto-adjust model parameters based on dataset requirements
+  const autoAdjustModelForDataset = (currentNodes, datasetInfo) => {
+    const updatedNodes = [...currentNodes];
+    let hasChanges = false;
+    
+    const inputNode = updatedNodes.find(n => n.data.layerType === 'Input');
+    const outputNode = updatedNodes.find(n => n.data.layerType === 'Output');
+    const firstDenseNode = updatedNodes.find(n => n.data.layerType === 'Dense');
+    const embeddingNode = updatedNodes.find(n => n.data.layerType === 'Embedding');
+    
+    // Adjust Input layer based on dataset type
+    if (inputNode) {
+      const inputIdx = updatedNodes.findIndex(n => n.id === inputNode.id);
+      const newConfig = { ...inputNode.data.config };
+      
+      if (datasetInfo.category === 'image') {
+        // For image datasets (MNIST, Fashion-MNIST style)
+        newConfig.inputType = 'image';
+        newConfig.height = 28;
+        newConfig.width = 28;
+        newConfig.channels = 1;
+        hasChanges = true;
+      } else if (datasetInfo.category === 'text') {
+        // For text datasets
+        newConfig.inputType = 'text';
+        newConfig.seqLength = 100;
+        newConfig.vocabSize = datasetInfo.vocabSize || 10000;
+        hasChanges = true;
+      } else if (datasetInfo.category === 'sequence') {
+        // For sequence/time-series datasets
+        newConfig.inputType = 'sequence';
+        newConfig.seqLength = 10;
+        newConfig.features = datasetInfo.features || 9;
+        hasChanges = true;
+      } else if (datasetInfo.category === 'tabular') {
+        // For tabular datasets
+        newConfig.inputType = 'flat';
+        newConfig.inputSize = datasetInfo.features || 4;
+        hasChanges = true;
+      }
+      
+      updatedNodes[inputIdx] = {
+        ...inputNode,
+        data: {
+          ...inputNode.data,
+          config: newConfig
+        }
+      };
+    }
+    
+    // Adjust Output layer based on number of classes
+    if (outputNode && datasetInfo.classes) {
+      const outputIdx = updatedNodes.findIndex(n => n.id === outputNode.id);
+      updatedNodes[outputIdx] = {
+        ...outputNode,
+        data: {
+          ...outputNode.data,
+          config: {
+            ...outputNode.data.config,
+            numClasses: datasetInfo.classes
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    // Adjust first Dense layer input size for tabular data
+    if (firstDenseNode && datasetInfo.category === 'tabular') {
+      const denseIdx = updatedNodes.findIndex(n => n.id === firstDenseNode.id);
+      updatedNodes[denseIdx] = {
+        ...firstDenseNode,
+        data: {
+          ...firstDenseNode.data,
+          config: {
+            ...firstDenseNode.data.config,
+            inputSize: datasetInfo.features || 4
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    // Adjust Embedding layer for text datasets
+    if (embeddingNode && datasetInfo.category === 'text') {
+      const embIdx = updatedNodes.findIndex(n => n.id === embeddingNode.id);
+      updatedNodes[embIdx] = {
+        ...embeddingNode,
+        data: {
+          ...embeddingNode.data,
+          config: {
+            ...embeddingNode.data.config,
+            vocabSize: datasetInfo.vocabSize || 10000
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    return hasChanges ? updatedNodes : null;
+  };
+
+  // Process image dataset into proper tensor format
+  const processImageDataset = (rawData, datasetInfo) => {
+    const numSamples = rawData.length;
+    const height = 28;
+    const width = 28;
+    const channels = 1;
+    
+    // Check if model has Conv2D layers
+    const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+    
+    // Extract pixel data and labels
+    const pixelColumns = Object.keys(rawData[0]).filter(k => k.startsWith('pixel_'));
+    const targetColumn = datasetInfo.targetColumn;
+    
+    // Get unique labels
+    const labels = rawData.map(row => row[targetColumn]);
+    const uniqueLabels = [...new Set(labels)];
+    const numClasses = uniqueLabels.length;
+    
+    // Create tensors
+    let xTensor;
+    
+    if (hasConv2D) {
+      // Create 4D tensor for CNN: [batch, height, width, channels]
+      const imageData = rawData.map(row => {
+        const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
+        // Reshape flat array to [height, width, channels]
+        const image = [];
+        for (let h = 0; h < height; h++) {
+          const row_data = [];
+          for (let w = 0; w < width; w++) {
+            row_data.push([pixels[h * width + w] || 0]);
+          }
+          image.push(row_data);
+        }
+        return image;
+      });
+      xTensor = tf.tensor4d(imageData, [numSamples, height, width, channels]);
+    } else {
+      // Create 2D tensor for MLP: [batch, features]
+      const flatData = rawData.map(row => 
+        pixelColumns.map(col => (row[col] || 0) / 255.0)
+      );
+      xTensor = tf.tensor2d(flatData, [numSamples, pixelColumns.length]);
+    }
+    
+    // Create one-hot encoded labels
+    const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
+    const yTensor = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), numClasses);
+    
+    return {
+      xTrain: xTensor,
+      yTrain: yTensor,
+      inputShape: hasConv2D ? [height, width, channels] : [pixelColumns.length],
+      numClasses,
+      uniqueLabels,
+      type: 'image'
+    };
   };
 
   // Start training
