@@ -10,8 +10,9 @@ import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
-// import { ProductTour } from '../components/ProductTour'; // Commented out - Product Tour disabled
-import { generatePyTorchCode, downloadCode } from '../utils/codeGenerator';
+import { useHistory } from '../hooks/useHistory';
+// import { ProductTour } from '../components/ProductTour'; // Commented out - Demo guide disabled for now
+import { generatePyTorchCode, generateKerasCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
 
 // Smart API URL detection for production/development
@@ -50,13 +51,62 @@ export default function Builder() {
   const [isModelsOpen, setIsModelsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+  const [generatedKerasCode, setGeneratedKerasCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
   const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
   const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
+  const [currentTemplateId, setCurrentTemplateId] = useState(null); // Track template for dataset recommendations
+  
+  // History management for undo/redo
+  const history = useHistory({ nodes: [], edges: [] }, 50);
   
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
   const [showLayerPalette, setShowLayerPalette] = useState(false);
+
+  // Record state changes to history
+  const recordHistory = useCallback((newNodes, newEdges, immediate = false) => {
+    history.record({ nodes: newNodes, edges: newEdges }, immediate);
+  }, [history]);
+
+  // Undo handler
+  const handleUndo = useCallback(() => {
+    const prevState = history.undo();
+    if (prevState) {
+      setNodes(prevState.nodes);
+      setEdges(prevState.edges);
+      toast.info('Undo');
+    }
+  }, [history, setNodes, setEdges]);
+
+  // Redo handler
+  const handleRedo = useCallback(() => {
+    const nextState = history.redo();
+    if (nextState) {
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      toast.info('Redo');
+    }
+  }, [history, setNodes, setEdges]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Z = Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y = Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   // Check screen size
   useEffect(() => {
@@ -99,7 +149,7 @@ export default function Builder() {
   };
 
   // Load template - adds to existing canvas instead of replacing
-  const handleLoadTemplate = useCallback((templateNodes, templateEdges, templateName) => {
+  const handleLoadTemplate = useCallback((templateNodes, templateEdges, templateName, templateId = null) => {
     // Generate unique IDs for the new nodes
     const timestamp = Date.now();
     const idMap = {};
@@ -133,15 +183,27 @@ export default function Builder() {
       ...edge,
       id: `e_${timestamp}_${index}`,
       source: idMap[edge.source],
-      target: idMap[edge.target]
+      target: idMap[edge.target],
+      targetHandle: edge.targetHandle // Preserve target handle for multi-input nodes
     }));
     
     // Add to existing nodes and edges
-    setNodes((nds) => [...nds, ...newNodes]);
-    setEdges((eds) => [...eds, ...newEdges]);
+    const updatedNodes = [...nodes, ...newNodes];
+    const updatedEdges = [...edges, ...newEdges];
+    
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+    
+    // Track template ID for dataset recommendations
+    if (templateId) {
+      setCurrentTemplateId(templateId);
+    }
+    
+    // Record to history (immediate for discrete action)
+    recordHistory(updatedNodes, updatedEdges, true);
     
     toast.success(`Added ${templateName || 'template'} to canvas!`);
-  }, [nodes, setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, recordHistory]);
 
   const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId, trainingData) => {
     setNodes(savedNodes || []);
@@ -185,13 +247,22 @@ export default function Builder() {
   }, []);
 
   const onConnect = useCallback((params) => {
-    setEdges((eds) => addEdge({
+    const newEdge = {
       ...params,
       animated: true,
-      style: { stroke: isDarkMode ? '#8b5cf6' : '#3b82f6' }
-    }, eds));
+      style: params.targetHandle?.includes('target-1') ? 
+        { stroke: '#22c55e', strokeWidth: 2 } : // Green for skip connections
+        { stroke: isDarkMode ? '#8b5cf6' : '#3b82f6' }
+    };
+    
+    setEdges((eds) => {
+      const updatedEdges = addEdge(newEdge, eds);
+      // Record to history
+      recordHistory(nodes, updatedEdges, true);
+      return updatedEdges;
+    });
     toast.success('Layers connected!');
-  }, [setEdges, isDarkMode]);
+  }, [setEdges, isDarkMode, nodes, recordHistory]);
 
   const onNodeClick = useCallback((event, node) => {
     setSelectedNode(node);
@@ -239,12 +310,24 @@ export default function Builder() {
         ...edge,
         id: `e_${timestamp}_${index}`,
         source: idMap[edge.source],
-        target: idMap[edge.target]
+        target: idMap[edge.target],
+        targetHandle: edge.targetHandle // Preserve target handle for multi-input nodes
       }));
       
       // Add to existing nodes and edges
-      setNodes((nds) => [...nds, ...newNodes]);
-      setEdges((eds) => [...eds, ...newEdges]);
+      const updatedNodes = [...nodes, ...newNodes];
+      const updatedEdges = [...edges, ...newEdges];
+      
+      setNodes(updatedNodes);
+      setEdges(updatedEdges);
+      
+      // Track template ID for dataset recommendations
+      if (template.id) {
+        setCurrentTemplateId(template.id);
+      }
+      
+      // Record to history
+      recordHistory(updatedNodes, updatedEdges, true);
       
       toast.success(`Added ${template.name} template!`);
       return;
@@ -273,13 +356,18 @@ export default function Builder() {
       },
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Record to history
+    recordHistory(updatedNodes, edges, true);
+    
     toast.success(`Added ${layer.label} layer`);
     
     if (isMobile) {
       setShowLayerPalette(false);
     }
-  }, [setNodes, setEdges, isMobile]);
+  }, [nodes, edges, setNodes, setEdges, isMobile, recordHistory]);
 
   // Add layer via tap (mobile)
   const handleAddLayer = useCallback((layer) => {
@@ -300,27 +388,42 @@ export default function Builder() {
       },
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Record to history
+    recordHistory(updatedNodes, edges, true);
+    
     toast.success(`Added ${layer.label} layer`);
-  }, [setNodes, nodes.length]);
+  }, [setNodes, nodes, edges, recordHistory]);
 
   const handleUpdateNode = useCallback((nodeId, newData) => {
-    setNodes((nds) =>
-      nds.map((node) =>
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
         node.id === nodeId
           ? { ...node, data: newData }
           : node
-      )
-    );
+      );
+      // Record to history (debounced for continuous changes)
+      recordHistory(updatedNodes, edges, false);
+      return updatedNodes;
+    });
     setSelectedNode(prev => prev?.id === nodeId ? { ...prev, data: newData } : prev);
-  }, [setNodes]);
+  }, [setNodes, edges, recordHistory]);
 
   const handleDeleteNode = useCallback((nodeId) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    const updatedNodes = nodes.filter((node) => node.id !== nodeId);
+    const updatedEdges = edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+    
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
     setSelectedNode(null);
+    
+    // Record to history
+    recordHistory(updatedNodes, updatedEdges, true);
+    
     toast.success('Layer deleted');
-  }, [setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, recordHistory]);
 
   const handleCloseProperties = useCallback(() => {
     setSelectedNode(null);
@@ -331,23 +434,31 @@ export default function Builder() {
       toast.info('Canvas is already empty');
       return;
     }
+    
+    // Record current state before clearing
+    recordHistory([], [], true);
+    
     setNodes([]);
     setEdges([]);
     setSelectedNode(null);
     nodeId = 0;
     toast.success('Canvas cleared');
-  }, [nodes.length, setNodes, setEdges]);
+  }, [nodes.length, setNodes, setEdges, recordHistory]);
 
   const handleShowCode = useCallback(() => {
-    const code = generatePyTorchCode(nodes, edges);
-    setGeneratedCode(code);
+    const pytorchCode = generatePyTorchCode(nodes, edges);
+    const kerasCode = generateKerasCode(nodes, edges);
+    setGeneratedCode(pytorchCode);
+    setGeneratedKerasCode(kerasCode);
     setIsCodeModalOpen(true);
   }, [nodes, edges]);
 
-  const handleDownloadCode = useCallback(() => {
-    downloadCode(generatedCode);
-    toast.success('Code downloaded!');
-  }, [generatedCode]);
+  const handleDownloadCode = useCallback((framework = 'pytorch') => {
+    const code = framework === 'pytorch' ? generatedCode : generatedKerasCode;
+    const filename = framework === 'pytorch' ? 'neural_network_pytorch.py' : 'neural_network_keras.py';
+    downloadCode(code, filename);
+    toast.success(`${framework === 'pytorch' ? 'PyTorch' : 'Keras'} code downloaded!`);
+  }, [generatedCode, generatedKerasCode]);
 
   const handleRun = useCallback(() => {
     if (nodes.length === 0) {
@@ -407,6 +518,10 @@ export default function Builder() {
         isMobile={isMobile}
         onToggleLayers={toggleLayerPalette}
         showLayerPalette={showLayerPalette}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
       />
 
       <LayerPalette 
@@ -445,6 +560,7 @@ export default function Builder() {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         code={generatedCode}
+        kerasCode={generatedKerasCode}
         onDownload={handleDownloadCode}
         isDarkMode={isDarkMode}
       />
@@ -459,6 +575,11 @@ export default function Builder() {
         savedWeights={trainedWeights}
         savedTrainingData={savedTrainingData}
         onSaveTrainingData={handleSaveTrainingData}
+        currentTemplateId={currentTemplateId}
+        onUpdateNodes={(updatedNodes) => {
+          setNodes(updatedNodes);
+          recordHistory(updatedNodes, edges, true);
+        }}
       />
 
       <SavedModelsPanel
@@ -470,7 +591,7 @@ export default function Builder() {
         trainedWeights={trainedWeights}
       />
 
-      {/* Product Tour for first-time users - Disabled due to inconsistencies */}
+      {/* Product Tour for first-time users - Disabled for now */}
       {/* <ProductTour isDark={isDarkMode} /> */}
     </div>
   );

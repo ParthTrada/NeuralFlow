@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain } from 'lucide-react';
+import { X, Plus, Sparkles, Network, Layers as LayersIcon, MessageSquare, Brain, FileText, GitMerge } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Accordion,
@@ -76,12 +76,12 @@ const templates = [
     color: '#22c55e',
     layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 50, features: 100 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 100, hiddenSize: 128, numLayers: 1 } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 10, features: 9 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 9, hiddenSize: 32, numLayers: 1 } } },
       { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 128, hiddenSize: 64, numLayers: 1 } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 64, units: 32, activation: 'relu' } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 32, numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 32, hiddenSize: 16, numLayers: 1 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 16, units: 8, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 8, numClasses: 3, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -93,20 +93,19 @@ const templates = [
   },
   {
     id: 'transformer',
-    name: 'Transformer',
-    description: 'Attention-based for NLP',
-    tip: 'Uses self-attention to process all positions simultaneously. Powers GPT, BERT, and modern language models. Excellent for NLP.',
+    name: 'Transformer (BERT-style)',
+    description: 'Encoder-only for classification',
+    tip: 'Uses Embedding + Positional Encoding + Transformer Encoder blocks. Like BERT, great for text classification, sentiment analysis, and NLU tasks.',
     icon: Brain,
     color: '#f59e0b',
-    layers: 7,
+    layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 32, features: 256 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Multi-Head Attention', layerType: 'MultiHeadAttention', config: { embedDim: 256, numHeads: 8 } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'LayerNorm', layerType: 'LayerNorm', config: { normalizedShape: 256 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 256, units: 512, activation: 'relu' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.1 } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 512, units: 128, activation: 'relu' } } },
-      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 780 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 128, numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 30000, seqLength: 128 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Embedding', layerType: 'Embedding', config: { vocabSize: 30000, embedDim: 256 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Positional Encoding', layerType: 'PositionalEncoding', config: { maxLen: 128, dModel: 256, dropout: 0.1 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Transformer Encoder', layerType: 'TransformerEncoder', config: { dModel: 256, nHead: 8, dimFeedforward: 1024, numLayers: 4 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Global Avg Pool', layerType: 'GlobalAvgPool1D', config: {} } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 256, numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -114,7 +113,6 @@ const templates = [
       { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
       { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
       { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
-      { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
     ]
   },
   {
@@ -141,6 +139,59 @@ const templates = [
       { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
       { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
       { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
+    ]
+  },
+  {
+    id: 'text-classifier',
+    name: 'Text Classifier',
+    description: 'For sentiment & NLP',
+    tip: 'Uses Embedding + LSTM for text classification. Great for sentiment analysis, spam detection, and intent classification.',
+    icon: FileText,
+    color: '#10b981',
+    layers: 6,
+    nodes: [
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 10000, seqLength: 100 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Embedding', layerType: 'Embedding', config: { vocabSize: 10000, embedDim: 128 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 128, hiddenSize: 64, numLayers: 1 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.3 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 64, units: 32, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 32, numClasses: 3, activation: 'softmax' } } },
+    ],
+    edges: [
+      { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
+      { id: 'e1-2', source: 'node_1', target: 'node_2', animated: true },
+      { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
+      { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
+      { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
+    ]
+  },
+  {
+    id: 'resnet-block',
+    name: 'ResNet Block',
+    description: 'CNN with skip connections',
+    tip: 'Demonstrates residual connections using Add layer. Skip connections help train deeper networks by allowing gradients to flow directly.',
+    icon: GitMerge,
+    color: '#ef4444',
+    layers: 8,
+    nodes: [
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'image', channels: 3, height: 32, width: 32 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 120 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 3, outChannels: 64, kernelSize: 3, padding: 1, activation: 'relu' } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 240 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 64, outChannels: 64, kernelSize: 3, padding: 1, activation: 'relu' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 360 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 64, outChannels: 64, kernelSize: 3, padding: 1, activation: 'none' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 150, y: 360 }, data: { label: 'Add (Skip)', layerType: 'Add', config: { numInputs: 2 } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 480 }, data: { label: 'Flatten', layerType: 'Flatten', config: {} } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 600 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 65536, units: 128, activation: 'relu' } } },
+      { id: 'node_7', type: 'layerNode', position: { x: 0, y: 720 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 128, numClasses: 10, activation: 'softmax' } } },
+    ],
+    edges: [
+      { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
+      { id: 'e1-2', source: 'node_1', target: 'node_2', animated: true },
+      { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
+      { id: 'e3-4', source: 'node_3', target: 'node_4', targetHandle: 'target-0', animated: true },
+      { id: 'e1-4-skip', source: 'node_1', target: 'node_4', targetHandle: 'target-1', animated: true, style: { stroke: '#22c55e', strokeWidth: 2 } },
+      { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
+      { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
+      { id: 'e6-7', source: 'node_6', target: 'node_7', animated: true },
     ]
   },
 ];
@@ -171,7 +222,7 @@ export const LayerPalette = ({ isMobile, isOpen, onClose, onAddLayer, onLoadTemp
   // Handle template selection (tap on mobile, click on desktop adds to canvas)
   const handleTemplateClick = (template) => {
     if (onLoadTemplate) {
-      onLoadTemplate(template.nodes, template.edges, template.name);
+      onLoadTemplate(template.nodes, template.edges, template.name, template.id);
       if (isMobile) {
         onClose();
       }

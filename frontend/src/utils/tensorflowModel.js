@@ -20,16 +20,43 @@ export const buildTFModel = (nodes, edges) => {
   const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
   let inputShape = null;
   
-  if (inputNode?.data?.config?.inputShape) {
-    const shapeStr = inputNode.data.config.inputShape;
-    if (typeof shapeStr === 'string') {
-      try {
-        inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
-      } catch {
-        inputShape = [parseInt(shapeStr) || 784];
+  if (inputNode?.data?.config) {
+    const inputConfig = inputNode.data.config;
+    
+    // Check for text input (NLP/Embedding)
+    if (inputConfig.inputType === 'text' || inputConfig.vocabSize) {
+      const seqLength = inputConfig.seqLength || 100;
+      inputShape = [seqLength]; // For embedding, input is 1D sequence of token IDs
+    }
+    // Check for sequence input (LSTM/RNN)
+    else if (inputConfig.inputType === 'sequence' || inputConfig.seqLength) {
+      const seqLength = inputConfig.seqLength || 50;
+      const features = inputConfig.features || inputConfig.inputSize || 100;
+      inputShape = [seqLength, features];
+    }
+    // Check for image input (CNN)
+    else if (inputConfig.inputType === 'image' || (inputConfig.height && inputConfig.width)) {
+      const height = inputConfig.height || 28;
+      const width = inputConfig.width || 28;
+      const channels = inputConfig.channels || 1;
+      inputShape = [height, width, channels];
+    }
+    // Check for explicit inputShape
+    else if (inputConfig.inputShape) {
+      const shapeStr = inputConfig.inputShape;
+      if (typeof shapeStr === 'string') {
+        try {
+          inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
+        } catch {
+          inputShape = [parseInt(shapeStr) || 784];
+        }
+      } else if (Array.isArray(shapeStr)) {
+        inputShape = shapeStr;
       }
-    } else if (Array.isArray(shapeStr)) {
-      inputShape = shapeStr;
+    }
+    // Check for inputSize (flat vector)
+    else if (inputConfig.inputSize) {
+      inputShape = [inputConfig.inputSize];
     }
   }
   
@@ -45,6 +72,8 @@ export const buildTFModel = (nodes, edges) => {
   if (!inputShape) {
     inputShape = [784];
   }
+  
+  console.log('Building model with input shape:', inputShape);
 
   const model = tf.sequential();
   let isFirstLayer = true;
@@ -98,19 +127,108 @@ export const buildTFModel = (nodes, edges) => {
           break;
 
         case 'LSTM':
+          // Check if next layer is LSTM/GRU - if so, return sequences
+          const lstmIndex = layerNodes.indexOf(node);
+          const nextLayerAfterLSTM = layerNodes[lstmIndex + 1];
+          const lstmReturnSeq = nextLayerAfterLSTM && 
+            (nextLayerAfterLSTM.data.layerType === 'LSTM' || nextLayerAfterLSTM.data.layerType === 'GRU');
+          
           model.add(tf.layers.lstm({
             units: config.hiddenSize || 64,
-            returnSequences: false,
+            returnSequences: lstmReturnSeq,
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
           break;
 
         case 'GRU':
+          // Check if next layer is LSTM/GRU - if so, return sequences
+          const gruIndex = layerNodes.indexOf(node);
+          const nextLayerAfterGRU = layerNodes[gruIndex + 1];
+          const gruReturnSeq = nextLayerAfterGRU && 
+            (nextLayerAfterGRU.data.layerType === 'LSTM' || nextLayerAfterGRU.data.layerType === 'GRU');
+          
           model.add(tf.layers.gru({
             units: config.hiddenSize || 64,
-            returnSequences: false,
+            returnSequences: gruReturnSeq,
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
+          break;
+
+        case 'Embedding':
+          model.add(tf.layers.embedding({
+            inputDim: config.vocabSize || 10000,
+            outputDim: config.embedDim || 128,
+            inputLength: inputShape[0], // sequence length
+            inputShape: isFirstLayer ? inputShape : undefined,
+          }));
+          break;
+
+        case 'PositionalEncoding':
+          // TensorFlow.js doesn't have built-in positional encoding
+          // We simulate it with a learnable embedding added as a Lambda layer
+          // For simplicity, we add dropout only (position info comes from embedding order)
+          model.add(tf.layers.dropout({
+            rate: config.dropout || 0.1,
+          }));
+          break;
+
+        case 'GlobalAvgPool1D':
+          model.add(tf.layers.globalAveragePooling1d());
+          break;
+
+        case 'LayerNorm':
+          // TensorFlow.js has layerNormalization
+          model.add(tf.layers.layerNormalization({
+            axis: -1,
+          }));
+          break;
+
+        case 'MultiHeadAttention':
+          // TensorFlow.js doesn't have native MultiHeadAttention in sequential API
+          // We'll use dense layers as approximation for the demo
+          model.add(tf.layers.dense({
+            units: config.embedDim || 256,
+            activation: 'relu',
+            inputShape: isFirstLayer ? inputShape : undefined,
+          }));
+          break;
+
+        case 'TransformerEncoder':
+          // Simplified transformer encoder for TF.js sequential model
+          // Real transformer needs functional API for skip connections
+          const encUnits = config.dModel || 256;
+          const encLayers = config.numLayers || 2;
+          for (let i = 0; i < encLayers; i++) {
+            // Self-attention approximation with dense layers
+            model.add(tf.layers.dense({
+              units: config.dimFeedforward || 1024,
+              activation: 'relu',
+            }));
+            model.add(tf.layers.dropout({ rate: 0.1 }));
+            model.add(tf.layers.dense({
+              units: encUnits,
+              activation: 'linear',
+            }));
+            model.add(tf.layers.layerNormalization({ axis: -1 }));
+          }
+          break;
+
+        case 'TransformerDecoder':
+          // Simplified transformer decoder for TF.js sequential model
+          const decUnits = config.dModel || 256;
+          const decLayers = config.numLayers || 2;
+          for (let i = 0; i < decLayers; i++) {
+            model.add(tf.layers.dense({
+              units: config.dimFeedforward || 1024,
+              activation: 'relu',
+            }));
+            model.add(tf.layers.dropout({ rate: 0.1 }));
+            model.add(tf.layers.dense({
+              units: decUnits,
+              activation: 'linear',
+            }));
+            model.add(tf.layers.layerNormalization({ axis: -1 }));
+          }
           break;
 
         case 'Output':
@@ -120,6 +238,18 @@ export const buildTFModel = (nodes, edges) => {
                        config.activation === 'sigmoid' ? 'sigmoid' : 'linear',
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
+          break;
+
+        case 'Add':
+          // In sequential model, Add is a pass-through (skip connections handled externally)
+          // For functional API support, this would merge multiple inputs
+          console.log('Add layer - skip connections require functional API for full support');
+          break;
+
+        case 'Concatenate':
+          // In sequential model, Concatenate is a pass-through
+          // For functional API support, this would concatenate multiple inputs
+          console.log('Concatenate layer - requires functional API for full support');
           break;
 
         default:

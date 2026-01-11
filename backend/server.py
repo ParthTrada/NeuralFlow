@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone
 from auth_routes import create_auth_routes
 from admin_routes import create_admin_routes
+from pdf_qa_routes import create_pdf_qa_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -165,6 +166,10 @@ async def generate_code(request: CodeGenerationRequest):
 
 # Include the router in the main app
 app.include_router(api_router)
+
+# Include PDF Q&A routes
+pdf_qa_router = create_pdf_qa_router(db)
+app.include_router(pdf_qa_router, prefix="/api")
 
 # Configure logging
 logging.basicConfig(

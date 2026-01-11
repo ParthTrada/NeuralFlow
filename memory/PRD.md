@@ -95,6 +95,35 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - ✅ Tap-to-add layers on mobile
 - ✅ Fixed header overflow and input auto-zoom issues on mobile
 
+### Jan 11, 2025 - Text Classification & PDF Q&A Features
+- ✅ **Text Classification Feature:**
+  - Text Classifier template (Input → Embedding → LSTM → Dropout → Dense → Output)
+  - Text input type support in Input layer config (vocabSize, seqLength)
+  - Embedding layer support in TensorFlow.js model builder
+  - Text sample data generation for NLP training
+  - Data Requirements Guide updated for NLP/Text models
+  - Text tokenization utilities (buildVocabulary, textToIndices)
+  - processTextCSVData function for text CSV processing
+- ✅ **PDF Q&A Chatbot Feature:** (Disabled for now, code preserved)
+
+### Jan 11, 2025 - Advanced Transformer & Keras Code Generation
+- ✅ **Advanced Transformer Support:**
+  - New PositionalEncoding layer with max_len, d_model, dropout config
+  - GlobalAvgPool1D layer for sequence pooling
+  - Updated Transformer template to BERT-style architecture:
+    - Input (text) → Embedding → Positional Encoding → Transformer Encoder (4 layers) → Global Avg Pool → Output
+  - TransformerEncoder and TransformerDecoder now use composite blocks with internal skip connections
+- ✅ **TensorFlow/Keras Code Generation:**
+  - Framework toggle (PyTorch | TF/Keras) in code preview modal
+  - Full Keras code generation with tf.keras.layers
+  - Custom layer implementations for Keras:
+    - PositionalEncoding class with learnable embeddings
+    - TransformerEncoderBlock with Multi-Head Attention + FFN + LayerNorm + residual connections
+    - TransformerDecoderBlock with masked self-attention + cross-attention
+  - Proper input shape handling for all layer types
+  - Download separate files for each framework
+
+
 ### Jan 6, 2025 - Input Layer Type System
 - ✅ Added Input Type dropdown with 3 options: Flat (Vector), Image (C, H, W), Sequence (Len, Feat)
 - ✅ Dynamic configuration fields based on input type:
@@ -108,11 +137,13 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 ## Prioritized Backlog
 
 ### P0 (Critical)
-- None - All critical features complete
+- [x] Text Classification feature ✅ COMPLETED
+- [x] PDF Q&A Chatbot ✅ COMPLETED
+- [ ] Production Google Auth reliability (user verification pending)
 
 ### P1 (High Priority)
-- [ ] TensorFlow/Keras code generation option
-- [ ] Undo/Redo functionality
+- [x] TensorFlow/Keras code generation option ✅ COMPLETED
+- [x] Undo/Redo functionality ✅ COMPLETED
 - [ ] Backend-based training for larger models
 
 ### P2 (Medium Priority)
@@ -126,3 +157,37 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [x] Pre-built architectures/templates ✅ COMPLETED
 - [ ] Training history persistence
 - [ ] Model comparison tools
+- [ ] Sentiment analysis pre-training for Text Classifier
+- [ ] More PDF document types support (scanned PDFs with OCR)
+
+### Future Enhancements (Advanced)
+- [x] **Advanced Transformer Support:** ✅ COMPLETED
+  - PositionalEncoding layer with max_len, d_model, dropout config
+  - TransformerEncoderBlock composite layer (stacks N encoder layers internally)
+  - TransformerDecoderBlock composite layer
+  - GlobalAvgPool1D for sequence pooling
+  - Updated Transformer template to BERT-style (Embedding → PosEnc → Encoder → Pool → Output)
+- [x] **Multi-Input Connections (Skip Connections):** ✅ COMPLETED
+  - Add layer with multiple input handles for residual connections
+  - Concatenate layer for feature fusion
+  - Visual distinction (green handles for skip connections)
+  - ResNet Block template demonstrating skip connections
+  - PyTorch code generation with proper skip connection handling
+  - Keras code generation with Add/Concatenate layers
+- [x] **Arbitrary Graph Topologies:** ✅ COMPLETED
+  - Topological sorting for DAG (Directed Acyclic Graph) processing
+  - Support for branching (one output to multiple inputs)
+  - Support for merging (multiple inputs to one output via Add/Concatenate)
+  - Code generators handle complex graph structures
+- [x] **Undo/Redo System:** ✅ COMPLETED
+  - History stack with 50 state limit
+  - Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Shift+Z (redo)
+  - UI buttons in header with visual disabled states
+  - Debounced recording for continuous changes (dragging)
+  - Immediate recording for discrete actions (add/delete)
+- [ ] **Graph Architecture Enhancements (Future):**
+  - Parallel layer execution visualization
+
+## Test Reports
+- Latest test run: Jan 11, 2025 - 9 tests passed (pytest)
+- Test file: /app/tests/test_pdf_qa_and_text_classifier.py

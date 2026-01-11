@@ -6,6 +6,8 @@ import { AuthCallback } from "./components/AuthCallback";
 import Landing from "./pages/Landing";
 import Builder from "./pages/Builder";
 import Admin from "./pages/Admin";
+import Guide from "./pages/Guide";
+// import PdfChat from "./pages/PdfChat"; // Feature disabled for now
 
 // Router component that handles auth callback detection
 function AppRouter() {
@@ -24,8 +26,10 @@ function AppRouter() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/builder" element={<Builder />} />
+      <Route path="/guide" element={<Guide />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/admin" element={<Admin />} />
+      {/* <Route path="/pdf-chat" element={<PdfChat />} /> */}
     </Routes>
   );
 }

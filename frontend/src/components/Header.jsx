@@ -1,6 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu, Undo2, Redo2, BookOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -31,9 +32,14 @@ export const Header = ({
   nodeCount,
   isMobile,
   onToggleLayers,
-  showLayerPalette
+  showLayerPalette,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }) => {
   const { user, login, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   // const { restartTour } = useProductTour(); // Commented out - Product Tour disabled
 
   return (
@@ -76,6 +82,53 @@ export const Header = ({
 
       {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Undo/Redo - Desktop only */}
+        {!isMobile && (
+          <>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                    className="w-8 h-8"
+                    data-testid="undo-btn"
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Undo (Ctrl+Z)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                    className="w-8 h-8"
+                    data-testid="redo-btn"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Redo (Ctrl+Shift+Z)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div className="w-px h-6 bg-border mx-1" />
+          </>
+        )}
+
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -95,6 +148,25 @@ export const Header = ({
             </TooltipTrigger>
             <TooltipContent>
               <p>Toggle {isDarkMode ? 'Light' : 'Dark'} Mode</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/guide')}
+                className="w-8 h-8"
+                data-testid="tutorial-btn"
+              >
+                <BookOpen className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Tutorial</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

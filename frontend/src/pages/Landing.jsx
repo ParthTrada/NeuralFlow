@@ -356,15 +356,17 @@ export default function Landing() {
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
-              variant="ghost"
-              size="lg"
-              className={`px-6 sm:px-8 py-5 sm:py-6 text-base rounded-xl w-full sm:w-auto ${
-                isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
-              }`}
               onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              size="lg"
+              className={`group px-6 sm:px-8 py-5 sm:py-6 text-base rounded-xl w-full sm:w-auto border-2 ${
+                isDark 
+                  ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10' 
+                  : 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
+              }`}
               data-testid="learn-more-btn"
             >
               Learn More
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>
         </div>

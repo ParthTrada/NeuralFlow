@@ -1,5 +1,62 @@
 // PyTorch Code Generator for Neural Network
 
+// Topological sort for DAG (Directed Acyclic Graph)
+const topologicalSort = (nodes, edges) => {
+  // Build adjacency list and in-degree count
+  const adjacency = {};
+  const inDegree = {};
+  const nodeMap = {};
+  
+  nodes.forEach(node => {
+    adjacency[node.id] = [];
+    inDegree[node.id] = 0;
+    nodeMap[node.id] = node;
+  });
+  
+  edges.forEach(edge => {
+    if (adjacency[edge.source]) {
+      adjacency[edge.source].push(edge.target);
+      inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
+    }
+  });
+  
+  // Find all nodes with no incoming edges
+  const queue = nodes.filter(node => inDegree[node.id] === 0);
+  const sorted = [];
+  
+  while (queue.length > 0) {
+    // Sort queue by position for consistent ordering
+    queue.sort((a, b) => {
+      const yDiff = a.position.y - b.position.y;
+      if (Math.abs(yDiff) > 50) return yDiff;
+      return a.position.x - b.position.x;
+    });
+    
+    const node = queue.shift();
+    sorted.push(node);
+    
+    // Process all outgoing edges
+    adjacency[node.id].forEach(targetId => {
+      inDegree[targetId]--;
+      if (inDegree[targetId] === 0) {
+        queue.push(nodeMap[targetId]);
+      }
+    });
+  }
+  
+  // If not all nodes are sorted, there's a cycle
+  if (sorted.length !== nodes.length) {
+    console.warn('Graph has a cycle, falling back to position-based sorting');
+    return [...nodes].sort((a, b) => {
+      const yDiff = a.position.y - b.position.y;
+      if (Math.abs(yDiff) > 50) return yDiff;
+      return a.position.x - b.position.x;
+    });
+  }
+  
+  return sorted;
+};
+
 export const generatePyTorchCode = (nodes, edges) => {
   if (!nodes || nodes.length === 0) {
     return `# No layers defined yet
@@ -7,18 +64,18 @@ export const generatePyTorchCode = (nodes, edges) => {
 `;
   }
 
-  // Sort nodes by position (top to bottom, left to right)
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const yDiff = a.position.y - b.position.y;
-    if (Math.abs(yDiff) > 50) return yDiff;
-    return a.position.x - b.position.x;
-  });
+  // Use topological sort for proper DAG ordering
+  const sortedNodes = topologicalSort(nodes, edges);
 
-  // Build adjacency list from edges
+  // Build adjacency list from edges (source -> targets)
   const adjacency = {};
+  const reverseAdjacency = {}; // target -> sources (for multi-input layers)
   edges.forEach(edge => {
     if (!adjacency[edge.source]) adjacency[edge.source] = [];
-    adjacency[edge.source].push(edge.target);
+    adjacency[edge.source].push({ target: edge.target, handle: edge.targetHandle });
+    
+    if (!reverseAdjacency[edge.target]) reverseAdjacency[edge.target] = [];
+    reverseAdjacency[edge.target].push({ source: edge.source, handle: edge.targetHandle });
   });
 
   // Find input nodes (nodes with no incoming edges)
@@ -169,6 +226,25 @@ export const generatePyTorchCode = (nodes, edges) => {
         forwardCode = `${varName} = ${layerName}({{input}}, {{input}})  # (target, memory)`;
         break;
 
+      case 'PositionalEncoding':
+        const peMaxLen = config.maxLen || 512;
+        const peDModel = config.dModel || 256;
+        const peDropout = config.dropout || 0.1;
+        // Positional encoding is typically a custom module in PyTorch
+        layerCode = `# Positional Encoding (${label})
+        # Using learned positional embeddings
+        ${layerName}_pos = nn.Embedding(${peMaxLen}, ${peDModel})
+        ${layerName}_dropout = nn.Dropout(p=${peDropout})`;
+        forwardCode = `seq_len = {{input}}.size(1)
+        positions = torch.arange(seq_len, device={{input}}.device).unsqueeze(0)
+        ${varName} = ${layerName}_dropout({{input}} + ${layerName}_pos(positions))`;
+        break;
+
+      case 'GlobalAvgPool1D':
+        layerCode = `# ${label} - Global Average Pooling over sequence dimension`;
+        forwardCode = `${varName} = {{input}}.mean(dim=1)  # (batch, seq_len, features) -> (batch, features)`;
+        break;
+
       case 'Output':
         const outInSize = config.inputSize || 128;
         const numClasses = config.numClasses || 10;
@@ -180,6 +256,18 @@ export const generatePyTorchCode = (nodes, edges) => {
         } else {
           forwardCode = `${varName} = ${layerName}({{input}})`;
         }
+        break;
+
+      case 'Add':
+        // Add layer combines multiple inputs - find all incoming edges
+        layerCode = `# ${label} - Skip Connection (element-wise addition)`;
+        forwardCode = `${varName} = {{inputs_add}}  # Add skip connection`;
+        break;
+
+      case 'Concatenate':
+        const axis = config.axis !== undefined ? config.axis : -1;
+        layerCode = `# ${label} - Concatenate along axis ${axis}`;
+        forwardCode = `${varName} = torch.cat({{inputs_cat}}, dim=${axis})  # Concatenate`;
         break;
 
       default:
@@ -202,14 +290,40 @@ export const generatePyTorchCode = (nodes, edges) => {
     if (layerCode) {
       layerDefs.push(layerCode);
       
-      // Find input for this layer
-      const incomingEdge = edges.find(e => e.target === node.id);
-      let inputVar = 'x';
-      if (incomingEdge && processedNodes.has(incomingEdge.source)) {
-        inputVar = processedNodes.get(incomingEdge.source);
+      // Find inputs for this layer
+      const incomingEdges = edges.filter(e => e.target === node.id);
+      
+      if (node.data.layerType === 'Add' || node.data.layerType === 'Concatenate') {
+        // Multi-input layer - collect all inputs
+        const inputVars = incomingEdges.map(edge => {
+          if (processedNodes.has(edge.source)) {
+            return processedNodes.get(edge.source);
+          }
+          return 'x';
+        });
+        
+        if (inputVars.length < 2) {
+          // Not enough inputs, use placeholder
+          inputVars.push('x');
+        }
+        
+        if (node.data.layerType === 'Add') {
+          const addExpr = inputVars.join(' + ');
+          forwardSteps.push(forwardCode.replace('{{inputs_add}}', addExpr));
+        } else {
+          const catExpr = `[${inputVars.join(', ')}]`;
+          forwardSteps.push(forwardCode.replace('{{inputs_cat}}', catExpr));
+        }
+      } else {
+        // Single input layer
+        const incomingEdge = incomingEdges[0];
+        let inputVar = 'x';
+        if (incomingEdge && processedNodes.has(incomingEdge.source)) {
+          inputVar = processedNodes.get(incomingEdge.source);
+        }
+        forwardSteps.push(forwardCode.replace(/{{input}}/g, inputVar));
       }
       
-      forwardSteps.push(forwardCode.replace(/{{input}}/g, inputVar));
       processedNodes.set(node.id, varName);
       layerIndex++;
     }
@@ -303,4 +417,384 @@ export const downloadCode = (code, filename = 'neural_network.py') => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+// TensorFlow/Keras Code Generator
+export const generateKerasCode = (nodes, edges) => {
+  if (!nodes || nodes.length === 0) {
+    return `# No layers defined yet
+# Drag layers from the sidebar to build your network
+`;
+  }
+
+  // Sort nodes by position
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const yDiff = a.position.y - b.position.y;
+    if (Math.abs(yDiff) > 50) return yDiff;
+    return a.position.x - b.position.x;
+  });
+
+  // Find input layer configuration
+  const inputLayerNode = sortedNodes.find(n => n.data.layerType === 'Input');
+  const inputConfig = inputLayerNode?.data?.config || {};
+  const inputType = inputConfig.inputType || 'flat';
+
+  // Track required custom layers
+  let needsPositionalEncoding = false;
+  let needsTransformerEncoder = false;
+  let needsTransformerDecoder = false;
+
+  // Generate layer code
+  const layerLines = [];
+  
+  sortedNodes.forEach((node, idx) => {
+    const config = node.data.config || {};
+    const label = node.data.label || node.data.layerType;
+    
+    switch (node.data.layerType) {
+      case 'Input':
+        // Input layer handled separately
+        break;
+
+      case 'Dense':
+        const units = config.units || 128;
+        const activation = config.activation && config.activation !== 'none' ? `'${config.activation}'` : 'None';
+        layerLines.push(`    layers.Dense(${units}, activation=${activation}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Conv2D':
+        const filters = config.outChannels || 32;
+        const kernelSize = config.kernelSize || 3;
+        const convActivation = config.activation && config.activation !== 'none' ? `'${config.activation}'` : 'None';
+        const padding = config.padding === 1 ? "'same'" : "'valid'";
+        layerLines.push(`    layers.Conv2D(${filters}, ${kernelSize}, padding=${padding}, activation=${convActivation}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'MaxPool2D':
+        layerLines.push(`    layers.MaxPooling2D(pool_size=(${config.kernelSize || 2}, ${config.kernelSize || 2}), strides=(${config.stride || 2}, ${config.stride || 2}), name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Dropout':
+        layerLines.push(`    layers.Dropout(${config.rate || 0.5}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Flatten':
+        layerLines.push(`    layers.Flatten(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'GlobalAvgPool1D':
+        layerLines.push(`    layers.GlobalAveragePooling1D(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Embedding':
+        const vocabSize = config.vocabSize || 10000;
+        const embedDim = config.embedDim || 256;
+        layerLines.push(`    layers.Embedding(${vocabSize}, ${embedDim}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'BatchNorm1D':
+      case 'BatchNorm2D':
+        layerLines.push(`    layers.BatchNormalization(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'LayerNorm':
+        layerLines.push(`    layers.LayerNormalization(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'LSTM':
+        const lstmUnits = config.hiddenSize || 128;
+        const returnSeq = idx < sortedNodes.length - 2 ? 'True' : 'False'; // Return sequences if not near end
+        const bidir = config.bidirectional;
+        if (bidir) {
+          layerLines.push(`    layers.Bidirectional(layers.LSTM(${lstmUnits}, return_sequences=${returnSeq}), name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        } else {
+          layerLines.push(`    layers.LSTM(${lstmUnits}, return_sequences=${returnSeq}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        }
+        break;
+
+      case 'GRU':
+        const gruUnits = config.hiddenSize || 128;
+        const gruReturnSeq = idx < sortedNodes.length - 2 ? 'True' : 'False';
+        layerLines.push(`    layers.GRU(${gruUnits}, return_sequences=${gruReturnSeq}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'MultiHeadAttention':
+        const numHeads = config.numHeads || 8;
+        const keyDim = Math.floor((config.embedDim || 256) / numHeads);
+        layerLines.push(`    # Multi-Head Attention - requires functional API for proper usage`);
+        layerLines.push(`    layers.MultiHeadAttention(num_heads=${numHeads}, key_dim=${keyDim}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'PositionalEncoding':
+        needsPositionalEncoding = true;
+        const peMaxLen = config.maxLen || 512;
+        const peDModel = config.dModel || 256;
+        const peDropout = config.dropout || 0.1;
+        layerLines.push(`    PositionalEncoding(max_len=${peMaxLen}, d_model=${peDModel}, dropout=${peDropout}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'TransformerEncoder':
+        needsTransformerEncoder = true;
+        const encDModel = config.dModel || 256;
+        const encNHead = config.nHead || 8;
+        const encDimFF = config.dimFeedforward || 1024;
+        const encNumLayers = config.numLayers || 2;
+        layerLines.push(`    TransformerEncoderBlock(d_model=${encDModel}, num_heads=${encNHead}, ff_dim=${encDimFF}, num_layers=${encNumLayers}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'TransformerDecoder':
+        needsTransformerDecoder = true;
+        const decDModel = config.dModel || 256;
+        const decNHead = config.nHead || 8;
+        const decDimFF = config.dimFeedforward || 1024;
+        const decNumLayers = config.numLayers || 2;
+        layerLines.push(`    # TransformerDecoder - requires functional API with encoder output`);
+        layerLines.push(`    TransformerDecoderBlock(d_model=${decDModel}, num_heads=${decNHead}, ff_dim=${decDimFF}, num_layers=${decNumLayers}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Output':
+        const numClasses = config.numClasses || 10;
+        let outputActivation = 'None';
+        if (config.activation === 'softmax') {
+          outputActivation = "'softmax'";
+        } else if (config.activation === 'sigmoid') {
+          outputActivation = "'sigmoid'";
+        }
+        layerLines.push(`    layers.Dense(${numClasses}, activation=${outputActivation}, name='output'),`);
+        break;
+
+      case 'Add':
+        layerLines.push(`    # Add (Skip Connection) - requires Functional API`);
+        layerLines.push(`    # In functional API: output = layers.Add()([input1, input2])`);
+        layerLines.push(`    layers.Add(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Concatenate':
+        const concatAxis = config.axis !== undefined ? config.axis : -1;
+        layerLines.push(`    # Concatenate - requires Functional API`);
+        layerLines.push(`    # In functional API: output = layers.Concatenate(axis=${concatAxis})([input1, input2])`);
+        layerLines.push(`    layers.Concatenate(axis=${concatAxis}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      default:
+        // Handle custom labeled layers
+        if (label.toLowerCase().includes('encoder') || label.toLowerCase().includes('decoder') || label.toLowerCase().includes('latent')) {
+          const customUnits = config.units || 128;
+          const customActivation = config.activation && config.activation !== 'none' ? `'${config.activation}'` : "'relu'";
+          layerLines.push(`    layers.Dense(${customUnits}, activation=${customActivation}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        }
+    }
+  });
+
+  // Generate input shape based on Input layer type
+  let inputShapeStr = '(784,)';
+  let inputExample = 'np.random.randn(1, 784).astype(np.float32)';
+  
+  if (inputType === 'flat') {
+    const size = inputConfig.inputSize || 784;
+    inputShapeStr = `(${size},)`;
+    inputExample = `np.random.randn(1, ${size}).astype(np.float32)`;
+  } else if (inputType === 'image') {
+    const h = inputConfig.height || 224;
+    const w = inputConfig.width || 224;
+    const c = inputConfig.channels || 3;
+    inputShapeStr = `(${h}, ${w}, ${c})`;
+    inputExample = `np.random.randn(1, ${h}, ${w}, ${c}).astype(np.float32)`;
+  } else if (inputType === 'sequence') {
+    const seqLen = inputConfig.seqLength || 32;
+    const feat = inputConfig.features || 256;
+    inputShapeStr = `(${seqLen}, ${feat})`;
+    inputExample = `np.random.randn(1, ${seqLen}, ${feat}).astype(np.float32)`;
+  } else if (inputType === 'text') {
+    const seqLen = inputConfig.seqLength || 128;
+    const vocabSize = inputConfig.vocabSize || 30000;
+    inputShapeStr = `(${seqLen},)`;
+    inputExample = `np.random.randint(0, ${vocabSize}, (1, ${seqLen}))`;
+  }
+
+  // Check if first layer is Embedding
+  const firstNonInput = sortedNodes.find(n => n.data.layerType !== 'Input');
+  if (firstNonInput?.data?.layerType === 'Embedding') {
+    const seqLen = inputConfig.seqLength || 128;
+    const vocabSize = firstNonInput.data.config?.vocabSize || 10000;
+    inputShapeStr = `(${seqLen},)`;
+    inputExample = `np.random.randint(0, ${vocabSize}, (1, ${seqLen}))`;
+  }
+
+  // Build custom layers code
+  let customLayers = '';
+  
+  if (needsPositionalEncoding) {
+    customLayers += `
+# Custom Positional Encoding Layer
+class PositionalEncoding(layers.Layer):
+    """Adds positional information to embeddings."""
+    def __init__(self, max_len=512, d_model=256, dropout=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.max_len = max_len
+        self.d_model = d_model
+        self.dropout_rate = dropout
+        self.pos_embedding = layers.Embedding(max_len, d_model)
+        self.dropout = layers.Dropout(dropout)
+    
+    def call(self, x, training=False):
+        seq_len = tf.shape(x)[1]
+        positions = tf.range(seq_len)
+        pos_enc = self.pos_embedding(positions)
+        return self.dropout(x + pos_enc, training=training)
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_len": self.max_len, "d_model": self.d_model, "dropout": self.dropout_rate})
+        return config
+
+`;
+  }
+
+  if (needsTransformerEncoder) {
+    customLayers += `
+# Custom Transformer Encoder Block
+class TransformerEncoderBlock(layers.Layer):
+    """Transformer Encoder with N stacked layers, each with Multi-Head Attention + FFN + residual connections."""
+    def __init__(self, d_model=256, num_heads=8, ff_dim=1024, num_layers=2, dropout=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.ff_dim = ff_dim
+        self.num_layers = num_layers
+        self.dropout_rate = dropout
+        
+        self.attention_layers = []
+        self.ffn_layers = []
+        self.layernorm1 = []
+        self.layernorm2 = []
+        self.dropout1 = []
+        self.dropout2 = []
+        
+        for _ in range(num_layers):
+            self.attention_layers.append(layers.MultiHeadAttention(num_heads=num_heads, key_dim=d_model // num_heads))
+            self.ffn_layers.append(tf.keras.Sequential([
+                layers.Dense(ff_dim, activation='relu'),
+                layers.Dense(d_model)
+            ]))
+            self.layernorm1.append(layers.LayerNormalization())
+            self.layernorm2.append(layers.LayerNormalization())
+            self.dropout1.append(layers.Dropout(dropout))
+            self.dropout2.append(layers.Dropout(dropout))
+    
+    def call(self, x, training=False):
+        for i in range(self.num_layers):
+            # Self-attention with residual
+            attn_output = self.attention_layers[i](x, x)
+            attn_output = self.dropout1[i](attn_output, training=training)
+            x = self.layernorm1[i](x + attn_output)
+            
+            # Feed-forward with residual
+            ffn_output = self.ffn_layers[i](x)
+            ffn_output = self.dropout2[i](ffn_output, training=training)
+            x = self.layernorm2[i](x + ffn_output)
+        return x
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "d_model": self.d_model, "num_heads": self.num_heads,
+            "ff_dim": self.ff_dim, "num_layers": self.num_layers, "dropout": self.dropout_rate
+        })
+        return config
+
+`;
+  }
+
+  if (needsTransformerDecoder) {
+    customLayers += `
+# Custom Transformer Decoder Block
+class TransformerDecoderBlock(layers.Layer):
+    """Transformer Decoder with Masked Self-Attention + Cross-Attention + FFN."""
+    def __init__(self, d_model=256, num_heads=8, ff_dim=1024, num_layers=2, dropout=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.ff_dim = ff_dim
+        self.num_layers = num_layers
+        self.dropout_rate = dropout
+        
+        self.self_attention = []
+        self.cross_attention = []
+        self.ffn_layers = []
+        self.layernorm1, self.layernorm2, self.layernorm3 = [], [], []
+        self.dropout1, self.dropout2, self.dropout3 = [], [], []
+        
+        for _ in range(num_layers):
+            self.self_attention.append(layers.MultiHeadAttention(num_heads=num_heads, key_dim=d_model // num_heads))
+            self.cross_attention.append(layers.MultiHeadAttention(num_heads=num_heads, key_dim=d_model // num_heads))
+            self.ffn_layers.append(tf.keras.Sequential([layers.Dense(ff_dim, activation='relu'), layers.Dense(d_model)]))
+            self.layernorm1.append(layers.LayerNormalization())
+            self.layernorm2.append(layers.LayerNormalization())
+            self.layernorm3.append(layers.LayerNormalization())
+            self.dropout1.append(layers.Dropout(dropout))
+            self.dropout2.append(layers.Dropout(dropout))
+            self.dropout3.append(layers.Dropout(dropout))
+    
+    def call(self, x, encoder_output=None, training=False):
+        if encoder_output is None:
+            encoder_output = x  # Self-attention only mode
+        for i in range(self.num_layers):
+            # Masked self-attention
+            attn1 = self.self_attention[i](x, x, use_causal_mask=True)
+            x = self.layernorm1[i](x + self.dropout1[i](attn1, training=training))
+            # Cross-attention
+            attn2 = self.cross_attention[i](x, encoder_output)
+            x = self.layernorm2[i](x + self.dropout2[i](attn2, training=training))
+            # FFN
+            ffn = self.ffn_layers[i](x)
+            x = self.layernorm3[i](x + self.dropout3[i](ffn, training=training))
+        return x
+
+`;
+  }
+
+  const architecture = sortedNodes.map(n => n.data.label || n.data.layerType).join(' → ');
+
+  const code = `import tensorflow as tf
+from tensorflow.keras import layers, models
+import numpy as np
+${customLayers}
+def create_model():
+    """
+    Neural Network generated by NeuralFlows
+    Architecture: ${architecture}
+    """
+    model = models.Sequential([
+        layers.InputLayer(input_shape=${inputShapeStr}),
+${layerLines.join('\n')}
+    ])
+    return model
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Create model
+    model = create_model()
+    
+    # Compile model
+    model.compile(
+        optimizer='adam',
+        loss='sparse_categorical_crossentropy',  # Change based on your task
+        metrics=['accuracy']
+    )
+    
+    # Model summary
+    model.summary()
+    
+    # Example input
+    x = ${inputExample}
+    
+    # Forward pass
+    output = model(x)
+    print(f"Input shape: {x.shape}")
+    print(f"Output shape: {output.shape}")
+`;
+
+  return code;
 };

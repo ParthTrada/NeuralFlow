@@ -230,6 +230,46 @@ const layerTips = {
       "Used for generation tasks (GPT, translation)"
     ],
     bestPractices: "Match d_model with encoder. Use causal masking for autoregressive generation. 2-6 layers typical."
+  },
+  Add: {
+    title: "Add (Skip Connection)",
+    description: "Element-wise addition of multiple inputs. Core component of residual networks (ResNet).",
+    details: [
+      "Enables training of very deep networks (100+ layers)",
+      "Allows gradients to flow directly through shortcuts",
+      "All inputs must have identical shapes"
+    ],
+    bestPractices: "Connect the skip from before a block to after. In ResNet: x + F(x). Combine with BatchNorm for stability."
+  },
+  Concatenate: {
+    title: "Concatenate Layer",
+    description: "Joins multiple inputs along a specified axis. Used for feature fusion in U-Net, DenseNet.",
+    details: [
+      "Unlike Add, preserves all information from both inputs",
+      "Output size = sum of input sizes along concat axis",
+      "Inputs must match in all dimensions except concat axis"
+    ],
+    bestPractices: "Use axis=-1 (last dimension) for feature concatenation. Common in U-Net skip connections and DenseNet dense blocks."
+  },
+  GlobalAvgPool1D: {
+    title: "Global Average Pooling 1D",
+    description: "Reduces sequence to a single vector by averaging across all positions. Used in Transformers for classification.",
+    details: [
+      "[batch, seq_len, features] → [batch, features]",
+      "No learnable parameters",
+      "Alternative to Flatten that handles variable lengths"
+    ],
+    bestPractices: "Use after Transformer/LSTM for classification tasks. Better than Flatten for variable-length sequences."
+  },
+  PositionalEncoding: {
+    title: "Positional Encoding",
+    description: "Adds position information to embeddings. Essential for Transformers since attention has no sense of order.",
+    details: [
+      "Sinusoidal: Fixed mathematical patterns",
+      "Learned: Trainable position embeddings",
+      "Without this, 'dog bites man' = 'man bites dog'"
+    ],
+    bestPractices: "Always use after Embedding, before Transformer. max_len should cover your longest sequence. Add dropout after."
   }
 };
 

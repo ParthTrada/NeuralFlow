@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -6,13 +6,19 @@ import {
   Square, 
   FileSpreadsheet, 
   Image, 
-  Sparkles,
   TrendingUp,
   AlertCircle,
   CheckCircle2,
   Loader2,
   X,
-  Save
+  Save,
+  Info,
+  FileText,
+  FolderTree,
+  Table,
+  Database,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
@@ -32,14 +38,104 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
-import { parseCSV, processCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
+import { parseCSV, processCSVData, processTextCSVData, processImageFolder } from '../utils/dataProcessor';
+import { sampleDatasets, downloadDatasetCSV } from '../utils/sampleDatasets';
+import DatasetBrowserModal from './DatasetBrowserModal';
 
-export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData }) => {
+// Analyze network to determine data requirements
+const analyzeNetworkRequirements = (nodes) => {
+  if (!nodes || nodes.length === 0) {
+    return null;
+  }
+  
+  const inputNode = nodes.find(n => n.data.layerType === 'Input');
+  const outputNode = nodes.find(n => n.data.layerType === 'Output');
+  const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+  const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+  const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
+  
+  const inputConfig = inputNode?.data?.config || {};
+  const outputConfig = outputNode?.data?.config || {};
+  
+  // Determine model type
+  let modelType = 'MLP'; // Default
+  let dataFormat = 'csv';
+  let taskType = 'classification';
+  
+  if (hasEmbedding || inputConfig.inputType === 'text') {
+    modelType = 'NLP/Text';
+    dataFormat = 'text';
+  } else if (hasLSTM) {
+    modelType = 'RNN/LSTM';
+    dataFormat = 'sequence';
+  } else if (hasConv2D) {
+    modelType = 'CNN';
+    dataFormat = 'image';
+  }
+  
+  // Determine task type from output
+  const outputActivation = outputConfig.activation || 'softmax';
+  const numClasses = outputConfig.numClasses || 10;
+  
+  if (outputActivation === 'softmax' || numClasses > 1) {
+    taskType = 'classification';
+  } else if (outputActivation === 'linear' || outputActivation === 'none' || numClasses === 1) {
+    taskType = 'regression';
+  }
+  
+  // Get input shape details
+  let inputShape = [];
+  let inputDescription = '';
+  let vocabSize = inputConfig.vocabSize || 10000;
+  
+  if (inputConfig.inputType === 'text' || hasEmbedding) {
+    const seqLength = inputConfig.seqLength || 100;
+    vocabSize = inputConfig.vocabSize || 10000;
+    inputShape = [seqLength];
+    inputDescription = `${seqLength} tokens (vocab: ${vocabSize})`;
+  } else if (inputConfig.inputType === 'sequence' || hasLSTM) {
+    const seqLength = inputConfig.seqLength || 50;
+    const features = inputConfig.features || 10;
+    inputShape = [seqLength, features];
+    inputDescription = `${seqLength} timesteps × ${features} features`;
+  } else if (inputConfig.inputType === 'image' || hasConv2D) {
+    const height = inputConfig.height || 28;
+    const width = inputConfig.width || 28;
+    const channels = inputConfig.channels || 1;
+    inputShape = [height, width, channels];
+    inputDescription = `${height}×${width} ${channels === 1 ? 'grayscale' : 'RGB'} images`;
+  } else {
+    const inputSize = inputConfig.inputSize || 784;
+    inputShape = [inputSize];
+    inputDescription = `${inputSize} features (numeric values)`;
+  }
+  
+  return {
+    modelType,
+    dataFormat,
+    taskType,
+    inputShape,
+    inputDescription,
+    numClasses,
+    hasLSTM,
+    hasConv2D,
+    hasEmbedding,
+    seqLength: inputConfig.seqLength || 50,
+    features: inputConfig.features || 10,
+    vocabSize,
+  };
+};
+
+export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData, currentTemplateId, onUpdateNodes }) => {
   const [dataType, setDataType] = useState('csv');
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
   const [targetColumn, setTargetColumn] = useState('');
+  const [textColumn, setTextColumn] = useState('');
   const [columns, setColumns] = useState([]);
+  const [showDataGuide, setShowDataGuide] = useState(false);
+  const [showDatasetBrowser, setShowDatasetBrowser] = useState(false);
+  const [selectedDatasetInfo, setSelectedDatasetInfo] = useState(null);
   
   // Training config
   const [epochs, setEpochs] = useState(10);
@@ -72,6 +168,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const lastModelIdRef = useRef(null);
+  
+  // Analyze network requirements
+  const networkReqs = useMemo(() => analyzeNetworkRequirements(nodes), [nodes]);
 
   // Restore or reset training state when a different model is loaded
   useEffect(() => {
@@ -171,10 +270,42 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       const cols = Object.keys(data[0]);
       setColumns(cols);
-      setTargetColumn(cols[cols.length - 1]);
+      
+      // Auto-detect text column (first string column that looks like text)
+      const isTextModel = networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding;
+      let detectedTextCol = '';
+      let detectedTargetCol = cols[cols.length - 1];
+      
+      if (isTextModel) {
+        // Look for a text-like column (longer strings, not just labels)
+        for (const col of cols) {
+          const sampleValue = String(data[0][col] || '');
+          if (sampleValue.length > 20 && col.toLowerCase() !== 'sentiment' && col.toLowerCase() !== 'label') {
+            detectedTextCol = col;
+            break;
+          }
+        }
+        // If no text column found, use first column
+        if (!detectedTextCol) {
+          detectedTextCol = cols[0];
+        }
+        // Target is usually the last column or one named 'sentiment'/'label'
+        const sentimentCol = cols.find(c => c.toLowerCase() === 'sentiment' || c.toLowerCase() === 'label');
+        if (sentimentCol) {
+          detectedTargetCol = sentimentCol;
+        }
+      }
+      
+      setTextColumn(detectedTextCol);
+      setTargetColumn(detectedTargetCol);
       setProcessedData({ raw: data, type: 'csv' });
       setStatus('ready');
-      toast.success(`Loaded ${data.length} rows from CSV`);
+      
+      if (isTextModel) {
+        toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
+      } else {
+        toast.success(`Loaded ${data.length} rows from CSV`);
+      }
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
@@ -209,21 +340,333 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   };
 
-  // Generate sample data
-  const handleGenerateSample = (type) => {
+  // Handle sample dataset selection from Dataset Browser
+  const handleSelectSampleDataset = async (datasetInfo) => {
     setStatus('loading');
+    setErrorMessage('');
+    setSelectedDatasetInfo(datasetInfo);
+    
     try {
-      const data = generateSampleData(type, 500);
-      setProcessedData({
-        ...data,
-        type: 'sample'
-      });
+      const rawData = datasetInfo.rawData;
+      const isTextDataset = datasetInfo.category === 'text';
+      const isSequenceDataset = datasetInfo.category === 'sequence';
+      const isImageDataset = datasetInfo.category === 'image';
+      
+      // Define consistent parameters (must match autoAdjustModelForDataset)
+      const textSeqLength = 64;
+      const textVocabSize = datasetInfo.vocabSize || 10000;
+      const seqFeatures = datasetInfo.features || 9;
+      const seqLength = 10;
+      
+      // Auto-adjust model parameters based on dataset
+      if (onUpdateNodes && nodes.length > 0) {
+        const updatedNodes = autoAdjustModelForDataset(nodes, datasetInfo);
+        if (updatedNodes) {
+          onUpdateNodes(updatedNodes);
+          toast.info('Model parameters auto-adjusted to match dataset');
+        }
+      }
+      
+      if (isTextDataset) {
+        // Process as text dataset - use SAME seqLength as auto-adjustment
+        const processed = processTextCSVData(
+          rawData, 
+          datasetInfo.textColumn, 
+          datasetInfo.targetColumn,
+          { maxLength: textSeqLength, vocabSize: textVocabSize }
+        );
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'text'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTextColumn(datasetInfo.textColumn);
+        setTargetColumn(datasetInfo.targetColumn);
+      } else if (isSequenceDataset) {
+        // Process as sequence dataset - use SAME seqLength as auto-adjustment
+        const processed = processCSVData(rawData, datasetInfo.targetColumn, {
+          normalize: true,
+          oneHotEncode: true,
+          isSequenceModel: true,
+          seqLength: seqLength
+        });
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'sequence'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
+      } else if (isImageDataset) {
+        // Store metadata for image dataset - tensor creation happens during training
+        const pixelColumns = Object.keys(rawData[0]).filter(k => k.startsWith('pixel_'));
+        const labels = rawData.map(row => row[datasetInfo.targetColumn]);
+        const uniqueLabels = [...new Set(labels)];
+        
+        // Check if model has Conv2D layers (for determining input shape)
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
+        // Get image dimensions from dataset config or use defaults
+        const imgConfig = datasetInfo.imageConfig || {
+          height: 28,
+          width: 28,
+          channels: 1
+        };
+        
+        setProcessedData({
+          raw: rawData,
+          type: 'image',
+          isImageData: true,
+          imageConfig: {
+            height: imgConfig.height,
+            width: imgConfig.width,
+            channels: imgConfig.channels,
+            numPixels: pixelColumns.length
+          },
+          pixelColumns,
+          targetColumn: datasetInfo.targetColumn,
+          uniqueLabels,
+          numClasses: uniqueLabels.length,
+          inputShape: modelHasConv2D ? [imgConfig.height, imgConfig.width, imgConfig.channels] : [pixelColumns.length]
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
+      } else {
+        // Process as tabular dataset
+        const processed = processCSVData(rawData, datasetInfo.targetColumn, {
+          normalize: true,
+          oneHotEncode: true
+        });
+        setProcessedData({
+          ...processed,
+          raw: rawData,
+          type: 'csv'
+        });
+        setColumns(Object.keys(rawData[0]));
+        setTargetColumn(datasetInfo.targetColumn);
+      }
+      
       setStatus('ready');
-      toast.success(`Generated ${type} sample dataset`);
+      toast.success(`Loaded ${datasetInfo.name} dataset (${rawData.length} samples)`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
+      toast.error(`Failed to load dataset: ${error.message}`);
     }
+  };
+
+  // Auto-adjust model parameters based on dataset requirements
+  const autoAdjustModelForDataset = (currentNodes, datasetInfo) => {
+    const updatedNodes = [...currentNodes];
+    let hasChanges = false;
+    
+    // Define consistent parameters for each dataset type
+    const textSeqLength = 64; // Consistent sequence length for text models
+    const textVocabSize = datasetInfo.vocabSize || 10000;
+    
+    // Get image config from dataset or use defaults
+    const imgConfig = datasetInfo.imageConfig || { height: 28, width: 28, channels: 1 };
+    
+    // Find all relevant layers
+    const inputNode = updatedNodes.find(n => n.data.layerType === 'Input');
+    const outputNode = updatedNodes.find(n => n.data.layerType === 'Output');
+    const embeddingNodes = updatedNodes.filter(n => n.data.layerType === 'Embedding');
+    const posEncodingNodes = updatedNodes.filter(n => n.data.layerType === 'PositionalEncoding');
+    const multiHeadNodes = updatedNodes.filter(n => n.data.layerType === 'MultiHeadAttention');
+    const lstmNodes = updatedNodes.filter(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+    const denseNodes = updatedNodes.filter(n => n.data.layerType === 'Dense');
+    const conv2dNodes = updatedNodes.filter(n => n.data.layerType === 'Conv2D');
+    
+    // Check if model has Conv2D layers (CNN vs MLP)
+    const hasConv2D = conv2dNodes.length > 0;
+    
+    // Adjust Input layer based on dataset type
+    if (inputNode) {
+      const inputIdx = updatedNodes.findIndex(n => n.id === inputNode.id);
+      const newConfig = { ...inputNode.data.config };
+      
+      if (datasetInfo.category === 'image') {
+        if (hasConv2D) {
+          // For CNN models - use image input type (4D tensor)
+          newConfig.inputType = 'image';
+          newConfig.height = imgConfig.height;
+          newConfig.width = imgConfig.width;
+          newConfig.channels = imgConfig.channels;
+        } else {
+          // For MLP models - use flat input type (2D tensor)
+          // Image pixels are flattened: height * width * channels
+          const flattenedSize = imgConfig.height * imgConfig.width * imgConfig.channels;
+          newConfig.inputType = 'flat';
+          newConfig.inputSize = flattenedSize;
+        }
+        hasChanges = true;
+      } else if (datasetInfo.category === 'text') {
+        // For text datasets - use consistent sequence length
+        newConfig.inputType = 'text';
+        newConfig.seqLength = textSeqLength;
+        newConfig.vocabSize = textVocabSize;
+        hasChanges = true;
+      } else if (datasetInfo.category === 'sequence') {
+        // For sequence/time-series datasets
+        newConfig.inputType = 'sequence';
+        newConfig.seqLength = 10;
+        newConfig.features = datasetInfo.features || 9;
+        hasChanges = true;
+      } else if (datasetInfo.category === 'tabular') {
+        // For tabular datasets
+        newConfig.inputType = 'flat';
+        newConfig.inputSize = datasetInfo.features || 4;
+        hasChanges = true;
+      }
+      
+      updatedNodes[inputIdx] = {
+        ...inputNode,
+        data: {
+          ...inputNode.data,
+          config: newConfig
+        }
+      };
+    }
+    
+    // Adjust Output layer based on number of classes
+    if (outputNode && datasetInfo.classes) {
+      const outputIdx = updatedNodes.findIndex(n => n.id === outputNode.id);
+      updatedNodes[outputIdx] = {
+        ...outputNode,
+        data: {
+          ...outputNode.data,
+          config: {
+            ...outputNode.data.config,
+            numClasses: datasetInfo.classes
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    // Adjust ALL Embedding layers for text datasets
+    if (datasetInfo.category === 'text') {
+      embeddingNodes.forEach(embNode => {
+        const embIdx = updatedNodes.findIndex(n => n.id === embNode.id);
+        updatedNodes[embIdx] = {
+          ...embNode,
+          data: {
+            ...embNode.data,
+            config: {
+              ...embNode.data.config,
+              vocabSize: textVocabSize,
+              inputLength: textSeqLength
+            }
+          }
+        };
+        hasChanges = true;
+      });
+      
+      // Adjust PositionalEncoding layers
+      posEncodingNodes.forEach(posNode => {
+        const posIdx = updatedNodes.findIndex(n => n.id === posNode.id);
+        updatedNodes[posIdx] = {
+          ...posNode,
+          data: {
+            ...posNode.data,
+            config: {
+              ...posNode.data.config,
+              maxLen: textSeqLength
+            }
+          }
+        };
+        hasChanges = true;
+      });
+      
+      // Adjust MultiHeadAttention layers
+      multiHeadNodes.forEach(mhaNode => {
+        const mhaIdx = updatedNodes.findIndex(n => n.id === mhaNode.id);
+        // Keep existing config but ensure it's consistent
+        updatedNodes[mhaIdx] = {
+          ...mhaNode,
+          data: {
+            ...mhaNode.data,
+            config: {
+              ...mhaNode.data.config
+            }
+          }
+        };
+      });
+    }
+    
+    // Adjust LSTM/GRU layers for sequence data
+    if (datasetInfo.category === 'sequence') {
+      lstmNodes.forEach(lstmNode => {
+        const lstmIdx = updatedNodes.findIndex(n => n.id === lstmNode.id);
+        updatedNodes[lstmIdx] = {
+          ...lstmNode,
+          data: {
+            ...lstmNode.data,
+            config: {
+              ...lstmNode.data.config,
+              inputSize: datasetInfo.features || 9
+            }
+          }
+        };
+        hasChanges = true;
+      });
+    }
+    
+    // Adjust first Conv2D layer for image data (input channels)
+    if (datasetInfo.category === 'image' && conv2dNodes.length > 0) {
+      const firstConv = conv2dNodes[0];
+      const convIdx = updatedNodes.findIndex(n => n.id === firstConv.id);
+      updatedNodes[convIdx] = {
+        ...firstConv,
+        data: {
+          ...firstConv.data,
+          config: {
+            ...firstConv.data.config,
+            inChannels: imgConfig.channels
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    // Adjust first Dense layer for image data when NO Conv2D layers (MLP with images)
+    // The flattened image size = height * width * channels
+    if (datasetInfo.category === 'image' && conv2dNodes.length === 0 && denseNodes.length > 0) {
+      const flattenedSize = imgConfig.height * imgConfig.width * imgConfig.channels;
+      const firstDense = denseNodes[0];
+      const denseIdx = updatedNodes.findIndex(n => n.id === firstDense.id);
+      updatedNodes[denseIdx] = {
+        ...firstDense,
+        data: {
+          ...firstDense.data,
+          config: {
+            ...firstDense.data.config,
+            inputSize: flattenedSize
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    // Adjust first Dense layer input size for tabular data
+    if (datasetInfo.category === 'tabular' && denseNodes.length > 0) {
+      const firstDense = denseNodes[0];
+      const denseIdx = updatedNodes.findIndex(n => n.id === firstDense.id);
+      updatedNodes[denseIdx] = {
+        ...firstDense,
+        data: {
+          ...firstDense.data,
+          config: {
+            ...firstDense.data.config,
+            inputSize: datasetInfo.features || 4
+          }
+        }
+      };
+      hasChanges = true;
+    }
+    
+    return hasChanges ? updatedNodes : null;
   };
 
   // Start training
@@ -238,13 +681,36 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       return;
     }
 
-    const firstLayer = nodes.find(n => n.data.layerType === 'Dense' || n.data.layerType === 'Conv2D');
-    if (firstLayer && processedData.inputShape) {
-      const expectedInput = processedData.inputShape[0];
-      const configuredInput = firstLayer.data.config?.inputSize || 784;
-      if (configuredInput !== expectedInput) {
-        toast.error(`Input size mismatch! Layer expects ${configuredInput}, data has ${expectedInput}.`);
-        return;
+    // Check input compatibility - different rules for different model types
+    const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+    const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+    const inputNode = nodes.find(n => n.data.layerType === 'Input');
+    
+    if (!hasLSTM && !hasConv2D) {
+      // For Dense/MLP models - check flat input size
+      const firstDense = nodes.find(n => n.data.layerType === 'Dense');
+      if (firstDense && processedData.inputShape && processedData.type !== 'sequence') {
+        const expectedInput = processedData.inputShape[0];
+        const configuredInput = firstDense.data.config?.inputSize || 784;
+        if (configuredInput !== expectedInput) {
+          toast.error(`Input size mismatch! Layer expects ${configuredInput}, data has ${expectedInput}.`);
+          return;
+        }
+      }
+    }
+    
+    // For LSTM/RNN models - check sequence dimensions match
+    if (hasLSTM && processedData.type === 'sequence' && inputNode?.data?.config) {
+      const dataSeqLength = processedData.inputShape[0];
+      const dataFeatures = processedData.inputShape[1];
+      const configSeqLength = inputNode.data.config.seqLength;
+      const configFeatures = inputNode.data.config.features;
+      
+      if (configSeqLength && configSeqLength !== dataSeqLength) {
+        toast.warning(`Sequence length mismatch: Input expects ${configSeqLength}, data has ${dataSeqLength}. Training anyway...`);
+      }
+      if (configFeatures && configFeatures !== dataFeatures) {
+        toast.warning(`Features mismatch: Input expects ${configFeatures}, data has ${dataFeatures}. Training anyway...`);
       }
     }
 
@@ -264,9 +730,125 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     stopTrainingRef.current = false;
 
     try {
+      let xTrain, yTrain;
+      let actualNumClasses = null;
+      
+      // Check model type
+      const hasLSTM = nodes.some(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+      const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
+      const inputNode = nodes.find(n => n.data.layerType === 'Input');
+      const outputNode = nodes.find(n => n.data.layerType === 'Output');
+      const seqLength = inputNode?.data?.config?.seqLength || 100;
+      const vocabSize = inputNode?.data?.config?.vocabSize || 10000;
+      const isTextModel = hasEmbedding || inputNode?.data?.config?.inputType === 'text';
+      
+      // FIRST: Process data to get actual number of classes
+      if (processedData.type === 'csv' && processedData.raw) {
+        if (isTextModel && textColumn) {
+          // Use text processor for NLP models
+          console.log(`Processing text data: text="${textColumn}", target="${targetColumn}"`);
+          const processed = processTextCSVData(processedData.raw, textColumn, targetColumn, {
+            maxLength: seqLength,
+            vocabSize: vocabSize
+          });
+          xTrain = processed.xTrain;
+          yTrain = processed.yTrain;
+          actualNumClasses = processed.numClasses;
+          
+          // Store vocab for prediction
+          setProcessedData(prev => ({
+            ...prev,
+            ...processed,
+            type: 'text'
+          }));
+          
+          console.log('Processed text data shape:', xTrain.shape, 'vocab size:', processed.vocabSize, 'classes:', actualNumClasses);
+          toast.info(`Vocabulary: ${processed.vocabSize} words, ${actualNumClasses} classes`);
+        } else {
+          // Use numeric processor for standard models
+          const processed = processCSVData(processedData.raw, targetColumn, {
+            normalize: true,
+            oneHotEncode: true,
+            isSequenceModel: hasLSTM && !hasEmbedding,
+            seqLength: hasLSTM ? seqLength : 1
+          });
+          xTrain = processed.xTrain;
+          yTrain = processed.yTrain;
+          actualNumClasses = processed.numClasses;
+          
+          // Log the shape for debugging
+          console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM, 'classes:', actualNumClasses);
+        }
+      } else if (processedData.type === 'image' && processedData.isImageData) {
+        // Process image data - create tensors now for training
+        const { raw, pixelColumns, targetColumn: imgTargetCol, uniqueLabels } = processedData;
+        const numSamples = raw.length;
+        const height = processedData.imageConfig?.height || 28;
+        const width = processedData.imageConfig?.width || 28;
+        const channels = processedData.imageConfig?.channels || 1;
+        
+        // Check if model has Conv2D layers
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
+        if (modelHasConv2D) {
+          // Create 4D tensor for CNN: [batch, height, width, channels]
+          const imageData = raw.map(row => {
+            const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
+            // Reshape flat array to [height, width, channels]
+            const image = [];
+            for (let h = 0; h < height; h++) {
+              const rowData = [];
+              for (let w = 0; w < width; w++) {
+                const pixelChannels = [];
+                for (let c = 0; c < channels; c++) {
+                  // For RGB images, pixels are stored as R,G,B,R,G,B... or as separate pixel_0, pixel_1...
+                  const pixelIdx = (h * width + w) * channels + c;
+                  pixelChannels.push(pixels[pixelIdx] || 0);
+                }
+                rowData.push(pixelChannels);
+              }
+              image.push(rowData);
+            }
+            return image;
+          });
+          xTrain = tf.tensor4d(imageData, [numSamples, height, width, channels]);
+          console.log('Created 4D tensor for CNN:', xTrain.shape);
+        } else {
+          // Create 2D tensor for MLP: [batch, features]
+          const flatData = raw.map(row => 
+            pixelColumns.map(col => (row[col] || 0) / 255.0)
+          );
+          xTrain = tf.tensor2d(flatData, [numSamples, pixelColumns.length]);
+          console.log('Created 2D tensor for MLP:', xTrain.shape);
+        }
+        
+        // Create one-hot encoded labels
+        const labels = raw.map(row => row[imgTargetCol]);
+        const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
+        yTrain = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), uniqueLabels.length);
+        actualNumClasses = uniqueLabels.length;
+        
+        console.log('Image data processed - samples:', numSamples, 'classes:', actualNumClasses);
+        toast.info(`Image data: ${numSamples} samples, ${actualNumClasses} classes`);
+      } else {
+        xTrain = processedData.xTrain;
+        yTrain = processedData.yTrain;
+        actualNumClasses = processedData.numClasses;
+      }
+      
+      // Check if we need to adjust the output layer
+      const configuredClasses = outputNode?.data?.config?.numClasses || 3;
+      if (actualNumClasses && actualNumClasses !== configuredClasses) {
+        throw new Error(
+          `Output layer mismatch: Your data has ${actualNumClasses} classes, but the Output layer is configured for ${configuredClasses} classes. ` +
+          `Please update the Output layer's "Classes" setting to ${actualNumClasses}, or modify your dataset to have ${configuredClasses} classes.`
+        );
+      }
+      
+      // Build the model
       modelRef.current = buildTFModel(nodes, edges);
       
-      const isClassification = processedData.numClasses > 1 || processedData.type === 'classification';
+      const isClassification = actualNumClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
       compileModel(modelRef.current, {
@@ -275,17 +857,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         loss,
         metrics: ['acc'],
       });
-
-      let xTrain, yTrain;
-      
-      if (processedData.type === 'csv' && processedData.raw) {
-        const processed = processCSVData(processedData.raw, targetColumn);
-        xTrain = processed.xTrain;
-        yTrain = processed.yTrain;
-      } else {
-        xTrain = processedData.xTrain;
-        yTrain = processedData.yTrain;
-      }
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
@@ -361,6 +932,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setErrorMessage('');
     setColumns([]);
     setTargetColumn('');
+    setTextColumn('');
     setPredictionInput('');
     setPredictionResult(null);
     setTestImage(null);
@@ -572,71 +1144,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     try {
       // Get expected input size
       const inputLayer = nodes.find(n => n.data.layerType === 'Input');
-      const inputSize = inputLayer?.data?.config?.inputSize || 100;
-      
-      let inputVector;
-      
-      switch (textEncoding) {
-        case 'bow': {
-          // Simple bag of words - character frequency
-          const chars = textInput.toLowerCase().split('');
-          const charCounts = {};
-          chars.forEach(c => {
-            const code = c.charCodeAt(0);
-            if (code >= 32 && code <= 126) {
-              charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
-            }
-          });
-          inputVector = new Array(inputSize).fill(0);
-          Object.entries(charCounts).forEach(([idx, count]) => {
-            if (parseInt(idx) < inputSize) {
-              inputVector[parseInt(idx)] = count / chars.length;
-            }
-          });
-          break;
-        }
-        
-        case 'tfidf': {
-          // Simple TF approximation
-          const words = textInput.toLowerCase().split(/\s+/);
-          const wordCounts = {};
-          words.forEach(w => {
-            const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
-            wordCounts[hash] = (wordCounts[hash] || 0) + 1;
-          });
-          inputVector = new Array(inputSize).fill(0);
-          Object.entries(wordCounts).forEach(([idx, count]) => {
-            inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
-          });
-          break;
-        }
-        
-        case 'char': {
-          // Character-level encoding
-          inputVector = new Array(inputSize).fill(0);
-          const chars = textInput.slice(0, inputSize).split('');
-          chars.forEach((c, i) => {
-            inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
-          });
-          break;
-        }
-        
-        case 'word': {
-          // Word index encoding (simple hash)
-          const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
-          inputVector = new Array(inputSize).fill(0);
-          words.forEach((word, i) => {
-            const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
-            inputVector[i] = hash / 1000;
-          });
-          break;
-        }
-        
-        default:
-          throw new Error('Unknown encoding type');
-      }
-
-      // Check if model expects sequence input (3D) or flat input (2D)
+      const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
       const hasLSTM = nodes.some(n => 
         n.data.layerType === 'LSTM' || 
         n.data.layerType === 'GRU' ||
@@ -644,14 +1152,131 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       );
       
       let inputTensor;
-      if (hasLSTM) {
-        // Reshape for RNN: [batch, timesteps, features]
-        const seqLength = inputLayer?.data?.config?.sequenceLength || inputSize;
-        const features = Math.ceil(inputSize / seqLength);
-        const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
-        inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features)], [1, seqLength, features]);
+      
+      // Check if this is an Embedding-based text model
+      if (hasEmbedding) {
+        // For Embedding models, we need token IDs (integers)
+        const seqLength = inputLayer?.data?.config?.seqLength || 100;
+        
+        // Use the vocabulary from training if available
+        const vocab = processedData?.vocab;
+        
+        if (vocab) {
+          // Tokenize using the trained vocabulary
+          const tokens = textInput
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 0);
+          
+          const indices = tokens.slice(0, seqLength).map(token => vocab[token] || 1); // 1 = UNK
+          
+          // Pad to seqLength
+          while (indices.length < seqLength) {
+            indices.push(0); // 0 = PAD
+          }
+          
+          // Create 2D tensor for Embedding input: [batch, sequence_length]
+          inputTensor = tf.tensor2d([indices], [1, seqLength], 'int32');
+        } else {
+          // Fallback: use simple hash-based tokenization
+          const tokens = textInput
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 0);
+          
+          const vocabSize = inputLayer?.data?.config?.vocabSize || 10000;
+          const indices = tokens.slice(0, seqLength).map(token => {
+            // Simple hash function to map words to indices
+            let hash = 0;
+            for (let i = 0; i < token.length; i++) {
+              hash = ((hash << 5) - hash + token.charCodeAt(i)) % vocabSize;
+            }
+            return Math.abs(hash) + 2; // +2 to avoid PAD (0) and UNK (1)
+          });
+          
+          // Pad to seqLength
+          while (indices.length < seqLength) {
+            indices.push(0);
+          }
+          
+          inputTensor = tf.tensor2d([indices], [1, seqLength], 'int32');
+        }
       } else {
-        inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+        // For non-Embedding models, use the original encoding methods
+        const inputSize = inputLayer?.data?.config?.inputSize || 100;
+        let inputVector;
+        
+        switch (textEncoding) {
+          case 'bow': {
+            // Simple bag of words - character frequency
+            const chars = textInput.toLowerCase().split('');
+            const charCounts = {};
+            chars.forEach(c => {
+              const code = c.charCodeAt(0);
+              if (code >= 32 && code <= 126) {
+                charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
+              }
+            });
+            inputVector = new Array(inputSize).fill(0);
+            Object.entries(charCounts).forEach(([idx, count]) => {
+              if (parseInt(idx) < inputSize) {
+                inputVector[parseInt(idx)] = count / chars.length;
+              }
+            });
+            break;
+          }
+          
+          case 'tfidf': {
+            // Simple TF approximation
+            const words = textInput.toLowerCase().split(/\s+/);
+            const wordCounts = {};
+            words.forEach(w => {
+              const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
+              wordCounts[hash] = (wordCounts[hash] || 0) + 1;
+            });
+            inputVector = new Array(inputSize).fill(0);
+            Object.entries(wordCounts).forEach(([idx, count]) => {
+              inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
+            });
+            break;
+          }
+          
+          case 'char': {
+            // Character-level encoding
+            inputVector = new Array(inputSize).fill(0);
+            const chars = textInput.slice(0, inputSize).split('');
+            chars.forEach((c, i) => {
+              inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
+            });
+            break;
+          }
+          
+          case 'word': {
+            // Word index encoding (simple hash)
+            const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
+            inputVector = new Array(inputSize).fill(0);
+            words.forEach((word, i) => {
+              const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
+              inputVector[i] = hash / 1000;
+            });
+            break;
+          }
+          
+          default:
+            throw new Error('Unknown encoding type');
+        }
+
+        if (hasLSTM) {
+          // Reshape for RNN: [batch, timesteps, features]
+          const seqLength = inputLayer?.data?.config?.seqLength || inputSize;
+          const features = Math.ceil(inputSize / seqLength);
+          const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
+          inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features).map(row => [row])].flat(), [1, seqLength, features]);
+        } else {
+          inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+        }
       }
 
       const prediction = modelRef.current.predict(inputTensor);
@@ -697,6 +1322,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   if (!isOpen) return null;
 
   return (
+    <>
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -732,6 +1358,144 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-24">
+              {/* Network Requirements Summary */}
+              {networkReqs && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowDataGuide(!showDataGuide)}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Info className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-sm">Data Requirements Guide</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {showDataGuide ? 'Hide' : 'Show'}
+                    </span>
+                  </button>
+                  
+                  {showDataGuide && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-3 rounded-lg bg-muted/50 border border-border space-y-3"
+                    >
+                      {/* Model Summary */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-primary/20 text-primary">
+                          {networkReqs.modelType}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                          {networkReqs.taskType}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                          {networkReqs.numClasses} {networkReqs.taskType === 'classification' ? 'classes' : 'output'}
+                        </span>
+                      </div>
+                      
+                      {/* Input Requirements */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-foreground/80">Expected Input:</p>
+                        <p className="text-xs text-muted-foreground">{networkReqs.inputDescription}</p>
+                      </div>
+                      
+                      {/* Data Format Guide based on model type */}
+                      {networkReqs.modelType === 'RNN/LSTM' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <Table className="w-3 h-3" /> CSV Format for LSTM:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># {networkReqs.features} features + 1 target column</div>
+                            <div className="text-muted-foreground"># Each row = 1 timestep in sequence</div>
+                            <div className="mt-1">f1, f2, f3, ..., f{networkReqs.features}, label</div>
+                            <div>0.1, 0.5, 0.3, ..., 0.8, class_A</div>
+                            <div>0.2, 0.4, 0.2, ..., 0.7, class_A</div>
+                            <div>0.3, 0.3, 0.4, ..., 0.9, class_B</div>
+                            <div className="text-muted-foreground">... (min {networkReqs.seqLength}+ rows)</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Sliding window creates sequences of {networkReqs.seqLength} timesteps from your data.
+                            Need at least 2 different labels for classification.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {networkReqs.modelType === 'CNN' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <FolderTree className="w-3 h-3" /> Image Folder Structure:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px]">
+                            <div>📁 training_data/</div>
+                            <div>├── 📁 class_A/</div>
+                            <div>│   ├── image1.jpg</div>
+                            <div>│   ├── image2.jpg</div>
+                            <div>│   └── ...</div>
+                            <div>├── 📁 class_B/</div>
+                            <div>│   ├── image1.jpg</div>
+                            <div>│   └── ...</div>
+                            <div>└── 📁 class_C/</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Images will be resized to {networkReqs.inputShape[0]}×{networkReqs.inputShape[1]}.
+                            Each subfolder = one class.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {networkReqs.modelType === 'MLP' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <Table className="w-3 h-3" /> CSV Format for MLP:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># {networkReqs.inputShape[0]} features + 1 target column</div>
+                            <div className="mt-1">feature1, feature2, ..., feature{networkReqs.inputShape[0]}, label</div>
+                            <div>0.5, 0.3, ..., 0.8, class_A</div>
+                            <div>0.2, 0.7, ..., 0.4, class_B</div>
+                            <div>0.9, 0.1, ..., 0.6, class_A</div>
+                            <div className="text-muted-foreground">...</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Each row = 1 sample. Last column = target label.
+                            Numeric values work best.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {networkReqs.modelType === 'NLP/Text' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> CSV Format for Text Classification:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># text column + label column</div>
+                            <div className="mt-1">text, sentiment</div>
+                            <div>"I love this product!", positive</div>
+                            <div>"Terrible experience.", negative</div>
+                            <div>"It's okay I guess", neutral</div>
+                            <div className="text-muted-foreground">...</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Text will be tokenized to {networkReqs.seqLength || 100} tokens.
+                            Vocab size: {networkReqs.vocabSize || 10000}. Use Sample → Text/NLP to test.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Quick Generate Button */}
+                      <div className="pt-2 border-t border-border/50">
+                        <p className="text-[10px] text-muted-foreground mb-2">
+                          🚀 Quick start: Use Sample data to test your network
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+              
               {/* Data Upload Section */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
@@ -740,6 +1504,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 
                 <Tabs value={dataType} onValueChange={setDataType}>
                   <TabsList className="grid grid-cols-3 w-full h-9 sm:h-10">
+                    <TabsTrigger value="datasets" className="text-xs sm:text-sm" data-testid="tab-datasets">
+                      <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Datasets
+                    </TabsTrigger>
                     <TabsTrigger value="csv" className="text-xs sm:text-sm" data-testid="tab-csv">
                       <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       CSV
@@ -748,11 +1516,65 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       <Image className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Images
                     </TabsTrigger>
-                    <TabsTrigger value="sample" className="text-xs sm:text-sm" data-testid="tab-sample">
-                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      Sample
-                    </TabsTrigger>
                   </TabsList>
+
+                  {/* Sample Datasets Tab */}
+                  <TabsContent value="datasets" className="space-y-3 mt-3 sm:mt-4">
+                    {/* Quick Dataset Cards */}
+                    <div className="space-y-2">
+                      {sampleDatasets
+                        .filter(ds => !currentTemplateId || ds.compatibleTemplates.includes(currentTemplateId))
+                        .slice(0, 4)
+                        .map((dataset) => (
+                          <div
+                            key={dataset.id}
+                            className={`p-3 rounded-lg border cursor-pointer transition-all hover:border-primary/50 ${
+                              selectedDatasetInfo?.id === dataset.id 
+                                ? 'bg-primary/10 border-primary' 
+                                : 'bg-secondary/30 border-border'
+                            }`}
+                            onClick={() => handleSelectSampleDataset({
+                              ...dataset,
+                              rawData: dataset.getData()
+                            })}
+                            data-testid={`quick-dataset-${dataset.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{dataset.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm truncate">{dataset.name}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {dataset.description}
+                                </div>
+                              </div>
+                              {selectedDatasetInfo?.id === dataset.id && (
+                                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* Browse All Button */}
+                    <Button
+                      variant="outline"
+                      className="w-full text-xs sm:text-sm"
+                      onClick={() => setShowDatasetBrowser(true)}
+                      data-testid="browse-all-datasets-btn"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-2" />
+                      Browse All Datasets
+                    </Button>
+                    
+                    {/* Dataset Info */}
+                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground/80">🎯 Recommended:</strong> Datasets shown are compatible with your current model template.
+                        <br />
+                        <strong className="text-foreground/80">💾 Download:</strong> Click "Browse All" to preview data and download CSVs.
+                      </p>
+                    </div>
+                  </TabsContent>
 
                   <TabsContent value="csv" className="space-y-3 mt-3 sm:mt-4">
                     <input
@@ -781,23 +1603,45 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <br />
                         <strong className="text-foreground/80">Example:</strong> feature1, feature2, ..., label
                         <br />
-                        <strong className="text-foreground/80">Tip:</strong> Numeric values work best. Match input size to your Input layer.
+                        <strong className="text-foreground/80">For LSTM:</strong> Each row = 1 timestep. Use sliding window for sequences.
                       </p>
                     </div>
                     
                     {columns.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm">Target Column</Label>
-                        <Select value={targetColumn} onValueChange={setTargetColumn}>
-                          <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-target-column">
-                            <SelectValue placeholder="Select target" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {columns.map(col => (
-                              <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-3">
+                        {/* Show text column selector for NLP models */}
+                        {(networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding) && (
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              Text Column
+                            </Label>
+                            <Select value={textColumn} onValueChange={setTextColumn}>
+                              <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-text-column">
+                                <SelectValue placeholder="Select text column" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {columns.map(col => (
+                                  <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm">Target Column</Label>
+                          <Select value={targetColumn} onValueChange={setTargetColumn}>
+                            <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-target-column">
+                              <SelectValue placeholder="Select target" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {columns.map(col => (
+                                <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     )}
                   </TabsContent>
@@ -832,38 +1676,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         <strong className="text-foreground/80">Example:</strong> images/cat/*.jpg, images/dog/*.jpg
                         <br />
                         <strong className="text-foreground/80">Tip:</strong> Use Conv2D layers for image data, or Dense with Input size 784 for 28x28 grayscale.
-                      </p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('classification')}
-                        data-testid="generate-classification-btn"
-                      >
-                        Classification
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('regression')}
-                        data-testid="generate-regression-btn"
-                      >
-                        Regression
-                      </Button>
-                    </div>
-                    
-                    {/* Sample Instructions */}
-                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        <strong className="text-foreground/80">Classification:</strong> 500 samples, 10 features, 3 classes. Use Softmax output.
-                        <br />
-                        <strong className="text-foreground/80">Regression:</strong> 500 samples, 10 features, 1 output. Use Linear output.
-                        <br />
-                        <strong className="text-foreground/80">Tip:</strong> Great for testing your network architecture quickly.
                       </p>
                     </div>
                   </TabsContent>
@@ -1337,5 +2149,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         </motion.div>
       </motion.div>
     </AnimatePresence>
+    
+    {/* Dataset Browser Modal */}
+    <DatasetBrowserModal
+      isOpen={showDatasetBrowser}
+      onClose={() => setShowDatasetBrowser(false)}
+      onSelectDataset={handleSelectSampleDataset}
+      currentTemplateId={currentTemplateId}
+    />
+    </>
   );
 };

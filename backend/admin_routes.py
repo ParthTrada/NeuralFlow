@@ -139,7 +139,7 @@ def create_admin_routes(db):
                 "updated_at": 1,
                 "is_public": 1,
                 "share_token": 1
-            }).sort("created_at", -1)
+            }).sort("created_at", -1).limit(100)
             
             models = []
             async for doc in cursor:
