@@ -149,7 +149,7 @@ export default function Builder() {
   };
 
   // Load template - adds to existing canvas instead of replacing
-  const handleLoadTemplate = useCallback((templateNodes, templateEdges, templateName) => {
+  const handleLoadTemplate = useCallback((templateNodes, templateEdges, templateName, templateId = null) => {
     // Generate unique IDs for the new nodes
     const timestamp = Date.now();
     const idMap = {};
@@ -193,6 +193,11 @@ export default function Builder() {
     
     setNodes(updatedNodes);
     setEdges(updatedEdges);
+    
+    // Track template ID for dataset recommendations
+    if (templateId) {
+      setCurrentTemplateId(templateId);
+    }
     
     // Record to history (immediate for discrete action)
     recordHistory(updatedNodes, updatedEdges, true);
