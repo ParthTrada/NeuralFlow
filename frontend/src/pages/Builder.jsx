@@ -50,6 +50,7 @@ export default function Builder() {
   const [isModelsOpen, setIsModelsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+  const [generatedKerasCode, setGeneratedKerasCode] = useState('');
   const [trainedWeights, setTrainedWeights] = useState(null);
   const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
   const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
