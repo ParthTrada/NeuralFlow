@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
-import { parseCSV, processCSVData, processTextCSVData, processImageFolder, processCharLevelData, generateText, buildCharVocabulary } from '../utils/dataProcessor';
+import { parseCSV, processCSVData, processTextCSVData, processImageFolder, processCharLevelData, generateText, buildCharVocabulary, generateShakespeareText, initShakespeareMarkov } from '../utils/dataProcessor';
 import { sampleDatasets, downloadDatasetCSV, shakespeareText } from '../utils/sampleDatasets';
 import DatasetBrowserModal from './DatasetBrowserModal';
 
