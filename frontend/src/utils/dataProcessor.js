@@ -1,6 +1,100 @@
 import * as tf from '@tensorflow/tfjs';
 import Papa from 'papaparse';
 
+// Simple tokenizer for text data
+const simpleTokenize = (text) => {
+  if (!text || typeof text !== 'string') return [];
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+};
+
+// Build vocabulary from text data
+export const buildVocabulary = (texts, maxVocabSize = 10000) => {
+  const wordCounts = {};
+  
+  texts.forEach(text => {
+    const tokens = simpleTokenize(text);
+    tokens.forEach(token => {
+      wordCounts[token] = (wordCounts[token] || 0) + 1;
+    });
+  });
+  
+  // Sort by frequency and take top maxVocabSize
+  const sortedWords = Object.entries(wordCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxVocabSize - 2) // Reserve space for PAD and UNK
+    .map(([word]) => word);
+  
+  // Create word to index mapping
+  const vocab = { '<PAD>': 0, '<UNK>': 1 };
+  sortedWords.forEach((word, idx) => {
+    vocab[word] = idx + 2;
+  });
+  
+  return vocab;
+};
+
+// Tokenize text to indices using vocabulary
+export const textToIndices = (text, vocab, maxLength = 100) => {
+  const tokens = simpleTokenize(text);
+  const indices = tokens.slice(0, maxLength).map(token => vocab[token] || 1); // 1 = UNK
+  
+  // Pad to maxLength
+  while (indices.length < maxLength) {
+    indices.push(0); // 0 = PAD
+  }
+  
+  return indices;
+};
+
+// Process text CSV data (text column + label column)
+export const processTextCSVData = (data, textColumn, targetColumn, options = {}) => {
+  const { maxLength = 100, vocabSize = 10000 } = options;
+  
+  if (!data || data.length === 0) {
+    throw new Error('No data provided');
+  }
+  
+  // Extract texts and targets
+  const texts = data.map(row => String(row[textColumn] || ''));
+  const targets = data.map(row => row[targetColumn]);
+  
+  // Build vocabulary
+  const vocab = buildVocabulary(texts, vocabSize);
+  console.log(`Built vocabulary with ${Object.keys(vocab).length} words`);
+  
+  // Convert texts to indices
+  const sequences = texts.map(text => textToIndices(text, vocab, maxLength));
+  
+  // Create tensor
+  const xTensor = tf.tensor2d(sequences, [sequences.length, maxLength], 'int32');
+  
+  // Process targets
+  const uniqueTargets = [...new Set(targets)];
+  
+  if (uniqueTargets.length < 2) {
+    throw new Error('Need at least 2 classes for text classification');
+  }
+  
+  const targetIndices = targets.map(t => uniqueTargets.indexOf(t));
+  const yTensor = tf.oneHot(tf.tensor1d(targetIndices, 'int32'), uniqueTargets.length);
+  
+  return {
+    xTrain: xTensor,
+    yTrain: yTensor,
+    inputShape: [maxLength],
+    numClasses: uniqueTargets.length,
+    vocab,
+    vocabSize: Object.keys(vocab).length,
+    uniqueTargets,
+    type: 'text',
+    description: `Text classification (${maxLength} tokens, ${uniqueTargets.length} classes)`,
+  };
+};
+
 // Parse CSV file
 export const parseCSV = (file) => {
   return new Promise((resolve, reject) => {
