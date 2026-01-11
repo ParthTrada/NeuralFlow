@@ -206,14 +206,13 @@ export default function Landing() {
             </Button>
             <button
               onClick={() => navigate('/guide')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 isDark 
                   ? 'text-zinc-400 hover:text-white hover:bg-white/5' 
                   : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
               }`}
               data-testid="guide-link"
             >
-              <BookOpen className="w-4 h-4" />
               Guide
             </button>
             {[
