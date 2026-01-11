@@ -32,6 +32,12 @@ export const layerCategories = {
         color: 'hsl(187, 95%, 42%)',
         description: 'Input layer - defines the shape of input data',
         tip: 'The entry point of your network. Choose input type based on your data: Flat for vectors, Image for CNN, Sequence for RNN/Transformer.',
+        learnMore: {
+          whatItDoes: 'Defines the shape and type of data your network expects. No computation happens here - it just specifies the input format.',
+          whenToUse: 'Every network needs exactly one Input layer at the start.',
+          inputTypes: 'Flat (1D vector for tabular data), Image (3D for CNNs), Sequence (2D for RNNs/Transformers), Text (token IDs for NLP).',
+          example: 'MNIST: Flat [784] or Image [1, 28, 28]. ImageNet: Image [3, 224, 224]. Text: [128] tokens.'
+        },
         defaultConfig: {
           inputType: 'flat',
           inputSize: 784,
@@ -49,6 +55,12 @@ export const layerCategories = {
         color: 'hsl(263, 70%, 50%)',
         description: 'Fully connected layer',
         tip: 'Every neuron connects to all neurons in the previous layer. Great for learning complex patterns. Use ReLU activation for hidden layers.',
+        learnMore: {
+          whatItDoes: 'Performs y = activation(Wx + b) where W is a weight matrix. Each output neuron sees ALL inputs.',
+          whenToUse: 'For learning non-linear relationships. Stack multiple Dense layers for deeper representations. Always use after Flatten for CNNs.',
+          activation: 'ReLU for hidden layers (fast, prevents vanishing gradients). Softmax for classification output. Linear/None for regression.',
+          example: 'Dense(128, relu) → Dense(64, relu) → Dense(10, softmax) for 10-class classification.'
+        },
         defaultConfig: {
           inputSize: 784,
           units: 128,
@@ -62,6 +74,12 @@ export const layerCategories = {
         color: 'hsl(263, 70%, 50%)',
         description: '2D Convolutional layer for image data',
         tip: 'Slides a small filter across the image to detect features like edges, textures, and shapes. Essential for image recognition.',
+        learnMore: {
+          whatItDoes: 'Slides learned filters (kernels) across the image. Early layers detect edges, later layers detect complex patterns like faces.',
+          whenToUse: 'For any image-related task: classification, detection, segmentation. Stack Conv→Pool→Conv→Pool for deeper features.',
+          keyParams: 'Filters: more = more patterns learned. Kernel size: 3x3 is standard. Padding: "same" keeps dimensions, "valid" shrinks.',
+          example: 'Conv2D(32, 3x3) → MaxPool → Conv2D(64, 3x3) → MaxPool → Flatten → Dense. Typical CNN pattern.'
+        },
         defaultConfig: {
           inChannels: 1,
           outChannels: 32,
@@ -77,6 +95,12 @@ export const layerCategories = {
         color: 'hsl(263, 70%, 50%)',
         description: 'Max pooling operation',
         tip: 'Reduces spatial dimensions by taking the maximum value in each region. Makes the network more efficient and adds translation invariance.',
+        learnMore: {
+          whatItDoes: 'Divides input into non-overlapping regions and outputs the maximum value from each. Reduces dimensions by factor of pool_size.',
+          whenToUse: 'After Conv2D layers to reduce spatial dimensions and computation. Provides translation invariance (small shifts don\'t change output).',
+          vsAvgPool: 'MaxPool preserves the strongest activations (better for detecting features). AvgPool smooths (better for some tasks).',
+          example: '28x28 image → MaxPool2D(2,2) → 14x14. Reduces parameters by 4x!'
+        },
         defaultConfig: {
           kernelSize: 2,
           stride: 2
@@ -89,6 +113,12 @@ export const layerCategories = {
         color: 'hsl(38, 92%, 50%)',
         description: 'Regularization layer to prevent overfitting',
         tip: 'Randomly "drops" neurons during training (sets to 0). Prevents overfitting by forcing the network to not rely on specific neurons. Use 0.2-0.5 rate.',
+        learnMore: {
+          whatItDoes: 'During training, randomly sets a fraction of inputs to 0. During inference, all neurons are used but scaled.',
+          whenToUse: 'Between Dense layers to prevent overfitting. Higher rate (0.5) for large networks, lower (0.2) for small ones.',
+          keyInsight: 'Acts like training an ensemble of networks. Each forward pass uses a different "sub-network".',
+          bestPractice: 'Don\'t use after the final output layer. Typical: Dense→Dropout→Dense→Dropout→Output.'
+        },
         defaultConfig: {
           rate: 0.5
         }
