@@ -150,12 +150,14 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [ ] More PDF document types support (scanned PDFs with OCR)
 
 ### Future Enhancements (Advanced)
-- [ ] **Advanced Transformer Support:**
-  - Multi-input/multi-output node connections (for skip connections)
-  - TransformerEncoderBlock and TransformerDecoderBlock composite layers
-  - Cross-attention connections between encoder and decoder
-  - Full "Attention is All You Need" architecture support
+- [x] **Advanced Transformer Support:** ✅ COMPLETED
+  - PositionalEncoding layer with max_len, d_model, dropout config
+  - TransformerEncoderBlock composite layer (stacks N encoder layers internally)
+  - TransformerDecoderBlock composite layer
+  - GlobalAvgPool1D for sequence pooling
+  - Updated Transformer template to BERT-style (Embedding → PosEnc → Encoder → Pool → Output)
 - [ ] **Graph Architecture Enhancements:**
+  - Multi-input/multi-output node connections (for skip connections)
   - Residual/Skip connections (Add layers with multiple inputs)
   - Branching and merging paths
   - Parallel layer execution visualization
