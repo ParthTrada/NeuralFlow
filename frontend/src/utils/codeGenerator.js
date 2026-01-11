@@ -506,6 +506,19 @@ export const generateKerasCode = (nodes, edges) => {
         layerLines.push(`    layers.Dense(${numClasses}, activation=${outputActivation}, name='output'),`);
         break;
 
+      case 'Add':
+        layerLines.push(`    # Add (Skip Connection) - requires Functional API`);
+        layerLines.push(`    # In functional API: output = layers.Add()([input1, input2])`);
+        layerLines.push(`    layers.Add(name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
+      case 'Concatenate':
+        const concatAxis = config.axis !== undefined ? config.axis : -1;
+        layerLines.push(`    # Concatenate - requires Functional API`);
+        layerLines.push(`    # In functional API: output = layers.Concatenate(axis=${concatAxis})([input1, input2])`);
+        layerLines.push(`    layers.Concatenate(axis=${concatAxis}, name='${label.replace(/[^a-zA-Z0-9_]/g, '_')}'),`);
+        break;
+
       default:
         // Handle custom labeled layers
         if (label.toLowerCase().includes('encoder') || label.toLowerCase().includes('decoder') || label.toLowerCase().includes('latent')) {
