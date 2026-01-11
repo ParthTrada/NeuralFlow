@@ -375,21 +375,48 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }
       
       if (isTextDataset) {
-        // Process as text dataset - use SAME seqLength as auto-adjustment
-        const processed = processTextCSVData(
-          rawData, 
-          datasetInfo.textColumn, 
-          datasetInfo.targetColumn,
-          { maxLength: textSeqLength, vocabSize: textVocabSize }
-        );
-        setProcessedData({
-          ...processed,
-          raw: rawData,
-          type: 'text'
-        });
-        setColumns(Object.keys(rawData[0]));
-        setTextColumn(datasetInfo.textColumn);
-        setTargetColumn(datasetInfo.targetColumn);
+        // Check if this is a text generation dataset (like Shakespeare)
+        const isTextGeneration = datasetInfo.isTextGeneration || datasetInfo.category === 'text-generation';
+        
+        if (isTextGeneration) {
+          // Process as character-level text generation dataset
+          const textGenData = datasetInfo.getData();
+          const processed = processCharLevelData(textGenData, {
+            seqLength: datasetInfo.seqLength || 64
+          });
+          
+          setProcessedData({
+            ...processed,
+            raw: textGenData,
+            type: 'text-generation',
+            isTextGeneration: true,
+            charToIdx: processed.charToIdx,
+            idxToChar: processed.idxToChar,
+            fullText: processed.fullText,
+          });
+          setColumns(['input', 'target']);
+          setTextColumn('input');
+          setTargetColumn('target');
+          
+          // Set a default generation prompt from the dataset
+          setGenerationPrompt(processed.fullText.slice(0, 64));
+        } else {
+          // Process as text classification dataset - use SAME seqLength as auto-adjustment
+          const processed = processTextCSVData(
+            rawData, 
+            datasetInfo.textColumn, 
+            datasetInfo.targetColumn,
+            { maxLength: textSeqLength, vocabSize: textVocabSize }
+          );
+          setProcessedData({
+            ...processed,
+            raw: rawData,
+            type: 'text'
+          });
+          setColumns(Object.keys(rawData[0]));
+          setTextColumn(datasetInfo.textColumn);
+          setTargetColumn(datasetInfo.targetColumn);
+        }
       } else if (isSequenceDataset) {
         // Process as sequence dataset - use SAME seqLength as auto-adjustment
         const processed = processCSVData(rawData, datasetInfo.targetColumn, {
