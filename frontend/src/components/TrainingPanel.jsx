@@ -526,17 +526,28 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     const denseNodes = updatedNodes.filter(n => n.data.layerType === 'Dense');
     const conv2dNodes = updatedNodes.filter(n => n.data.layerType === 'Conv2D');
     
+    // Check if model has Conv2D layers (CNN vs MLP)
+    const hasConv2D = conv2dNodes.length > 0;
+    
     // Adjust Input layer based on dataset type
     if (inputNode) {
       const inputIdx = updatedNodes.findIndex(n => n.id === inputNode.id);
       const newConfig = { ...inputNode.data.config };
       
       if (datasetInfo.category === 'image') {
-        // For image datasets - use dimensions from dataset config
-        newConfig.inputType = 'image';
-        newConfig.height = imgConfig.height;
-        newConfig.width = imgConfig.width;
-        newConfig.channels = imgConfig.channels;
+        if (hasConv2D) {
+          // For CNN models - use image input type (4D tensor)
+          newConfig.inputType = 'image';
+          newConfig.height = imgConfig.height;
+          newConfig.width = imgConfig.width;
+          newConfig.channels = imgConfig.channels;
+        } else {
+          // For MLP models - use flat input type (2D tensor)
+          // Image pixels are flattened: height * width * channels
+          const flattenedSize = imgConfig.height * imgConfig.width * imgConfig.channels;
+          newConfig.inputType = 'flat';
+          newConfig.inputSize = flattenedSize;
+        }
         hasChanges = true;
       } else if (datasetInfo.category === 'text') {
         // For text datasets - use consistent sequence length
