@@ -340,15 +340,19 @@ export default function Builder() {
   }, [nodes.length, setNodes, setEdges]);
 
   const handleShowCode = useCallback(() => {
-    const code = generatePyTorchCode(nodes, edges);
-    setGeneratedCode(code);
+    const pytorchCode = generatePyTorchCode(nodes, edges);
+    const kerasCode = generateKerasCode(nodes, edges);
+    setGeneratedCode(pytorchCode);
+    setGeneratedKerasCode(kerasCode);
     setIsCodeModalOpen(true);
   }, [nodes, edges]);
 
-  const handleDownloadCode = useCallback(() => {
-    downloadCode(generatedCode);
-    toast.success('Code downloaded!');
-  }, [generatedCode]);
+  const handleDownloadCode = useCallback((framework = 'pytorch') => {
+    const code = framework === 'pytorch' ? generatedCode : generatedKerasCode;
+    const filename = framework === 'pytorch' ? 'neural_network_pytorch.py' : 'neural_network_keras.py';
+    downloadCode(code, filename);
+    toast.success(`${framework === 'pytorch' ? 'PyTorch' : 'Keras'} code downloaded!`);
+  }, [generatedCode, generatedKerasCode]);
 
   const handleRun = useCallback(() => {
     if (nodes.length === 0) {
