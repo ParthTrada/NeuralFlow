@@ -355,7 +355,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     
     try {
       const rawData = datasetInfo.rawData;
-      const isTextDataset = datasetInfo.category === 'text';
+      const isTextDataset = datasetInfo.category === 'text' || datasetInfo.category === 'text-generation';
       const isSequenceDataset = datasetInfo.category === 'sequence';
       const isImageDataset = datasetInfo.category === 'image';
       
