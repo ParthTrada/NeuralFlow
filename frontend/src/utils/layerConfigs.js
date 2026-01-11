@@ -44,7 +44,12 @@ import {
   Grip,
   SquareStack,
   Podcast,
-  AudioWaveform
+  AudioWaveform,
+  // Additional unique icons
+  ArrowDownNarrowWide,
+  AlignVerticalSpaceAround,
+  Scan,
+  Grid2X2
 } from 'lucide-react';
 
 // Layers that support multiple inputs (for skip connections)
