@@ -513,6 +513,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     const textSeqLength = 64; // Consistent sequence length for text models
     const textVocabSize = datasetInfo.vocabSize || 10000;
     
+    // Get image config from dataset or use defaults
+    const imgConfig = datasetInfo.imageConfig || { height: 28, width: 28, channels: 1 };
+    
     // Find all relevant layers
     const inputNode = updatedNodes.find(n => n.data.layerType === 'Input');
     const outputNode = updatedNodes.find(n => n.data.layerType === 'Output');
@@ -521,6 +524,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     const multiHeadNodes = updatedNodes.filter(n => n.data.layerType === 'MultiHeadAttention');
     const lstmNodes = updatedNodes.filter(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
     const denseNodes = updatedNodes.filter(n => n.data.layerType === 'Dense');
+    const conv2dNodes = updatedNodes.filter(n => n.data.layerType === 'Conv2D');
     
     // Adjust Input layer based on dataset type
     if (inputNode) {
@@ -528,11 +532,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const newConfig = { ...inputNode.data.config };
       
       if (datasetInfo.category === 'image') {
-        // For image datasets (MNIST, Fashion-MNIST style)
+        // For image datasets - use dimensions from dataset config
         newConfig.inputType = 'image';
-        newConfig.height = 28;
-        newConfig.width = 28;
-        newConfig.channels = 1;
+        newConfig.height = imgConfig.height;
+        newConfig.width = imgConfig.width;
+        newConfig.channels = imgConfig.channels;
         hasChanges = true;
       } else if (datasetInfo.category === 'text') {
         // For text datasets - use consistent sequence length
