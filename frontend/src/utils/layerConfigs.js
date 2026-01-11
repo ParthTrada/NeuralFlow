@@ -138,7 +138,7 @@ export const layerCategories = {
       {
         type: 'Dropout',
         label: 'Dropout',
-        icon: Scissors,
+        icon: Shuffle,
         color: 'hsl(38, 92%, 50%)',
         description: 'Regularization layer to prevent overfitting',
         tip: 'Randomly "drops" neurons during training (sets to 0). Prevents overfitting by forcing the network to not rely on specific neurons. Use 0.2-0.5 rate.',
@@ -155,8 +155,8 @@ export const layerCategories = {
       {
         type: 'Flatten',
         label: 'Flatten',
-        icon: Minimize2,
-        color: 'hsl(263, 70%, 50%)',
+        icon: RectangleHorizontal,
+        color: 'hsl(280, 60%, 55%)',
         description: 'Flatten multi-dimensional input to 1D',
         tip: 'Converts 2D/3D feature maps into a 1D vector. Required before Dense layers when coming from Conv2D layers.',
         learnMore: {
@@ -170,8 +170,8 @@ export const layerCategories = {
       {
         type: 'GlobalAvgPool1D',
         label: 'Global Avg Pool 1D',
-        icon: Minimize2,
-        color: 'hsl(263, 70%, 50%)',
+        icon: Shrink,
+        color: 'hsl(170, 60%, 45%)',
         description: 'Global average pooling for sequences',
         tip: 'Averages across the sequence dimension, converting [batch, seq_len, features] to [batch, features]. Used after Transformer encoder for classification. Unlike Flatten, it reduces sequence length to 1 by taking the mean, preserving the feature dimension.',
         learnMore: {
