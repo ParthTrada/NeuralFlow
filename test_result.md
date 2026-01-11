@@ -210,6 +210,18 @@ frontend:
         agent: "main"
         comment: "Fixed by: 1) Added currentModelId state in Builder.jsx to track loaded model, 2) Passed modelId prop to TrainingPanel, 3) Added useEffect in TrainingPanel to reset all training state when modelId changes. Now when loading a different saved model, training panel resets: trainingHistory, status, predictions, processed data, etc."
 
+  - task: "LSTM Template Model Testing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/LayerPalette.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "LSTM template implemented with Input → LSTM → Dropout → LSTM → Dense → Output layers. Sequence data generation added to dataProcessor.js. Input shape detection fixed for sequence data in tensorflowModel.js. Training panel supports sequence data generation via 'Sequence' button."
+
   - task: "Admin Dashboard Page"
     implemented: true
     working: true
