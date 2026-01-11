@@ -149,6 +149,17 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [ ] Sentiment analysis pre-training for Text Classifier
 - [ ] More PDF document types support (scanned PDFs with OCR)
 
+### Future Enhancements (Advanced)
+- [ ] **Advanced Transformer Support:**
+  - Multi-input/multi-output node connections (for skip connections)
+  - TransformerEncoderBlock and TransformerDecoderBlock composite layers
+  - Cross-attention connections between encoder and decoder
+  - Full "Attention is All You Need" architecture support
+- [ ] **Graph Architecture Enhancements:**
+  - Residual/Skip connections (Add layers with multiple inputs)
+  - Branching and merging paths
+  - Parallel layer execution visualization
+
 ## Test Reports
 - Latest test run: Jan 11, 2025 - 9 tests passed (pytest)
 - Test file: /app/tests/test_pdf_qa_and_text_classifier.py
