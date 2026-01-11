@@ -14,7 +14,8 @@ import {
   Moon,
   Menu,
   X,
-  Github
+  Github,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { NetworkShowcase } from '../components/NetworkShowcase';
