@@ -220,17 +220,10 @@ const Guide = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <GuideCard className="py-10">
-                <div className="flex items-center justify-center gap-3 sm:gap-6 flex-wrap">
-                  <NodeBlock label="Input" sublabel="4 features" color="from-blue-500 to-blue-600" />
-                  <ConnectionArrow />
-                  <NodeBlock label="Dense" sublabel="64 units" color="from-violet-500 to-violet-600" />
-                  <ConnectionArrow />
-                  <NodeBlock label="Dense" sublabel="32 units" color="from-violet-500 to-violet-600" />
-                  <ConnectionArrow />
-                  <NodeBlock label="Output" sublabel="3 classes" color="from-emerald-500 to-emerald-600" />
-                </div>
-              </GuideCard>
+              <ScreenshotCard 
+                src={SCREENSHOTS.canvas} 
+                alt="Visual canvas showing connected neural network layers" 
+              />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
