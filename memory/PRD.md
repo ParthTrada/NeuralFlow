@@ -131,7 +131,7 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - [ ] Production Google Auth reliability (user verification pending)
 
 ### P1 (High Priority)
-- [ ] TensorFlow/Keras code generation option
+- [x] TensorFlow/Keras code generation option ✅ COMPLETED
 - [ ] Undo/Redo functionality
 - [ ] Backend-based training for larger models
 
