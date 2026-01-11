@@ -23,8 +23,13 @@ export const buildTFModel = (nodes, edges) => {
   if (inputNode?.data?.config) {
     const inputConfig = inputNode.data.config;
     
+    // Check for text input (NLP/Embedding)
+    if (inputConfig.inputType === 'text' || inputConfig.vocabSize) {
+      const seqLength = inputConfig.seqLength || 100;
+      inputShape = [seqLength]; // For embedding, input is 1D sequence of token IDs
+    }
     // Check for sequence input (LSTM/RNN)
-    if (inputConfig.inputType === 'sequence' || inputConfig.seqLength) {
+    else if (inputConfig.inputType === 'sequence' || inputConfig.seqLength) {
       const seqLength = inputConfig.seqLength || 50;
       const features = inputConfig.features || inputConfig.inputSize || 100;
       inputShape = [seqLength, features];
@@ -145,6 +150,15 @@ export const buildTFModel = (nodes, edges) => {
           model.add(tf.layers.gru({
             units: config.hiddenSize || 64,
             returnSequences: gruReturnSeq,
+            inputShape: isFirstLayer ? inputShape : undefined,
+          }));
+          break;
+
+        case 'Embedding':
+          model.add(tf.layers.embedding({
+            inputDim: config.vocabSize || 10000,
+            outputDim: config.embedDim || 128,
+            inputLength: inputShape[0], // sequence length
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
           break;
