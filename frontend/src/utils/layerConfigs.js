@@ -57,7 +57,7 @@ export const layerCategories = {
       {
         type: 'Input',
         label: 'Input',
-        icon: CircleDot,
+        icon: Radio,
         color: 'hsl(187, 95%, 42%)',
         description: 'Input layer - defines the shape of input data',
         tip: 'The entry point of your network. Choose input type based on your data: Flat for vectors, Image for CNN, Sequence for RNN/Transformer.',
@@ -99,8 +99,8 @@ export const layerCategories = {
       {
         type: 'Conv2D',
         label: 'Conv2D',
-        icon: Layers,
-        color: 'hsl(263, 70%, 50%)',
+        icon: LayoutGrid,
+        color: 'hsl(220, 80%, 55%)',
         description: '2D Convolutional layer for image data',
         tip: 'Slides a small filter across the image to detect features like edges, textures, and shapes. Essential for image recognition.',
         learnMore: {
@@ -120,8 +120,8 @@ export const layerCategories = {
       {
         type: 'MaxPool2D',
         label: 'MaxPool2D',
-        icon: Maximize2,
-        color: 'hsl(263, 70%, 50%)',
+        icon: ChevronDownSquare,
+        color: 'hsl(200, 70%, 50%)',
         description: 'Max pooling operation',
         tip: 'Reduces spatial dimensions by taking the maximum value in each region. Makes the network more efficient and adds translation invariance.',
         learnMore: {
