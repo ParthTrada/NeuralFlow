@@ -135,7 +135,8 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         setPosition({ 
           top: '50%', 
           left: '50%', 
-          transform: 'translate(-50%, -50%)' 
+          transform: 'translate(-50%, -50%)',
+          maxWidth: isMobile ? 'calc(100vw - 32px)' : '360px',
         });
         return;
       }
@@ -147,7 +148,8 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
           setPosition({ 
             top: '50%', 
             left: '50%', 
-            transform: 'translate(-50%, -50%)' 
+            transform: 'translate(-50%, -50%)',
+            maxWidth: 'calc(100vw - 32px)',
           });
           return;
         }
@@ -160,7 +162,8 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         setPosition({ 
           top: '50%', 
           left: '50%', 
-          transform: 'translate(-50%, -50%)' 
+          transform: 'translate(-50%, -50%)',
+          maxWidth: isMobile ? 'calc(100vw - 32px)' : '360px',
         });
         return;
       }
