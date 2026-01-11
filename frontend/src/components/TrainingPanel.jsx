@@ -1824,7 +1824,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     
                     <Button 
                       onClick={handleMiniGPTGeneration}
-                      disabled={isGenerating || !generationPrompt.trim() || isTraining || isLoadingMiniGPT || (miniGPTTrainingFailed && !useMarkovFallback)}
+                      disabled={isGenerating || !generationPrompt.trim() || isLoadingMiniGPT}
                       className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                       data-testid="generate-text-btn"
                     >
@@ -1833,20 +1833,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                           Generating...
                         </>
-                      ) : isTraining || isLoadingMiniGPT ? (
+                      ) : isLoadingMiniGPT ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          Training... Please wait
-                        </>
-                      ) : miniGPTTrainingFailed && !useMarkovFallback ? (
-                        <>
-                          <AlertCircle className="w-4 h-4 mr-2" />
-                          Enable Markov Chain Above
+                          Loading...
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 mr-2" />
-                          Generate Text {useMarkovFallback || !miniGPTTrainingComplete ? '(Markov)' : '(Neural)'}
+                          Generate Text {useMarkovFallback ? '(Markov)' : '(Neural - Demo)'}
                         </>
                       )}
                     </Button>
