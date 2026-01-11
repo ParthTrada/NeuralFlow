@@ -180,6 +180,141 @@ export const generateText = async (model, seedText, charToIdx, idxToChar, option
   return generated;
 };
 
+// ============================================
+// Markov Chain Text Generator for Shakespeare
+// ============================================
+
+// Build a character-level Markov chain from text
+export const buildMarkovChain = (text, order = 3) => {
+  const chain = {};
+  
+  for (let i = 0; i < text.length - order; i++) {
+    const state = text.slice(i, i + order);
+    const nextChar = text[i + order];
+    
+    if (!chain[state]) {
+      chain[state] = {};
+    }
+    chain[state][nextChar] = (chain[state][nextChar] || 0) + 1;
+  }
+  
+  // Convert counts to probabilities
+  for (const state in chain) {
+    const total = Object.values(chain[state]).reduce((a, b) => a + b, 0);
+    for (const char in chain[state]) {
+      chain[state][char] /= total;
+    }
+  }
+  
+  return chain;
+};
+
+// Sample from probability distribution with temperature
+const sampleFromDistribution = (probs, temperature = 1.0) => {
+  const chars = Object.keys(probs);
+  const weights = Object.values(probs);
+  
+  // Apply temperature
+  const scaledWeights = weights.map(w => Math.pow(w, 1 / temperature));
+  const sum = scaledWeights.reduce((a, b) => a + b, 0);
+  const normalizedWeights = scaledWeights.map(w => w / sum);
+  
+  // Sample
+  const random = Math.random();
+  let cumSum = 0;
+  for (let i = 0; i < chars.length; i++) {
+    cumSum += normalizedWeights[i];
+    if (random < cumSum) {
+      return chars[i];
+    }
+  }
+  return chars[chars.length - 1];
+};
+
+// Pre-built Shakespeare Markov chain (cached for performance)
+let shakespeareMarkovChain = null;
+let shakespeareText = null;
+
+// Initialize Shakespeare Markov chain
+export const initShakespeareMarkov = (text) => {
+  if (!shakespeareMarkovChain || shakespeareText !== text) {
+    console.log('Building Shakespeare Markov chain...');
+    shakespeareText = text;
+    shakespeareMarkovChain = buildMarkovChain(text, 4); // Order 4 for better quality
+    console.log('Markov chain built with', Object.keys(shakespeareMarkovChain).length, 'states');
+  }
+  return shakespeareMarkovChain;
+};
+
+// Generate Shakespeare-style text using Markov chain
+export const generateShakespeareText = (seedText, options = {}) => {
+  const {
+    length = 200,
+    temperature = 0.8,
+    onToken = null,
+    sourceText = null
+  } = options;
+  
+  // Initialize chain if needed
+  if (sourceText) {
+    initShakespeareMarkov(sourceText);
+  }
+  
+  if (!shakespeareMarkovChain) {
+    throw new Error('Markov chain not initialized. Call initShakespeareMarkov first.');
+  }
+  
+  const order = 4; // Must match the order used in buildMarkovChain
+  let currentText = seedText || '';
+  
+  // If seed is too short, pick a random starting point from the source
+  if (currentText.length < order && shakespeareText) {
+    const startIdx = Math.floor(Math.random() * (shakespeareText.length - 100));
+    currentText = shakespeareText.slice(startIdx, startIdx + order);
+  }
+  
+  let generated = '';
+  
+  for (let i = 0; i < length; i++) {
+    const state = currentText.slice(-order);
+    
+    if (shakespeareMarkovChain[state]) {
+      const nextChar = sampleFromDistribution(shakespeareMarkovChain[state], temperature);
+      generated += nextChar;
+      currentText += nextChar;
+      
+      if (onToken) {
+        onToken(nextChar, generated);
+      }
+    } else {
+      // Fallback: find a similar state or use random character
+      const states = Object.keys(shakespeareMarkovChain);
+      const similarStates = states.filter(s => s.slice(-2) === state.slice(-2));
+      
+      if (similarStates.length > 0) {
+        const randomState = similarStates[Math.floor(Math.random() * similarStates.length)];
+        const nextChar = sampleFromDistribution(shakespeareMarkovChain[randomState], temperature);
+        generated += nextChar;
+        currentText += nextChar;
+        
+        if (onToken) {
+          onToken(nextChar, generated);
+        }
+      } else {
+        // Ultimate fallback: add a space and continue
+        generated += ' ';
+        currentText += ' ';
+        
+        if (onToken) {
+          onToken(' ', generated);
+        }
+      }
+    }
+  }
+  
+  return generated;
+};
+
 // Build vocabulary from text data (word-level)
 
 // Build vocabulary from text data
