@@ -122,17 +122,29 @@ export const buildTFModel = (nodes, edges) => {
           break;
 
         case 'LSTM':
+          // Check if next layer is LSTM/GRU - if so, return sequences
+          const lstmIndex = layerNodes.indexOf(node);
+          const nextLayerAfterLSTM = layerNodes[lstmIndex + 1];
+          const lstmReturnSeq = nextLayerAfterLSTM && 
+            (nextLayerAfterLSTM.data.layerType === 'LSTM' || nextLayerAfterLSTM.data.layerType === 'GRU');
+          
           model.add(tf.layers.lstm({
             units: config.hiddenSize || 64,
-            returnSequences: false,
+            returnSequences: lstmReturnSeq,
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
           break;
 
         case 'GRU':
+          // Check if next layer is LSTM/GRU - if so, return sequences
+          const gruIndex = layerNodes.indexOf(node);
+          const nextLayerAfterGRU = layerNodes[gruIndex + 1];
+          const gruReturnSeq = nextLayerAfterGRU && 
+            (nextLayerAfterGRU.data.layerType === 'LSTM' || nextLayerAfterGRU.data.layerType === 'GRU');
+          
           model.add(tf.layers.gru({
             units: config.hiddenSize || 64,
-            returnSequences: false,
+            returnSequences: gruReturnSeq,
             inputShape: isFirstLayer ? inputShape : undefined,
           }));
           break;
