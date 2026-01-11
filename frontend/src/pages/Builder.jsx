@@ -56,9 +56,56 @@ export default function Builder() {
   const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
   const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
   
+  // History management for undo/redo
+  const history = useHistory({ nodes: [], edges: [] }, 50);
+  
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
   const [showLayerPalette, setShowLayerPalette] = useState(false);
+
+  // Record state changes to history
+  const recordHistory = useCallback((newNodes, newEdges, immediate = false) => {
+    history.record({ nodes: newNodes, edges: newEdges }, immediate);
+  }, [history]);
+
+  // Undo handler
+  const handleUndo = useCallback(() => {
+    const prevState = history.undo();
+    if (prevState) {
+      setNodes(prevState.nodes);
+      setEdges(prevState.edges);
+      toast.info('Undo');
+    }
+  }, [history, setNodes, setEdges]);
+
+  // Redo handler
+  const handleRedo = useCallback(() => {
+    const nextState = history.redo();
+    if (nextState) {
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      toast.info('Redo');
+    }
+  }, [history, setNodes, setEdges]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Z = Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y = Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   // Check screen size
   useEffect(() => {
