@@ -450,6 +450,7 @@ export default function Builder() {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         code={generatedCode}
+        kerasCode={generatedKerasCode}
         onDownload={handleDownloadCode}
         isDarkMode={isDarkMode}
       />
