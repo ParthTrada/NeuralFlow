@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -12,7 +12,11 @@ import {
   CheckCircle2,
   Loader2,
   X,
-  Save
+  Save,
+  Info,
+  FileText,
+  FolderTree,
+  Table
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
