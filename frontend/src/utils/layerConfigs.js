@@ -352,6 +352,11 @@ export const getConfigFields = (layerType, config = {}) => {
       { key: 'embedDim', label: 'Embed Dimension', type: 'number', min: 1 },
       { key: 'numHeads', label: 'Num Heads', type: 'number', min: 1 }
     ],
+    PositionalEncoding: [
+      { key: 'maxLen', label: 'Max Length', type: 'number', min: 1 },
+      { key: 'dModel', label: 'Model Dimension', type: 'number', min: 1 },
+      { key: 'dropout', label: 'Dropout Rate', type: 'number', min: 0, max: 1, step: 0.1 }
+    ],
     TransformerEncoder: [
       { key: 'dModel', label: 'Model Dimension', type: 'number', min: 1 },
       { key: 'nHead', label: 'Num Heads', type: 'number', min: 1 },
