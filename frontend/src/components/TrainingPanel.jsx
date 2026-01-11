@@ -1140,18 +1140,40 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     
                     {columns.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm">Target Column</Label>
-                        <Select value={targetColumn} onValueChange={setTargetColumn}>
-                          <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-target-column">
-                            <SelectValue placeholder="Select target" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {columns.map(col => (
-                              <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-3">
+                        {/* Show text column selector for NLP models */}
+                        {(networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding) && (
+                          <div className="space-y-2">
+                            <Label className="text-xs sm:text-sm flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              Text Column
+                            </Label>
+                            <Select value={textColumn} onValueChange={setTextColumn}>
+                              <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-text-column">
+                                <SelectValue placeholder="Select text column" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {columns.map(col => (
+                                  <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm">Target Column</Label>
+                          <Select value={targetColumn} onValueChange={setTargetColumn}>
+                            <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-target-column">
+                              <SelectValue placeholder="Select target" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {columns.map(col => (
+                                <SelectItem key={col} value={col} className="text-xs sm:text-sm">{col}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     )}
                   </TabsContent>
