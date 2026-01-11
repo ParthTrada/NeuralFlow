@@ -1446,6 +1446,42 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   };
 
+  // Handle Markov chain text generation (for Pre-trained Mini-GPT)
+  const handleMarkovGeneration = async () => {
+    if (!generationPrompt.trim()) {
+      toast.error('Please enter a prompt');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratedText('');
+
+    try {
+      // Initialize Markov chain with Shakespeare text
+      initShakespeareMarkov(shakespeareText);
+      
+      // Generate text using Markov chain (simulate streaming)
+      const result = generateShakespeareText(
+        generationPrompt,
+        {
+          length: generationLength,
+          temperature: generationTemp,
+          sourceText: shakespeareText,
+          onToken: (char, fullText) => {
+            setGeneratedText(fullText);
+          }
+        }
+      );
+
+      toast.success(`Generated ${result.length} characters!`);
+    } catch (error) {
+      console.error('Markov generation error:', error);
+      toast.error(`Generation failed: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Handle text generation (for Mini-GPT style models)
   const handleTextGeneration = async () => {
     if (!modelRef.current) {
