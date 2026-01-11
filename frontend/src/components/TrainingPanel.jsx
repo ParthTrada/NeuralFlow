@@ -817,7 +817,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             for (let h = 0; h < height; h++) {
               const rowData = [];
               for (let w = 0; w < width; w++) {
-                rowData.push([pixels[h * width + w] || 0]);
+                const pixelChannels = [];
+                for (let c = 0; c < channels; c++) {
+                  // For RGB images, pixels are stored as R,G,B,R,G,B... or as separate pixel_0, pixel_1...
+                  const pixelIdx = (h * width + w) * channels + c;
+                  pixelChannels.push(pixels[pixelIdx] || 0);
+                }
+                rowData.push(pixelChannels);
               }
               image.push(rowData);
             }
