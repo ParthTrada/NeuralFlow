@@ -1727,60 +1727,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       </p>
                     </div>
                   </TabsContent>
-
-                  <TabsContent value="sample" className="space-y-3 mt-3 sm:mt-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('classification')}
-                        data-testid="generate-classification-btn"
-                      >
-                        Classification
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('regression')}
-                        data-testid="generate-regression-btn"
-                      >
-                        Regression
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('sequence')}
-                        data-testid="generate-sequence-btn"
-                      >
-                        Sequence
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="text-xs sm:text-sm h-9 sm:h-10"
-                        onClick={() => handleGenerateSample('text')}
-                        data-testid="generate-text-btn"
-                      >
-                        <FileText className="w-3 h-3 mr-1" />
-                        Text/NLP
-                      </Button>
-                    </div>
-                    
-                    {/* What is Generate? */}
-                    <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        <strong className="text-foreground/80">🧪 Quick Testing with Synthetic Data</strong>
-                        <br />
-                        Generate dummy datasets to quickly test if your model architecture works correctly before using real data.
-                        <br /><br />
-                        <span className="text-[9px] sm:text-[10px] opacity-80">
-                        • <strong>Classification:</strong> MLP/Dense models
-                        • <strong>Regression:</strong> Prediction models
-                        • <strong>Sequence:</strong> LSTM/GRU models
-                        • <strong>Text:</strong> Embedding + LSTM models
-                        </span>
-                      </p>
-                    </div>
-                  </TabsContent>
                 </Tabs>
 
                 {/* Status indicator */}
