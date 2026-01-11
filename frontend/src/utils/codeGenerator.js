@@ -169,6 +169,25 @@ export const generatePyTorchCode = (nodes, edges) => {
         forwardCode = `${varName} = ${layerName}({{input}}, {{input}})  # (target, memory)`;
         break;
 
+      case 'PositionalEncoding':
+        const peMaxLen = config.maxLen || 512;
+        const peDModel = config.dModel || 256;
+        const peDropout = config.dropout || 0.1;
+        // Positional encoding is typically a custom module in PyTorch
+        layerCode = `# Positional Encoding (${label})
+        # Using learned positional embeddings
+        ${layerName}_pos = nn.Embedding(${peMaxLen}, ${peDModel})
+        ${layerName}_dropout = nn.Dropout(p=${peDropout})`;
+        forwardCode = `seq_len = {{input}}.size(1)
+        positions = torch.arange(seq_len, device={{input}}.device).unsqueeze(0)
+        ${varName} = ${layerName}_dropout({{input}} + ${layerName}_pos(positions))`;
+        break;
+
+      case 'GlobalAvgPool1D':
+        layerCode = `# ${label} - Global Average Pooling over sequence dimension`;
+        forwardCode = `${varName} = {{input}}.mean(dim=1)  # (batch, seq_len, features) -> (batch, features)`;
+        break;
+
       case 'Output':
         const outInSize = config.inputSize || 128;
         const numClasses = config.numClasses || 10;
