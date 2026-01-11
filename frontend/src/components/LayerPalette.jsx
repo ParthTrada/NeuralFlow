@@ -165,6 +165,35 @@ const templates = [
       { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
     ]
   },
+  {
+    id: 'resnet-block',
+    name: 'ResNet Block',
+    description: 'CNN with skip connections',
+    tip: 'Demonstrates residual connections using Add layer. Skip connections help train deeper networks by allowing gradients to flow directly.',
+    icon: GitMerge,
+    color: '#ef4444',
+    layers: 8,
+    nodes: [
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'image', channels: 3, height: 32, width: 32 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 120 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 3, outChannels: 64, kernelSize: 3, padding: 1, activation: 'relu' } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 240 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 64, outChannels: 64, kernelSize: 3, padding: 1, activation: 'relu' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 360 }, data: { label: 'Conv2D', layerType: 'Conv2D', config: { inChannels: 64, outChannels: 64, kernelSize: 3, padding: 1, activation: 'none' } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 150, y: 360 }, data: { label: 'Add (Skip)', layerType: 'Add', config: { numInputs: 2 } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 480 }, data: { label: 'Flatten', layerType: 'Flatten', config: {} } },
+      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 600 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 65536, units: 128, activation: 'relu' } } },
+      { id: 'node_7', type: 'layerNode', position: { x: 0, y: 720 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 128, numClasses: 10, activation: 'softmax' } } },
+    ],
+    edges: [
+      { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
+      { id: 'e1-2', source: 'node_1', target: 'node_2', animated: true },
+      { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
+      { id: 'e3-4', source: 'node_3', target: 'node_4', targetHandle: 'target-0', animated: true },
+      { id: 'e1-4-skip', source: 'node_1', target: 'node_4', targetHandle: 'target-1', animated: true, style: { stroke: '#22c55e', strokeWidth: 2 } },
+      { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
+      { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
+      { id: 'e6-7', source: 'node_6', target: 'node_7', animated: true },
+    ]
+  },
 ];
 
 // Export templates for drag handling
