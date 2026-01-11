@@ -1,6 +1,6 @@
 Contact: support@neuralflows.com
 Preferred-Languages: en
-Canonical: https://model-dataset-sync.preview.emergentagent.com/.well-known/security.txt
+Canonical: https://llm-template-demo.preview.emergentagent.com/.well-known/security.txt
 Expires: 2025-12-31T23:59:59.000Z
-Policy: https://model-dataset-sync.preview.emergentagent.com/
+Policy: https://llm-template-demo.preview.emergentagent.com/
 Acknowledgments: We appreciate responsible disclosure of security vulnerabilities.
