@@ -371,8 +371,12 @@ export const generatePyTorchCode = (nodes, edges) => {
 
       case 'Output': {
         // Calculate input features from previous layer
-        const inFeatures = getFlatFeatures(inputShape);
+        const inFeatures = inputShape?.features || getFlatFeatures(inputShape);
         const numClasses = config.numClasses || 10;
+        
+        // For sequence models (text generation), output is per-position
+        const isSequenceOutput = inputShape?.type === 'sequence';
+        
         layerCode = `${layerName} = nn.Linear(${inFeatures}, ${numClasses})  # ${label}`;
         
         if (config.activation === 'softmax') {
