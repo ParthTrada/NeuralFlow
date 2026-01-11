@@ -196,6 +196,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [isMiniGPTLoaded, setIsMiniGPTLoaded] = useState(false);
   const [isLoadingMiniGPT, setIsLoadingMiniGPT] = useState(false);
   const [miniGPTVocab, setMiniGPTVocab] = useState(null);
+  const [miniGPTTrainingProgress, setMiniGPTTrainingProgress] = useState({ epoch: 0, loss: 0, accuracy: 0 });
+  const [useMarkovFallback, setUseMarkovFallback] = useState(false);
+  const [miniGPTTrainingComplete, setMiniGPTTrainingComplete] = useState(false);
   
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
