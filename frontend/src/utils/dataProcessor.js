@@ -26,13 +26,40 @@ export const processCSVData = (data, targetColumn, options = {}) => {
     throw new Error('No data provided');
   }
 
+  // Get all columns except target
+  const allColumns = Object.keys(data[0]).filter(col => col !== targetColumn);
+  
+  // Filter to only numeric columns (check first row)
+  const numericColumns = allColumns.filter(col => {
+    const val = data[0][col];
+    // Check if it's a number or can be parsed as a pure number
+    if (typeof val === 'number') return true;
+    if (typeof val === 'string') {
+      // Check if it's a pure numeric string (not a date or mixed string)
+      const trimmed = val.trim();
+      const parsed = parseFloat(trimmed);
+      // It's numeric if the parse result matches the original (no extra chars)
+      return !isNaN(parsed) && trimmed === String(parsed);
+    }
+    return false;
+  });
+  
+  // If we filtered out columns that look like dates or strings, notify
+  const skippedColumns = allColumns.filter(c => !numericColumns.includes(c));
+  if (skippedColumns.length > 0) {
+    console.log(`Skipped non-numeric columns: ${skippedColumns.join(', ')}`);
+  }
+  
+  if (numericColumns.length === 0) {
+    throw new Error('No numeric feature columns found. Please ensure your CSV has numeric data columns.');
+  }
+
   // Separate features and target
   const features = [];
   const targets = [];
-  const columns = Object.keys(data[0]).filter(col => col !== targetColumn);
 
   data.forEach(row => {
-    const featureRow = columns.map(col => {
+    const featureRow = numericColumns.map(col => {
       const val = row[col];
       return typeof val === 'number' ? val : parseFloat(val) || 0;
     });
@@ -41,7 +68,7 @@ export const processCSVData = (data, targetColumn, options = {}) => {
   });
 
   // Check if we need to reshape for sequence models (LSTM/GRU)
-  const numFeatures = columns.length;
+  const numFeatures = numericColumns.length;
   
   let xTensor;
   let inputShape;
