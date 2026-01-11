@@ -58,9 +58,9 @@ export const processTextCSVData = (data, textColumn, targetColumn, options = {})
     throw new Error('No data provided');
   }
   
-  // Extract texts and targets
-  const texts = data.map(row => String(row[textColumn] || ''));
-  const targets = data.map(row => row[targetColumn]);
+  // Extract texts and targets, trimming whitespace
+  const texts = data.map(row => String(row[textColumn] || '').trim());
+  const targets = data.map(row => String(row[targetColumn] || '').trim());
   
   // Build vocabulary
   const vocab = buildVocabulary(texts, vocabSize);
@@ -72,8 +72,10 @@ export const processTextCSVData = (data, textColumn, targetColumn, options = {})
   // Create tensor
   const xTensor = tf.tensor2d(sequences, [sequences.length, maxLength], 'int32');
   
-  // Process targets
+  // Process targets - trim whitespace and normalize
   const uniqueTargets = [...new Set(targets)];
+  
+  console.log(`Found ${uniqueTargets.length} unique classes:`, uniqueTargets.slice(0, 10), uniqueTargets.length > 10 ? '...' : '');
   
   if (uniqueTargets.length < 2) {
     throw new Error('Need at least 2 classes for text classification');
