@@ -10,6 +10,7 @@ import { PropertiesPanel } from '../components/PropertiesPanel';
 import { CodePreviewModal } from '../components/CodePreviewModal';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { SavedModelsPanel } from '../components/SavedModelsPanel';
+import { useHistory } from '../hooks/useHistory';
 // import { ProductTour } from '../components/ProductTour'; // Commented out - Product Tour disabled
 import { generatePyTorchCode, generateKerasCode, downloadCode } from '../utils/codeGenerator';
 import { useAuth } from '../context/AuthContext';
