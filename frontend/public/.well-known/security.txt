@@ -1,6 +1,6 @@
 Contact: support@neuralflows.com
 Preferred-Languages: en
-Canonical: https://mlflow-dashboard.preview.emergentagent.com/.well-known/security.txt
+Canonical: https://dag-ml-builder.preview.emergentagent.com/.well-known/security.txt
 Expires: 2025-12-31T23:59:59.000Z
-Policy: https://mlflow-dashboard.preview.emergentagent.com/
+Policy: https://dag-ml-builder.preview.emergentagent.com/
 Acknowledgments: We appreciate responsible disclosure of security vulnerabilities.
