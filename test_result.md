@@ -243,6 +243,7 @@ metadata:
 test_plan:
   current_focus:
     - "Image Classification Testing (Dense Input Models)"
+    - "LSTM Template Model Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
