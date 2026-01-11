@@ -95,6 +95,24 @@ Build a website called "NeuralFlows" (domain neuralflows.ai) where users can cre
 - ✅ Tap-to-add layers on mobile
 - ✅ Fixed header overflow and input auto-zoom issues on mobile
 
+### Jan 11, 2025 - Text Classification & PDF Q&A Features
+- ✅ **Text Classification Feature:**
+  - Text Classifier template (Input → Embedding → LSTM → Dropout → Dense → Output)
+  - Text input type support in Input layer config (vocabSize, seqLength)
+  - Embedding layer support in TensorFlow.js model builder
+  - Text sample data generation for NLP training
+  - Data Requirements Guide updated for NLP/Text models
+  - Text tokenization utilities (buildVocabulary, textToIndices)
+  - processTextCSVData function for text CSV processing
+- ✅ **PDF Q&A Chatbot Feature:**
+  - PdfChat.jsx page with upload interface and chat UI
+  - pdf_qa_routes.py backend with Groq/Llama 3.3 integration
+  - Simple TF-IDF based embeddings for text similarity (no external API needed)
+  - PDF upload endpoint (/api/pdf-qa/upload)
+  - Question answering endpoint (/api/pdf-qa/ask)
+  - Session management for multi-turn conversations
+  - PDF Chat button on landing page
+
 ### Jan 6, 2025 - Input Layer Type System
 - ✅ Added Input Type dropdown with 3 options: Flat (Vector), Image (C, H, W), Sequence (Len, Feat)
 - ✅ Dynamic configuration fields based on input type:
