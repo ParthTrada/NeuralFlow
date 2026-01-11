@@ -33,13 +33,14 @@ const tourSteps = [
     icon: Layers,
     position: 'right',
     target: '[data-tour="layer-palette"]',
+    mobileDescription: 'Tap the layers icon in the header to access all neural network layers and templates.',
   },
   {
     id: 'canvas',
     title: 'Design Canvas',
     description: 'Drag layers here and connect them by drawing lines between the handles. Your network architecture takes shape visually!',
     icon: MousePointerClick,
-    position: 'left',
+    position: 'center',
     target: '[data-tour="canvas"]',
   },
   {
@@ -49,6 +50,8 @@ const tourSteps = [
     icon: Settings,
     position: 'left',
     target: '[data-tour="properties-panel"]',
+    mobileDescription: 'Tap any layer to see its properties. Configure units, activations, and other settings.',
+    mobilePosition: 'center',
   },
   {
     id: 'train',
@@ -57,6 +60,8 @@ const tourSteps = [
     icon: GraduationCap,
     position: 'bottom-left',
     target: '[data-tour="train-btn"]',
+    mobileTarget: '[data-testid="mobile-actions-btn"]',
+    mobileDescription: 'Tap the menu icon to access training options. Train your model right in your browser!',
   },
   {
     id: 'view-code',
@@ -73,6 +78,7 @@ const tourSteps = [
     icon: BookOpen,
     position: 'bottom-left',
     target: '[data-testid="tutorial-btn"]',
+    skipOnMobile: true, // Tutorial button might not be visible on mobile
   },
   {
     id: 'complete',
@@ -81,6 +87,7 @@ const tourSteps = [
     icon: Sparkles,
     position: 'center',
     target: null,
+    mobileDescription: 'Start by tapping the layers icon and choosing a template. Happy building!',
   },
 ];
 
@@ -90,7 +97,6 @@ const ProductTourContext = createContext(null);
 export const useProductTour = () => {
   const context = useContext(ProductTourContext);
   if (!context) {
-    // Return dummy functions if used outside provider
     return {
       restartTour: () => {
         if (window.restartProductTour) {
@@ -106,72 +112,115 @@ export const useProductTour = () => {
 };
 
 // Tour tooltip component
-const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, onComplete, isDark }) => {
+const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, onComplete, isDark, isMobile }) => {
   const Icon = step.icon;
   const isFirst = currentStep === 0;
   const isWelcome = step.id === 'welcome';
   const isComplete = step.id === 'complete';
-  const actualSteps = totalSteps - 2; // Exclude welcome and complete
-  const actualCurrentStep = currentStep - 1; // Adjust for welcome step
+  const actualSteps = totalSteps - 2;
+  const actualCurrentStep = currentStep - 1;
   
-  // Calculate position based on target element
-  const [position, setPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+  const description = isMobile && step.mobileDescription ? step.mobileDescription : step.description;
+  
+  const [position, setPosition] = useState({ 
+    top: '50%', 
+    left: '50%', 
+    transform: 'translate(-50%, -50%)' 
+  });
   
   useEffect(() => {
-    if (step.position === 'center' || !step.target) {
-      setPosition({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
-      return;
-    }
+    const calculatePosition = () => {
+      // Center position for welcome, complete, or center-positioned steps
+      if (step.position === 'center' || !step.target || isWelcome || isComplete) {
+        setPosition({ 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)' 
+        });
+        return;
+      }
+      
+      // On mobile, use center position for most steps
+      if (isMobile) {
+        const mobilePos = step.mobilePosition || 'center';
+        if (mobilePos === 'center') {
+          setPosition({ 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)' 
+          });
+          return;
+        }
+      }
+      
+      const targetSelector = isMobile && step.mobileTarget ? step.mobileTarget : step.target;
+      const target = document.querySelector(targetSelector);
+      
+      if (!target) {
+        setPosition({ 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)' 
+        });
+        return;
+      }
+      
+      const rect = target.getBoundingClientRect();
+      const tooltipWidth = isMobile ? Math.min(320, window.innerWidth - 32) : 360;
+      const tooltipHeight = 280;
+      const padding = 16;
+      
+      let newPosition = {};
+      const effectivePosition = isMobile && step.mobilePosition ? step.mobilePosition : step.position;
+      
+      switch (effectivePosition) {
+        case 'right':
+          newPosition = {
+            top: Math.min(Math.max(rect.top, padding + 56), window.innerHeight - tooltipHeight - padding),
+            left: Math.min(rect.right + padding, window.innerWidth - tooltipWidth - padding),
+          };
+          break;
+        case 'left':
+          newPosition = {
+            top: Math.min(Math.max(rect.top, padding + 56), window.innerHeight - tooltipHeight - padding),
+            left: Math.max(rect.left - tooltipWidth - padding, padding),
+          };
+          break;
+        case 'bottom':
+          newPosition = {
+            top: rect.bottom + padding,
+            left: Math.max(Math.min(rect.left - (tooltipWidth / 2) + (rect.width / 2), window.innerWidth - tooltipWidth - padding), padding),
+          };
+          break;
+        case 'bottom-left':
+          newPosition = {
+            top: rect.bottom + padding,
+            left: Math.max(rect.left - tooltipWidth + rect.width + 50, padding),
+          };
+          break;
+        default:
+          newPosition = { 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)' 
+          };
+      }
+      
+      // Ensure tooltip stays within viewport
+      if (newPosition.left && newPosition.left + tooltipWidth > window.innerWidth - padding) {
+        newPosition.left = window.innerWidth - tooltipWidth - padding;
+      }
+      if (newPosition.top && newPosition.top + tooltipHeight > window.innerHeight - padding) {
+        newPosition.top = window.innerHeight - tooltipHeight - padding;
+      }
+      
+      setPosition(newPosition);
+    };
     
-    const target = document.querySelector(step.target);
-    if (!target) {
-      setPosition({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
-      return;
-    }
-    
-    const rect = target.getBoundingClientRect();
-    const tooltipWidth = 360;
-    const tooltipHeight = 280;
-    const padding = 16;
-    
-    let newPosition = {};
-    
-    switch (step.position) {
-      case 'right':
-        newPosition = {
-          top: Math.min(Math.max(rect.top, padding), window.innerHeight - tooltipHeight - padding),
-          left: rect.right + padding,
-        };
-        break;
-      case 'left':
-        newPosition = {
-          top: Math.min(Math.max(rect.top, padding), window.innerHeight - tooltipHeight - padding),
-          left: Math.max(rect.left - tooltipWidth - padding, padding),
-        };
-        break;
-      case 'bottom':
-        newPosition = {
-          top: rect.bottom + padding,
-          left: Math.max(rect.left - (tooltipWidth / 2) + (rect.width / 2), padding),
-        };
-        break;
-      case 'bottom-left':
-        newPosition = {
-          top: rect.bottom + padding,
-          left: Math.max(rect.left - tooltipWidth + rect.width, padding),
-        };
-        break;
-      default:
-        newPosition = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    }
-    
-    // Ensure tooltip stays within viewport
-    if (newPosition.left + tooltipWidth > window.innerWidth - padding) {
-      newPosition.left = window.innerWidth - tooltipWidth - padding;
-    }
-    
-    setPosition(newPosition);
-  }, [step, currentStep]);
+    calculatePosition();
+    window.addEventListener('resize', calculatePosition);
+    return () => window.removeEventListener('resize', calculatePosition);
+  }, [step, currentStep, isMobile, isWelcome, isComplete]);
   
   return (
     <motion.div
@@ -180,7 +229,9 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -10 }}
       transition={{ duration: 0.25 }}
-      className={`fixed z-[10001] w-[360px] rounded-2xl shadow-2xl border ${
+      className={`fixed z-[10001] rounded-2xl shadow-2xl border ${
+        isMobile ? 'w-[calc(100vw-32px)] max-w-[360px]' : 'w-[360px]'
+      } ${
         isDark 
           ? 'bg-zinc-900/95 border-zinc-700 text-white backdrop-blur-xl' 
           : 'bg-white/95 border-zinc-200 text-zinc-900 backdrop-blur-xl'
@@ -191,7 +242,7 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-xl ${
+            <div className={`p-2.5 rounded-xl flex-shrink-0 ${
               isDark ? 'bg-violet-500/20' : 'bg-violet-100'
             }`}>
               <Icon className="w-5 h-5 text-violet-500" />
@@ -208,7 +259,7 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
           {!isComplete && (
             <button
               onClick={onSkip}
-              className={`p-1.5 rounded-lg transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
                 isDark ? 'hover:bg-white/10 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-500'
               }`}
               aria-label="Skip tour"
@@ -220,13 +271,13 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
         
         {/* Description */}
         <p className={`text-sm leading-relaxed mb-5 ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
-          {step.description}
+          {description}
         </p>
         
         {/* Progress dots */}
         {!isWelcome && !isComplete && (
           <div className="flex justify-center gap-1.5 mb-5">
-            {tourSteps.slice(1, -1).map((_, idx) => (
+            {Array.from({ length: actualSteps }).map((_, idx) => (
               <div
                 key={idx}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -300,7 +351,7 @@ const TourTooltip = ({ step, currentStep, totalSteps, onNext, onPrev, onSkip, on
 };
 
 // Highlight ring around target element
-const TargetHighlight = ({ target, isDark }) => {
+const TargetHighlight = ({ target, isDark, isMobile }) => {
   const [rect, setRect] = useState(null);
   
   useEffect(() => {
@@ -332,7 +383,7 @@ const TargetHighlight = ({ target, isDark }) => {
   
   if (!rect) return null;
   
-  const padding = 8;
+  const padding = isMobile ? 4 : 8;
   
   return (
     <motion.div
@@ -361,6 +412,22 @@ const TargetHighlight = ({ target, isDark }) => {
 export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTourComplete }) => {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Filter steps for mobile (skip steps marked as skipOnMobile)
+  const activeSteps = isMobile 
+    ? tourSteps.filter(step => !step.skipOnMobile)
+    : tourSteps;
   
   // Check if tour should show on mount
   useEffect(() => {
@@ -372,7 +439,6 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
     
     const tourCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     if (!tourCompleted) {
-      // Small delay to let the page render first
       const timer = setTimeout(() => {
         setIsActive(true);
       }, 800);
@@ -381,7 +447,7 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
   }, [forceShow]);
   
   const handleNext = () => {
-    if (currentStep < tourSteps.length - 1) {
+    if (currentStep < activeSteps.length - 1) {
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -420,7 +486,16 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
   
   if (!isActive) return null;
   
-  const currentStepData = tourSteps[currentStep];
+  const currentStepData = activeSteps[currentStep];
+  const targetSelector = isMobile && currentStepData.mobileTarget 
+    ? currentStepData.mobileTarget 
+    : currentStepData.target;
+  
+  // Don't show highlight for center-positioned steps
+  const showHighlight = currentStepData.target && 
+    currentStepData.position !== 'center' && 
+    currentStepData.id !== 'welcome' && 
+    currentStepData.id !== 'complete';
   
   return (
     <AnimatePresence mode="wait">
@@ -436,21 +511,26 @@ export const ProductTour = ({ isDark = true, forceShow = false, onComplete: onTo
             onClick={currentStep === 0 ? undefined : handleSkip}
           />
           
-          {/* Target highlight */}
-          {currentStepData.target && (
-            <TargetHighlight target={currentStepData.target} isDark={isDark} />
+          {/* Target highlight - only show when not center positioned */}
+          {showHighlight && (
+            <TargetHighlight 
+              target={targetSelector} 
+              isDark={isDark} 
+              isMobile={isMobile}
+            />
           )}
           
           {/* Tooltip */}
           <TourTooltip
             step={currentStepData}
             currentStep={currentStep}
-            totalSteps={tourSteps.length}
+            totalSteps={activeSteps.length}
             onNext={handleNext}
             onPrev={handlePrev}
             onSkip={handleSkip}
             onComplete={handleComplete}
             isDark={isDark}
+            isMobile={isMobile}
           />
         </>
       )}
