@@ -376,6 +376,13 @@ export const getConfigFields = (layerType, config = {}) => {
     LayerNorm: [
       { key: 'normalizedShape', label: 'Normalized Shape', type: 'number', min: 1 }
     ],
+    Add: [
+      { key: 'numInputs', label: 'Number of Inputs', type: 'number', min: 2, max: 5, description: 'Number of input connections (for skip connections)' }
+    ],
+    Concatenate: [
+      { key: 'numInputs', label: 'Number of Inputs', type: 'number', min: 2, max: 5, description: 'Number of input connections to concatenate' },
+      { key: 'axis', label: 'Axis', type: 'number', min: -1, description: 'Axis to concatenate along (-1 for last axis)' }
+    ],
     LSTM: [
       { key: 'inputSize', label: 'Input Size', type: 'number', min: 1 },
       { key: 'hiddenSize', label: 'Hidden Size', type: 'number', min: 1 },
