@@ -167,6 +167,10 @@ async def generate_code(request: CodeGenerationRequest):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Include PDF Q&A routes
+pdf_qa_router = create_pdf_qa_router(db)
+app.include_router(pdf_qa_router, prefix="/api")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
