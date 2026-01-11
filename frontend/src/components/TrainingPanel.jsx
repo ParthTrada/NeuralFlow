@@ -1938,5 +1938,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         </motion.div>
       </motion.div>
     </AnimatePresence>
+    
+    {/* Dataset Browser Modal */}
+    <DatasetBrowserModal
+      isOpen={showDatasetBrowser}
+      onClose={() => setShowDatasetBrowser(false)}
+      onSelectDataset={handleSelectSampleDataset}
+      currentTemplateId={currentTemplateId}
+    />
+    </>
   );
 };
