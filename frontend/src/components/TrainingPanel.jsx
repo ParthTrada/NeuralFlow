@@ -305,16 +305,31 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const handleGenerateSample = (type) => {
     setStatus('loading');
     try {
-      // For sequence data, get seqLength and features from Input node if available
+      // Get configuration from Input/Output nodes if available
       let options = {};
+      const inputNode = nodes.find(n => n.data.layerType === 'Input');
+      const outputNode = nodes.find(n => n.data.layerType === 'Output');
+      
       if (type === 'sequence') {
-        const inputNode = nodes.find(n => n.data.layerType === 'Input');
         if (inputNode?.data?.config) {
           options.seqLength = inputNode.data.config.seqLength || 50;
           options.features = inputNode.data.config.features || 10;
         }
         // Get numClasses from Output node if available
-        const outputNode = nodes.find(n => n.data.layerType === 'Output');
+        if (outputNode?.data?.config?.numClasses) {
+          options.numClasses = outputNode.data.config.numClasses;
+        }
+      } else if (type === 'text') {
+        if (inputNode?.data?.config) {
+          options.seqLength = inputNode.data.config.seqLength || 100;
+          options.vocabSize = inputNode.data.config.vocabSize || 10000;
+        }
+        // Get Embedding layer config if available
+        const embeddingNode = nodes.find(n => n.data.layerType === 'Embedding');
+        if (embeddingNode?.data?.config) {
+          options.vocabSize = embeddingNode.data.config.vocabSize || options.vocabSize;
+        }
+        // Get numClasses from Output node if available
         if (outputNode?.data?.config?.numClasses) {
           options.numClasses = outputNode.data.config.numClasses;
         }
@@ -323,7 +338,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const data = generateSampleData(type, 500, options);
       setProcessedData({
         ...data,
-        type: 'sample'
+        type: type === 'text' ? 'text' : 'sample'
       });
       setStatus('ready');
       toast.success(`Generated ${type} sample dataset`);
