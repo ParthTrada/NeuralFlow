@@ -321,6 +321,11 @@ export default function Builder() {
       setNodes(updatedNodes);
       setEdges(updatedEdges);
       
+      // Track template ID for dataset recommendations
+      if (template.id) {
+        setCurrentTemplateId(template.id);
+      }
+      
       // Record to history
       recordHistory(updatedNodes, updatedEdges, true);
       
