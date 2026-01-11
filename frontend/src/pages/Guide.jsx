@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -11,8 +11,9 @@ import {
   MousePointer2,
   Layers,
   Database,
-  Code,
-  Zap
+  Zap,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
@@ -26,7 +27,7 @@ const SCREENSHOTS = {
 };
 
 // Animated Background Component (same as Landing page)
-const AnimatedBackground = () => {
+const AnimatedBackground = ({ isDark }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -56,10 +57,10 @@ const AnimatedBackground = () => {
     };
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+      ctx.fillStyle = isDark ? 'rgba(5, 5, 5, 0.1)' : 'rgba(250, 250, 250, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)';
+      ctx.strokeStyle = isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(139, 92, 246, 0.2)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -78,7 +79,7 @@ const AnimatedBackground = () => {
 
       ctx.globalAlpha = 1;
       nodes.forEach(node => {
-        ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
+        ctx.fillStyle = isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.6)';
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -101,7 +102,7 @@ const AnimatedBackground = () => {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <canvas
@@ -113,10 +114,14 @@ const AnimatedBackground = () => {
 };
 
 // Screenshot Card with glow effect
-const ScreenshotCard = ({ src, alt, className = '' }) => (
+const ScreenshotCard = ({ src, alt, className = '', isDark }) => (
   <div className={`relative group ${className}`}>
-    <div className="absolute -inset-1 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
-    <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-sm">
+    <div className={`absolute -inset-1 bg-gradient-to-r rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300 ${
+      isDark ? 'from-violet-600/30 to-fuchsia-600/30' : 'from-violet-500/20 to-fuchsia-500/20'
+    }`} />
+    <div className={`relative rounded-xl overflow-hidden border backdrop-blur-sm ${
+      isDark ? 'border-white/10 bg-black/50' : 'border-zinc-200 bg-white/50'
+    }`}>
       <img 
         src={src} 
         alt={alt} 
@@ -128,23 +133,46 @@ const ScreenshotCard = ({ src, alt, className = '' }) => (
 );
 
 const Guide = () => {
+  const [isDark, setIsDark] = useState(true);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+  };
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white relative">
-      <AnimatedBackground />
+    <div className={`min-h-screen relative transition-colors duration-300 ${
+      isDark ? 'bg-[#050505] text-white' : 'bg-[#fafafa] text-zinc-900'
+    }`}>
+      <AnimatedBackground isDark={isDark} />
       
       {/* Header */}
-      <header className="border-b border-white/10 bg-[#050505]/80 backdrop-blur-xl sticky top-0 z-50">
+      <header className={`border-b backdrop-blur-xl sticky top-0 z-50 transition-colors duration-300 ${
+        isDark ? 'border-white/10 bg-[#050505]/80' : 'border-zinc-200 bg-white/80'
+      }`}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+          <Link to="/" className={`flex items-center gap-2 transition-colors ${
+            isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900'
+          }`}>
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Back to Home</span>
           </Link>
-          <Link to="/builder">
-            <Button className="bg-violet-600 hover:bg-violet-700" data-testid="start-building-btn">
-              Start Building
-              <ArrowRight className="w-4 h-4 ml-2" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={`w-9 h-9 ${isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'}`}
+              data-testid="theme-toggle-btn"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
-          </Link>
+            <Link to="/builder">
+              <Button className="bg-violet-600 hover:bg-violet-700 text-white" data-testid="start-building-btn">
+                Start Building
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -156,9 +184,11 @@ const Guide = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 mb-6">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${
+              isDark ? 'bg-violet-500/10 border-violet-500/20' : 'bg-violet-500/10 border-violet-500/30'
+            }`}>
               <Sparkles className="w-4 h-4 text-violet-400" />
-              <span className="text-sm text-violet-300">Learn in 5 minutes</span>
+              <span className={`text-sm ${isDark ? 'text-violet-300' : 'text-violet-600'}`}>Learn in 5 minutes</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
               Build Your First <br />
@@ -166,7 +196,7 @@ const Guide = () => {
                 Neural Network
               </span>
             </h1>
-            <p className="text-lg text-zinc-400 max-w-xl mx-auto">
+            <p className={`text-lg max-w-xl mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
               A visual guide to creating, training, and exporting neural networks without writing code.
             </p>
           </motion.div>
@@ -181,30 +211,29 @@ const Guide = () => {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-2 lg:order-1"
             >
-              <StepBadge number="1" color="violet" label="Step One" />
+              <StepBadge number="1" color="violet" label="Step One" isDark={isDark} />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Start with a Template
               </h2>
-              <p className="text-zinc-400 text-lg mb-6">
+              <p className={`text-lg mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Choose from pre-built architectures designed for different tasks. Each template is optimized and ready to train.
               </p>
               <div className="space-y-3">
-                <FeatureItem icon={Brain} text="Simple MLP for tabular data classification" />
-                <FeatureItem icon={Layers} text="CNN for image recognition" />
-                <FeatureItem icon={Zap} text="Transformer for text analysis" />
+                <FeatureItem icon={Brain} text="Simple MLP for tabular data classification" isDark={isDark} />
+                <FeatureItem icon={Layers} text="CNN for image recognition" isDark={isDark} />
+                <FeatureItem icon={Zap} text="Transformer for text analysis" isDark={isDark} />
               </div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-1 lg:order-2"
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.templates} 
                 alt="Template selection panel showing MLP, CNN, RNN, Transformer options"
+                isDark={isDark}
               />
             </motion.div>
           </div>
@@ -219,28 +248,31 @@ const Guide = () => {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="order-2 lg:order-1"
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.canvas} 
-                alt="Visual canvas showing connected neural network layers" 
+                alt="Visual canvas showing connected neural network layers"
+                isDark={isDark}
               />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="order-1 lg:order-2"
             >
-              <StepBadge number="2" color="cyan" label="Step Two" />
+              <StepBadge number="2" color="cyan" label="Step Two" isDark={isDark} />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Connect Layers Visually
               </h2>
-              <p className="text-zinc-400 text-lg mb-6">
+              <p className={`text-lg mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Drag and drop layers onto the canvas. Connect them by drawing lines. Your network takes shape in real-time.
               </p>
               <div className="space-y-3">
-                <FeatureItem icon={MousePointer2} text="Drag layers from the sidebar" />
-                <FeatureItem icon={ArrowRight} text="Connect by clicking and dragging" />
-                <FeatureItem icon={Sparkles} text="Configure each layer with a click" />
+                <FeatureItem icon={MousePointer2} text="Drag layers from the sidebar" isDark={isDark} />
+                <FeatureItem icon={ArrowRight} text="Connect by clicking and dragging" isDark={isDark} />
+                <FeatureItem icon={Sparkles} text="Configure each layer with a click" isDark={isDark} />
               </div>
             </motion.div>
           </div>
@@ -255,30 +287,29 @@ const Guide = () => {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-2 lg:order-1"
             >
-              <StepBadge number="3" color="emerald" label="Step Three" />
+              <StepBadge number="3" color="emerald" label="Step Three" isDark={isDark} />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Load a Dataset
               </h2>
-              <p className="text-zinc-400 text-lg mb-6">
+              <p className={`text-lg mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Use built-in datasets or upload your own CSV. The model auto-adjusts parameters to match your data!
               </p>
               <div className="space-y-3">
-                <FeatureItem icon={Database} text="Browse sample datasets with smart matching" />
-                <FeatureItem icon={Layers} text="Filter by type: Tabular, Image, Text" />
-                <FeatureItem icon={Zap} text="Auto-adjust model to fit your data" />
+                <FeatureItem icon={Database} text="Browse sample datasets with smart matching" isDark={isDark} />
+                <FeatureItem icon={Layers} text="Filter by type: Tabular, Image, Text" isDark={isDark} />
+                <FeatureItem icon={Zap} text="Auto-adjust model to fit your data" isDark={isDark} />
               </div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-1 lg:order-2"
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.datasets} 
-                alt="Sample datasets browser showing Iris, MNIST, Fashion Items" 
+                alt="Sample datasets browser showing Iris, MNIST, Fashion Items"
+                isDark={isDark}
               />
             </motion.div>
           </div>
@@ -293,28 +324,31 @@ const Guide = () => {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="order-2 lg:order-1"
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.training} 
                 alt="Training panel showing epochs, learning rate, and accuracy/loss chart"
+                isDark={isDark}
               />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="order-1 lg:order-2"
             >
-              <StepBadge number="4" color="fuchsia" label="Step Four" />
+              <StepBadge number="4" color="fuchsia" label="Step Four" isDark={isDark} />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Train & Watch it Learn
               </h2>
-              <p className="text-zinc-400 text-lg mb-6">
+              <p className={`text-lg mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Click "Train" and watch your model learn in real-time. Track accuracy and loss as it improves epoch by epoch.
               </p>
               <div className="space-y-3">
-                <FeatureItem icon={Play} text="Training happens in your browser" />
-                <FeatureItem icon={Zap} text="Real-time accuracy & loss charts" />
-                <FeatureItem icon={Database} text="Configure epochs, batch size, learning rate" />
+                <FeatureItem icon={Play} text="Training happens in your browser" isDark={isDark} />
+                <FeatureItem icon={Zap} text="Real-time accuracy & loss charts" isDark={isDark} />
+                <FeatureItem icon={Database} text="Configure epochs, batch size, learning rate" isDark={isDark} />
               </div>
             </motion.div>
           </div>
@@ -329,23 +363,30 @@ const Guide = () => {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-2 lg:order-1"
             >
-              <StepBadge number="5" color="orange" label="Step Five" />
+              <StepBadge number="5" color="orange" label="Step Five" isDark={isDark} />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Export Production Code
               </h2>
-              <p className="text-zinc-400 text-lg mb-6">
+              <p className={`text-lg mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Export your model as PyTorch or TensorFlow/Keras code. Copy directly or download the file.
               </p>
               <div className="flex gap-3">
-                <div className="flex-1 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
-                  <div className="text-orange-400 font-bold mb-1">PyTorch</div>
-                  <div className="text-xs text-zinc-400">Research & flexibility</div>
+                <div className={`flex-1 p-4 rounded-xl border transition-colors ${
+                  isDark 
+                    ? 'bg-orange-500/10 border-orange-500/20 hover:border-orange-500/40' 
+                    : 'bg-orange-50 border-orange-200 hover:border-orange-400'
+                }`}>
+                  <div className="text-orange-500 font-bold mb-1">PyTorch</div>
+                  <div className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Research & flexibility</div>
                 </div>
-                <div className="flex-1 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-colors">
-                  <div className="text-blue-400 font-bold mb-1">Keras</div>
-                  <div className="text-xs text-zinc-400">Production & mobile</div>
+                <div className={`flex-1 p-4 rounded-xl border transition-colors ${
+                  isDark 
+                    ? 'bg-blue-500/10 border-blue-500/20 hover:border-blue-500/40' 
+                    : 'bg-blue-50 border-blue-200 hover:border-blue-400'
+                }`}>
+                  <div className="text-blue-500 font-bold mb-1">Keras</div>
+                  <div className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Production & mobile</div>
                 </div>
               </div>
             </motion.div>
@@ -353,11 +394,11 @@ const Guide = () => {
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="order-1 lg:order-2"
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.code} 
-                alt="Generated PyTorch code with copy and download options" 
+                alt="Generated PyTorch code with copy and download options"
+                isDark={isDark}
               />
             </motion.div>
           </div>
@@ -373,11 +414,11 @@ const Guide = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Build?</h2>
-            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+            <p className={`mb-8 max-w-md mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
               Start with a template and have your first model running in under a minute.
             </p>
             <Link to="/builder">
-              <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-lg px-8 py-6" data-testid="start-building-cta">
+              <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-white text-lg px-8 py-6" data-testid="start-building-cta">
                 <Brain className="w-5 h-5 mr-2" />
                 Start Building
                 <ChevronRight className="w-5 h-5 ml-2" />
@@ -391,7 +432,7 @@ const Guide = () => {
 };
 
 // Helper Components
-const StepBadge = ({ number, color, label }) => {
+const StepBadge = ({ number, color, label, isDark }) => {
   const colors = {
     violet: 'bg-violet-500/20 text-violet-400',
     cyan: 'bg-cyan-500/20 text-cyan-400',
@@ -410,9 +451,11 @@ const StepBadge = ({ number, color, label }) => {
   );
 };
 
-const FeatureItem = ({ icon: Icon, text }) => (
-  <div className="flex items-center gap-3 text-zinc-300">
-    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+const FeatureItem = ({ icon: Icon, text, isDark }) => (
+  <div className={`flex items-center gap-3 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+      isDark ? 'bg-white/5 border border-white/10' : 'bg-violet-50 border border-violet-100'
+    }`}>
       <Icon className="w-4 h-4 text-violet-400" />
     </div>
     <span className="text-sm">{text}</span>
