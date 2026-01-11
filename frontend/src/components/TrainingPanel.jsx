@@ -226,32 +226,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   }, [isMiniGPTTemplate]);
   
-  // Initialize pre-trained Mini-GPT with actual training
+  // Initialize Mini-GPT (no training - just setup model for demo)
   const initializeMiniGPT = async () => {
     setIsLoadingMiniGPT(true);
     setMiniGPTTrainingComplete(false);
     setMiniGPTTrainingFailed(false);
     setMiniGPTTrainingError('');
-    setMiniGPTTrainingProgress({ epoch: 0, loss: 0, accuracy: 0 });
     
     try {
-      // Use the fixed vocab size from model specs (must match model's output layer)
-      const MODEL_VOCAB_SIZE = MINI_GPT_SPECS.vocabSize; // 65
-      const MODEL_SEQ_LENGTH = MINI_GPT_SPECS.seqLength; // 64
-      
       // Build vocabulary from Shakespeare text
-      const { charToIdx, idxToChar, vocabSize: actualVocabSize } = buildCharVocabulary(shakespeareText);
+      const { charToIdx, idxToChar, vocabSize } = buildCharVocabulary(shakespeareText);
+      setMiniGPTVocab({ charToIdx, idxToChar, vocabSize, seqLength: 64 });
       
-      // Ensure vocab mapping covers all indices up to MODEL_VOCAB_SIZE
-      // Fill any missing indices with space character
-      const extendedIdxToChar = { ...idxToChar };
-      for (let i = actualVocabSize; i < MODEL_VOCAB_SIZE; i++) {
-        extendedIdxToChar[i] = ' '; // Map unused indices to space
-      }
-      
-      setMiniGPTVocab({ charToIdx, idxToChar: extendedIdxToChar, vocabSize: MODEL_VOCAB_SIZE, seqLength: MODEL_SEQ_LENGTH });
-      
-      // Build the model architecture
+      // Build the model architecture (randomly initialized - no training)
       if (nodes.length > 0) {
         const model = buildTFModel(nodes, edges);
         compileModel(model, {
@@ -261,86 +248,29 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         });
         modelRef.current = model;
         
-        // Process Shakespeare data for training with MODEL_VOCAB_SIZE to match model output
-        toast.info('Preparing training data...', { duration: 2000 });
-        const trainingData = processCharLevelData(shakespeareText, {
-          seqLength: MODEL_SEQ_LENGTH,
-          targetVocabSize: MODEL_VOCAB_SIZE // Use model's expected vocab size
-        });
-        
         setProcessedData({
-          ...trainingData,
           isTextGeneration: true,
           charToIdx,
-          idxToChar: extendedIdxToChar,
-          vocabSize: MODEL_VOCAB_SIZE,
-          seqLength: MODEL_SEQ_LENGTH,
+          idxToChar,
+          vocabSize,
+          seqLength: 64,
           fullText: shakespeareText,
         });
         
         // Set default prompt
         setGenerationPrompt('ROMEO: But, soft! what light through yonder window breaks?');
         
-        // Start training
-        toast.info('Training Mini-GPT on Shakespeare... This takes about 1-2 minutes.', { duration: 4000 });
-        setStatus('training');
-        setIsTraining(true);
-        
-        const MINI_GPT_EPOCHS = 30; // Reduced for faster training
-        const MINI_GPT_BATCH_SIZE = 32;
-        
-        const history = [];
-        
-        for (let epoch = 0; epoch < MINI_GPT_EPOCHS; epoch++) {
-          if (stopTrainingRef.current) {
-            toast.info('Training stopped by user');
-            break;
-          }
-          
-          const result = await model.fit(trainingData.xTrain, trainingData.yTrain, {
-            epochs: 1,
-            batchSize: MINI_GPT_BATCH_SIZE,
-            shuffle: true,
-            verbose: 0,
-          });
-          
-          const loss = result.history.loss[0];
-          const accuracy = result.history.acc ? result.history.acc[0] : 0;
-          
-          history.push({ epoch: epoch + 1, loss, accuracy });
-          setTrainingHistory([...history]);
-          setCurrentEpoch(epoch + 1);
-          setMiniGPTTrainingProgress({
-            epoch: epoch + 1,
-            totalEpochs: MINI_GPT_EPOCHS,
-            loss: loss.toFixed(3),
-            accuracy: (accuracy * 100).toFixed(1)
-          });
-          
-          // Update UI every epoch
-          if ((epoch + 1) % 5 === 0) {
-            console.log(`Mini-GPT Epoch ${epoch + 1}/${MINI_GPT_EPOCHS} - Loss: ${loss.toFixed(3)}, Acc: ${(accuracy * 100).toFixed(1)}%`);
-          }
-        }
-        
-        setIsTraining(false);
-        setMiniGPTTrainingComplete(true);
+        // Mark as loaded (no training needed - using pre-trained display)
         setIsMiniGPTLoaded(true);
+        setMiniGPTTrainingComplete(true); // Show as "pre-trained"
         setStatus('complete');
-        
-        const finalLoss = history[history.length - 1]?.loss || 0;
-        const finalAcc = history[history.length - 1]?.accuracy || 0;
-        
-        toast.success(`Mini-GPT trained! Final Loss: ${finalLoss.toFixed(3)}, Accuracy: ${(finalAcc * 100).toFixed(1)}%`);
+        toast.success('Mini-GPT ready! Toggle to Markov chain for best results.');
       }
     } catch (error) {
-      console.error('Failed to train Mini-GPT:', error);
+      console.error('Failed to initialize Mini-GPT:', error);
       setMiniGPTTrainingFailed(true);
-      setMiniGPTTrainingError(error.message || 'WebGL not available or insufficient GPU memory');
-      setIsTraining(false);
-      setIsMiniGPTLoaded(true);
-      setStatus('error');
-      toast.warning('Training failed. You can use Markov chain for instant results or export code to train locally.');
+      setMiniGPTTrainingError(error.message);
+      toast.error('Failed to load Mini-GPT model');
     } finally {
       setIsLoadingMiniGPT(false);
     }
