@@ -321,12 +321,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }
     } catch (error) {
       console.error('Failed to train Mini-GPT:', error);
-      toast.error('Training failed. Switching to Markov chain fallback.');
-      setUseMarkovFallback(true);
-      setIsMiniGPTLoaded(true);
+      setMiniGPTTrainingFailed(true);
+      setMiniGPTTrainingError(error.message || 'WebGL not available or insufficient GPU memory');
       setIsTraining(false);
-      setMiniGPTTrainingComplete(false);
-      setStatus('complete');
+      setIsMiniGPTLoaded(true);
+      setStatus('error');
+      toast.warning('Training failed. You can use Markov chain for instant results or export code to train locally.');
     } finally {
       setIsLoadingMiniGPT(false);
     }
