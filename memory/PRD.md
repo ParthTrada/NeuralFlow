@@ -1,193 +1,100 @@
-# NeuralFlow Architect - Product Requirements Document
+# NeuralFlows - Product Requirements Document
 
 ## Original Problem Statement
-Build a website called "NeuralFlows" (domain neuralflows.ai) where users can create neural networks through drag and drop, similar to Azure Synapse pipelines. After constructing the graphical model of the NN, users can run the neural network and download generated PyTorch code. Features include:
-- Graphical model building with drag-and-drop
-- In-browser training with data upload
-- PyTorch code generation & download
-- User accounts with Google OAuth for model persistence
-- Model versioning and sharing
-- Landing page for product introduction
-
-## User Choices
-- Both basic and advanced layers
-- PyTorch code generation
-- Dark/Light mode toggle
-- Google OAuth authentication
-- Model versioning and sharing
-
-## Architecture
-- **Frontend**: React 19 + React Flow + Framer Motion + Tailwind CSS + Shadcn UI + TensorFlow.js
-- **Backend**: FastAPI + MongoDB
-- **Code Generation**: Client-side PyTorch code generator
-- **Authentication**: Emergent-managed Google OAuth
+Build a visual deep-learning tool that allows users to design, train, and export neural networks without writing code. Users can drag-and-drop layers, connect them visually, train models in-browser, and export production-ready PyTorch/Keras code.
 
 ## User Personas
-1. **ML Students** - Learning neural network architectures
-2. **Data Scientists** - Quick prototyping of network structures
-3. **Developers** - Visual planning before implementation
+1. **ML Beginners** - Learning neural network concepts visually
+2. **Educators** - Teaching neural network architectures
+3. **Rapid Prototypers** - Quickly designing and testing model architectures
 
-## Core Requirements (Static)
-- [x] Drag-and-drop layer palette
-- [x] Visual canvas for network construction
-- [x] Layer connections with animated edges
-- [x] Properties panel for layer configuration
-- [x] PyTorch code generation
-- [x] Code preview with syntax highlighting
-- [x] Download .py file
-- [x] Dark/Light mode toggle
-- [x] In-browser training with TensorFlow.js
-- [x] CSV and image data upload
-- [x] Real-time training progress charts
-- [x] Model prediction testing
-- [x] Google OAuth authentication
-- [x] Save/Load models to account
-- [x] Model versioning
-- [x] Share models via link
-- [x] Professional landing page
+## Core Features
 
-## What's Been Implemented
+### Implemented ✅
+- **Visual Network Builder** - Drag-and-drop canvas for neural network design
+- **Layer Palette** - Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, Embedding, Flatten, MaxPooling2D
+- **Model Templates** - Pre-built architectures (MLP, CNN, RNN, Transformer, Autoencoder, Text Classifier, ResNet Block)
+- **In-Browser Training** - TensorFlow.js based training with real-time metrics
+- **Sample Datasets** - Iris, MNIST, Fashion-MNIST, CIFAR-10, Sentiment, Movie Reviews, News Categories, Intent Classification
+- **Auto-Adjustment** - Model layers automatically adapt to selected dataset specifications
+- **Code Export** - Generate PyTorch and Keras code with download/copy options
+- **User Authentication** - Google OAuth via Emergent Platform
+- **Save/Load Models** - Authenticated users can save, version, and share models
+- **Dark/Light Mode** - Theme toggle across all pages
+- **Guide Page** - Visual tutorial with real platform screenshots
+- **Admin Panel** - Debug interface at `/admin` (password protected)
+- **Mobile Responsive** - Adapted UI for mobile devices
 
-### Jan 6, 2025 - Landing Page
-- ✅ Professional landing page at '/' route
-- ✅ Animated neural network background (canvas-based)
-- ✅ Hero section with "Build Neural Networks Visually" headline
-- ✅ Feature cards (Drag & Drop, Train in Browser, Export Code, Layers, Share)
-- ✅ How-it-works section (Design → Train → Export)
-- ✅ Call-to-action section
-- ✅ Navigation to builder at '/builder'
-- ✅ Consistent NeuralFlows branding
-- ✅ Dark/Light mode toggle on landing page
-- ✅ Mobile-responsive design with hamburger menu
-- ✅ Full-width CTAs on mobile
+### Product Tour (Ready but Disabled)
+- First-time user onboarding tour
+- Highlights: Layer Palette, Canvas, Properties Panel, Train, View Code, Tutorial
+- Mobile-friendly with adjusted descriptions
+- Can be enabled by uncommenting in Builder.jsx
 
-### Jan 6, 2025 - Training & Auth Features
-- ✅ Browser-based Training with TensorFlow.js
-- ✅ CSV data upload and processing
-- ✅ Image folder upload for classification
-- ✅ Sample data generation (classification/regression)
-- ✅ Training config (epochs, batch size, learning rate, optimizer)
-- ✅ Real-time loss/accuracy charts during training
-- ✅ Google OAuth - Sign in with Google
-- ✅ Save/Load models to account
-- ✅ Model versioning (v1, v2, v3...)
-- ✅ Export trained weights
-- ✅ Share models via link
+## Technical Architecture
 
-### Initial MVP
-- ✅ Full drag-and-drop neural network builder
-- ✅ Basic Layers: Input, Dense, Conv2D, MaxPool2D, Dropout, Flatten, Output
-- ✅ Advanced Layers: BatchNorm1D/2D, LSTM, GRU, Multi-Head Attention
-- ✅ Real-time PyTorch code generation
-- ✅ Dark/Light theme toggle
-- ✅ Resizable UI panels
+```
+/app/
+├── frontend/                    # React + TailwindCSS
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Header.jsx              # App header with actions
+│   │   │   ├── LayerPalette.jsx        # Draggable layers & templates
+│   │   │   ├── NetworkCanvas.jsx       # React Flow canvas
+│   │   │   ├── PropertiesPanel.jsx     # Layer configuration
+│   │   │   ├── TrainingPanel.jsx       # Training UI & dataset browser
+│   │   │   ├── DatasetBrowserModal.jsx # Sample datasets modal
+│   │   │   ├── CodePreviewModal.jsx    # Code export modal
+│   │   │   ├── SavedModelsPanel.jsx    # User's saved models
+│   │   │   └── ProductTour.jsx         # First-time user tour (disabled)
+│   │   ├── pages/
+│   │   │   ├── Landing.jsx             # Homepage
+│   │   │   ├── Builder.jsx             # Main app
+│   │   │   ├── Guide.jsx               # Tutorial page
+│   │   │   └── Admin.jsx               # Admin panel
+│   │   ├── utils/
+│   │   │   ├── sampleDatasets.js       # Dataset configurations
+│   │   │   └── codeGenerator.js        # PyTorch/Keras generation
+│   │   └── context/
+│   │       └── AuthContext.jsx         # Google OAuth
+│   └── .env
+├── backend/                     # FastAPI + MongoDB
+│   ├── server.py               # Main server
+│   ├── auth_routes.py          # Auth & model endpoints
+│   ├── admin_routes.py         # Admin endpoints
+│   └── .env
+└── memory/
+    └── PRD.md                  # This file
+```
 
-### Jan 6, 2025 - Templates, Learning Panel & New Layers
-- ✅ Network Templates: Simple MLP, CNN, RNN (LSTM), Transformer, Autoencoder
-- ✅ Templates are draggable and can be added additively to the canvas
-- ✅ Learning Panel in right sidebar with context-sensitive educational content
-- ✅ Layer tips showing description, details, and best practices for each layer type
-- ✅ New Advanced Layers: Embedding, LayerNorm, TransformerEncoder, TransformerDecoder
-- ✅ Fixed PyTorch code generation for Transformer and Autoencoder templates
-- ✅ Correct code generation for TransformerEncoder (nn.TransformerEncoderLayer + nn.TransformerEncoder)
-- ✅ Correct code generation for TransformerDecoder (nn.TransformerDecoderLayer + nn.TransformerDecoder)
-- ✅ Mobile-responsive builder interface
-- ✅ Tap-to-add layers on mobile
-- ✅ Fixed header overflow and input auto-zoom issues on mobile
+## 3rd Party Integrations
+- **Google OAuth** - Via Emergent Platform
+- **TensorFlow.js** - Browser-based model training
+- **Groq API** - For PDF Q&A feature (currently disabled)
 
-### Jan 11, 2025 - Text Classification & PDF Q&A Features
-- ✅ **Text Classification Feature:**
-  - Text Classifier template (Input → Embedding → LSTM → Dropout → Dense → Output)
-  - Text input type support in Input layer config (vocabSize, seqLength)
-  - Embedding layer support in TensorFlow.js model builder
-  - Text sample data generation for NLP training
-  - Data Requirements Guide updated for NLP/Text models
-  - Text tokenization utilities (buildVocabulary, textToIndices)
-  - processTextCSVData function for text CSV processing
-- ✅ **PDF Q&A Chatbot Feature:** (Disabled for now, code preserved)
+## Known Issues
+- **P0:** Google Auth may be unreliable on production domain (`neuralflows.ai`) - needs user verification after deployment
 
-### Jan 11, 2025 - Advanced Transformer & Keras Code Generation
-- ✅ **Advanced Transformer Support:**
-  - New PositionalEncoding layer with max_len, d_model, dropout config
-  - GlobalAvgPool1D layer for sequence pooling
-  - Updated Transformer template to BERT-style architecture:
-    - Input (text) → Embedding → Positional Encoding → Transformer Encoder (4 layers) → Global Avg Pool → Output
-  - TransformerEncoder and TransformerDecoder now use composite blocks with internal skip connections
-- ✅ **TensorFlow/Keras Code Generation:**
-  - Framework toggle (PyTorch | TF/Keras) in code preview modal
-  - Full Keras code generation with tf.keras.layers
-  - Custom layer implementations for Keras:
-    - PositionalEncoding class with learnable embeddings
-    - TransformerEncoderBlock with Multi-Head Attention + FFN + LayerNorm + residual connections
-    - TransformerDecoderBlock with masked self-attention + cross-attention
-  - Proper input shape handling for all layer types
-  - Download separate files for each framework
+## Changelog
 
+### January 11, 2025
+- Updated Guide page with real platform screenshots
+- Added dark/light mode toggle to Guide page
+- Fixed mobile responsiveness for Guide page (text before images)
+- Moved Guide button from Landing header to Builder header as "Tutorial" (book icon)
+- Implemented Product Tour for first-time users (commented out for now)
+- Fixed admin routes - added .limit(100) to models query
 
-### Jan 6, 2025 - Input Layer Type System
-- ✅ Added Input Type dropdown with 3 options: Flat (Vector), Image (C, H, W), Sequence (Len, Feat)
-- ✅ Dynamic configuration fields based on input type:
-  - Flat: Input Size (e.g., 784)
-  - Image: Channels, Height, Width (e.g., 3, 224, 224)
-  - Sequence: Sequence Length, Features (e.g., 32, 256)
-- ✅ Node card displays formatted shape (e.g., [3, 224, 224] for images)
-- ✅ PyTorch code generator uses input type for correct example inputs
-- ✅ Updated all templates with proper inputType configurations
+### Previous Sessions
+- Implemented Sample Datasets feature with model auto-adjustment
+- Added Dataset Browser Modal with search, filter, preview
+- Expanded dataset library (CIFAR-10, text corpora)
+- Created Guide page with step-by-step tutorial
+- Mobile responsive Dataset Browser
+- Removed redundant "Generate" data tab
+- Fixed multiple tensor shape mismatch bugs
+- Unique layer icons implementation
 
-## Prioritized Backlog
-
-### P0 (Critical)
-- [x] Text Classification feature ✅ COMPLETED
-- [x] PDF Q&A Chatbot ✅ COMPLETED
-- [ ] Production Google Auth reliability (user verification pending)
-
-### P1 (High Priority)
-- [x] TensorFlow/Keras code generation option ✅ COMPLETED
-- [x] Undo/Redo functionality ✅ COMPLETED
-- [ ] Backend-based training for larger models
-
-### P2 (Medium Priority)
-- [x] Network templates (CNN, RNN, Transformer) ✅ COMPLETED
-- [ ] Export as ONNX format
-- [ ] Layer validation warnings
-- [ ] Collaborative real-time editing
-- [ ] Allow users to save custom architectures as templates
-
-### P3 (Nice to Have)
-- [x] Pre-built architectures/templates ✅ COMPLETED
-- [ ] Training history persistence
-- [ ] Model comparison tools
-- [ ] Sentiment analysis pre-training for Text Classifier
-- [ ] More PDF document types support (scanned PDFs with OCR)
-
-### Future Enhancements (Advanced)
-- [x] **Advanced Transformer Support:** ✅ COMPLETED
-  - PositionalEncoding layer with max_len, d_model, dropout config
-  - TransformerEncoderBlock composite layer (stacks N encoder layers internally)
-  - TransformerDecoderBlock composite layer
-  - GlobalAvgPool1D for sequence pooling
-  - Updated Transformer template to BERT-style (Embedding → PosEnc → Encoder → Pool → Output)
-- [x] **Multi-Input Connections (Skip Connections):** ✅ COMPLETED
-  - Add layer with multiple input handles for residual connections
-  - Concatenate layer for feature fusion
-  - Visual distinction (green handles for skip connections)
-  - ResNet Block template demonstrating skip connections
-  - PyTorch code generation with proper skip connection handling
-  - Keras code generation with Add/Concatenate layers
-- [x] **Arbitrary Graph Topologies:** ✅ COMPLETED
-  - Topological sorting for DAG (Directed Acyclic Graph) processing
-  - Support for branching (one output to multiple inputs)
-  - Support for merging (multiple inputs to one output via Add/Concatenate)
-  - Code generators handle complex graph structures
-- [x] **Undo/Redo System:** ✅ COMPLETED
-  - History stack with 50 state limit
-  - Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Shift+Z (redo)
-  - UI buttons in header with visual disabled states
-  - Debounced recording for continuous changes (dragging)
-  - Immediate recording for discrete actions (add/delete)
-- [ ] **Graph Architecture Enhancements (Future):**
-  - Parallel layer execution visualization
-
-## Test Reports
-- Latest test run: Jan 11, 2025 - 9 tests passed (pytest)
-- Test file: /app/tests/test_pdf_qa_and_text_classifier.py
+## Credentials
+- **Admin Panel:** `/admin` with password `xeufa#496`
+- **Groq API Key:** Configured in backend/.env
