@@ -200,6 +200,19 @@ export const layerCategories = {
         }
       },
       {
+        type: 'PositionalEncoding',
+        label: 'Positional Encoding',
+        icon: AlignJustify,
+        color: 'hsl(160, 70%, 45%)',
+        description: 'Adds position information to embeddings',
+        tip: 'Injects information about token positions into the embeddings. Essential for Transformers since attention has no inherent sense of order.',
+        defaultConfig: {
+          maxLen: 512,
+          dModel: 256,
+          dropout: 0.1
+        }
+      },
+      {
         type: 'TransformerEncoder',
         label: 'Transformer Encoder',
         icon: ArrowDownToLine,
