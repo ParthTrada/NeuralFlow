@@ -47,6 +47,7 @@ import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/t
 import { parseCSV, processCSVData, processTextCSVData, processImageFolder, processCharLevelData, generateText, buildCharVocabulary, generateShakespeareText, initShakespeareMarkov } from '../utils/dataProcessor';
 import { sampleDatasets, downloadDatasetCSV, shakespeareText } from '../utils/sampleDatasets';
 import DatasetBrowserModal from './DatasetBrowserModal';
+import { cn } from '../lib/utils';
 
 // Pre-trained Mini-GPT model specifications
 const MINI_GPT_SPECS = {
