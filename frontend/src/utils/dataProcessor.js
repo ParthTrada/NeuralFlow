@@ -48,16 +48,17 @@ export const processCSVData = (data, targetColumn, options = {}) => {
   
   if (isSequenceModel) {
     // Reshape 2D data [samples, features] into 3D [samples, timesteps, features_per_step]
-    // If user has 50 rows x 10 columns, we can interpret this as:
-    // Option 1: 50 separate sequences of 1 timestep each with 10 features -> [50, 1, 10]
-    // Option 2: Sliding window - create sequences from continuous data
-    
-    // For simplicity, treat each row as a single timestep with all features
-    // This creates [num_rows, 1, num_features] which can be expanded
     const numSamples = features.length;
+    let actualSeqLength = seqLength;
     
-    // If seqLength is 1, each row is one timestep
-    if (seqLength === 1 || numSamples < seqLength) {
+    // Auto-adjust sequence length if data is too small
+    if (numSamples <= seqLength) {
+      // Use smaller sequence length that allows at least 5 sequences
+      actualSeqLength = Math.max(1, Math.floor(numSamples / 5));
+      console.log(`Auto-adjusted sequence length from ${seqLength} to ${actualSeqLength} (only ${numSamples} rows)`);
+    }
+    
+    if (actualSeqLength === 1) {
       // Each row becomes a sequence of length 1
       xTensor = tf.tensor3d(features.map(row => [row])); // [samples, 1, features]
       inputShape = [1, numFeatures];
@@ -66,18 +67,24 @@ export const processCSVData = (data, targetColumn, options = {}) => {
       const sequences = [];
       const sequenceTargets = [];
       
-      for (let i = 0; i <= numSamples - seqLength; i++) {
-        const sequence = features.slice(i, i + seqLength);
+      for (let i = 0; i <= numSamples - actualSeqLength; i++) {
+        const sequence = features.slice(i, i + actualSeqLength);
         sequences.push(sequence);
-        sequenceTargets.push(targets[i + seqLength - 1]); // Use last target in sequence
+        sequenceTargets.push(targets[i + actualSeqLength - 1]); // Use last target in sequence
+      }
+      
+      if (sequences.length === 0) {
+        throw new Error(`Not enough data rows. Need at least ${actualSeqLength + 1} rows for sequences of length ${actualSeqLength}. You have ${numSamples} rows.`);
       }
       
       xTensor = tf.tensor3d(sequences); // [num_sequences, seqLength, features]
-      inputShape = [seqLength, numFeatures];
+      inputShape = [actualSeqLength, numFeatures];
       
       // Update targets to match sequences
       targets.length = 0;
       targets.push(...sequenceTargets);
+      
+      console.log(`Created ${sequences.length} sequences of length ${actualSeqLength} with ${numFeatures} features`);
     }
   } else {
     // Standard 2D tensor for Dense/MLP models
