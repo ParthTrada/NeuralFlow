@@ -163,6 +163,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [textInput, setTextInput] = useState('');
   const [textEncoding, setTextEncoding] = useState('bow');
   
+  // Text generation state (for Mini-GPT)
+  const [generationPrompt, setGenerationPrompt] = useState('');
+  const [generatedText, setGeneratedText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationTemp, setGenerationTemp] = useState(0.8);
+  const [generationLength, setGenerationLength] = useState(200);
+  
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
