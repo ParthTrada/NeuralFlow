@@ -7,7 +7,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 class NeuralFlowAPITester:
-    def __init__(self, base_url="https://neuralfix.preview.emergentagent.com"):
+    def __init__(self, base_url="https://mlflow-dashboard.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_token = None
         self.tests_run = 0

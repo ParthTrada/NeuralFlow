@@ -9,9 +9,9 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://neuralfix.preview.emergentagent.com/api/openapi.json"
+    "url": "https://mlflow-dashboard.preview.emergentagent.com/api/openapi.json"
   },
-  "logo_url": "https://neuralfix.preview.emergentagent.com/favicon.svg",
+  "logo_url": "https://mlflow-dashboard.preview.emergentagent.com/favicon.svg",
   "contact_email": "support@neuralflows.com",
-  "legal_info_url": "https://neuralfix.preview.emergentagent.com/"
+  "legal_info_url": "https://mlflow-dashboard.preview.emergentagent.com/"
 }
