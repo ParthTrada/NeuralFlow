@@ -1,6 +1,10 @@
 import requests
 import sys
+import io
+import os
 from datetime import datetime
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 class NeuralFlowAPITester:
     def __init__(self, base_url="https://neuralfix.preview.emergentagent.com"):
