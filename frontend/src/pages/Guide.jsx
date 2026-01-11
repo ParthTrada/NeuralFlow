@@ -205,7 +205,6 @@ const Guide = () => {
               <ScreenshotCard 
                 src={SCREENSHOTS.templates} 
                 alt="Template selection panel showing MLP, CNN, RNN, Transformer options"
-                maxHeight="max-h-[400px]"
               />
             </motion.div>
           </div>
