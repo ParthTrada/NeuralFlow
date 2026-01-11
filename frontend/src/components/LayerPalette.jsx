@@ -76,12 +76,12 @@ const templates = [
     color: '#22c55e',
     layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 50, features: 10 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 10, hiddenSize: 64, numLayers: 1 } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 10, features: 9 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 9, hiddenSize: 32, numLayers: 1 } } },
       { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.2 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 64, hiddenSize: 32, numLayers: 1 } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 32, units: 16, activation: 'relu' } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 16, numClasses: 3, activation: 'softmax' } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'LSTM', layerType: 'LSTM', config: { inputSize: 32, hiddenSize: 16, numLayers: 1 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 16, units: 8, activation: 'relu' } } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 8, numClasses: 3, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
