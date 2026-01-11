@@ -820,71 +820,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     try {
       // Get expected input size
       const inputLayer = nodes.find(n => n.data.layerType === 'Input');
-      const inputSize = inputLayer?.data?.config?.inputSize || 100;
-      
-      let inputVector;
-      
-      switch (textEncoding) {
-        case 'bow': {
-          // Simple bag of words - character frequency
-          const chars = textInput.toLowerCase().split('');
-          const charCounts = {};
-          chars.forEach(c => {
-            const code = c.charCodeAt(0);
-            if (code >= 32 && code <= 126) {
-              charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
-            }
-          });
-          inputVector = new Array(inputSize).fill(0);
-          Object.entries(charCounts).forEach(([idx, count]) => {
-            if (parseInt(idx) < inputSize) {
-              inputVector[parseInt(idx)] = count / chars.length;
-            }
-          });
-          break;
-        }
-        
-        case 'tfidf': {
-          // Simple TF approximation
-          const words = textInput.toLowerCase().split(/\s+/);
-          const wordCounts = {};
-          words.forEach(w => {
-            const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
-            wordCounts[hash] = (wordCounts[hash] || 0) + 1;
-          });
-          inputVector = new Array(inputSize).fill(0);
-          Object.entries(wordCounts).forEach(([idx, count]) => {
-            inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
-          });
-          break;
-        }
-        
-        case 'char': {
-          // Character-level encoding
-          inputVector = new Array(inputSize).fill(0);
-          const chars = textInput.slice(0, inputSize).split('');
-          chars.forEach((c, i) => {
-            inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
-          });
-          break;
-        }
-        
-        case 'word': {
-          // Word index encoding (simple hash)
-          const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
-          inputVector = new Array(inputSize).fill(0);
-          words.forEach((word, i) => {
-            const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
-            inputVector[i] = hash / 1000;
-          });
-          break;
-        }
-        
-        default:
-          throw new Error('Unknown encoding type');
-      }
-
-      // Check if model expects sequence input (3D) or flat input (2D)
+      const hasEmbedding = nodes.some(n => n.data.layerType === 'Embedding');
       const hasLSTM = nodes.some(n => 
         n.data.layerType === 'LSTM' || 
         n.data.layerType === 'GRU' ||
@@ -892,14 +828,131 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       );
       
       let inputTensor;
-      if (hasLSTM) {
-        // Reshape for RNN: [batch, timesteps, features]
-        const seqLength = inputLayer?.data?.config?.sequenceLength || inputSize;
-        const features = Math.ceil(inputSize / seqLength);
-        const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
-        inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features)], [1, seqLength, features]);
+      
+      // Check if this is an Embedding-based text model
+      if (hasEmbedding) {
+        // For Embedding models, we need token IDs (integers)
+        const seqLength = inputLayer?.data?.config?.seqLength || 100;
+        
+        // Use the vocabulary from training if available
+        const vocab = processedData?.vocab;
+        
+        if (vocab) {
+          // Tokenize using the trained vocabulary
+          const tokens = textInput
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 0);
+          
+          const indices = tokens.slice(0, seqLength).map(token => vocab[token] || 1); // 1 = UNK
+          
+          // Pad to seqLength
+          while (indices.length < seqLength) {
+            indices.push(0); // 0 = PAD
+          }
+          
+          // Create 2D tensor for Embedding input: [batch, sequence_length]
+          inputTensor = tf.tensor2d([indices], [1, seqLength], 'int32');
+        } else {
+          // Fallback: use simple hash-based tokenization
+          const tokens = textInput
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 0);
+          
+          const vocabSize = inputLayer?.data?.config?.vocabSize || 10000;
+          const indices = tokens.slice(0, seqLength).map(token => {
+            // Simple hash function to map words to indices
+            let hash = 0;
+            for (let i = 0; i < token.length; i++) {
+              hash = ((hash << 5) - hash + token.charCodeAt(i)) % vocabSize;
+            }
+            return Math.abs(hash) + 2; // +2 to avoid PAD (0) and UNK (1)
+          });
+          
+          // Pad to seqLength
+          while (indices.length < seqLength) {
+            indices.push(0);
+          }
+          
+          inputTensor = tf.tensor2d([indices], [1, seqLength], 'int32');
+        }
       } else {
-        inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+        // For non-Embedding models, use the original encoding methods
+        const inputSize = inputLayer?.data?.config?.inputSize || 100;
+        let inputVector;
+        
+        switch (textEncoding) {
+          case 'bow': {
+            // Simple bag of words - character frequency
+            const chars = textInput.toLowerCase().split('');
+            const charCounts = {};
+            chars.forEach(c => {
+              const code = c.charCodeAt(0);
+              if (code >= 32 && code <= 126) {
+                charCounts[code - 32] = (charCounts[code - 32] || 0) + 1;
+              }
+            });
+            inputVector = new Array(inputSize).fill(0);
+            Object.entries(charCounts).forEach(([idx, count]) => {
+              if (parseInt(idx) < inputSize) {
+                inputVector[parseInt(idx)] = count / chars.length;
+              }
+            });
+            break;
+          }
+          
+          case 'tfidf': {
+            // Simple TF approximation
+            const words = textInput.toLowerCase().split(/\s+/);
+            const wordCounts = {};
+            words.forEach(w => {
+              const hash = w.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % inputSize, 0);
+              wordCounts[hash] = (wordCounts[hash] || 0) + 1;
+            });
+            inputVector = new Array(inputSize).fill(0);
+            Object.entries(wordCounts).forEach(([idx, count]) => {
+              inputVector[parseInt(idx)] = Math.log(1 + count) / Math.log(1 + words.length);
+            });
+            break;
+          }
+          
+          case 'char': {
+            // Character-level encoding
+            inputVector = new Array(inputSize).fill(0);
+            const chars = textInput.slice(0, inputSize).split('');
+            chars.forEach((c, i) => {
+              inputVector[i] = (c.charCodeAt(0) - 32) / 94; // Normalize ASCII printable range
+            });
+            break;
+          }
+          
+          case 'word': {
+            // Word index encoding (simple hash)
+            const words = textInput.toLowerCase().split(/\s+/).slice(0, inputSize);
+            inputVector = new Array(inputSize).fill(0);
+            words.forEach((word, i) => {
+              const hash = word.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 1000, 0);
+              inputVector[i] = hash / 1000;
+            });
+            break;
+          }
+          
+          default:
+            throw new Error('Unknown encoding type');
+        }
+
+        if (hasLSTM) {
+          // Reshape for RNN: [batch, timesteps, features]
+          const seqLength = inputLayer?.data?.config?.seqLength || inputSize;
+          const features = Math.ceil(inputSize / seqLength);
+          const paddedVector = [...inputVector, ...new Array(seqLength * features - inputVector.length).fill(0)];
+          inputTensor = tf.tensor3d([paddedVector.slice(0, seqLength * features).map(row => [row])].flat(), [1, seqLength, features]);
+        } else {
+          inputTensor = tf.tensor2d([inputVector], [1, inputSize]);
+        }
       }
 
       const prediction = modelRef.current.predict(inputTensor);
