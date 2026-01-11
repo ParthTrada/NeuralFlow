@@ -297,7 +297,6 @@ const Guide = () => {
               <ScreenshotCard 
                 src={SCREENSHOTS.training} 
                 alt="Training panel showing epochs, learning rate, and accuracy/loss chart"
-                maxHeight="max-h-[420px]"
               />
             </motion.div>
             <motion.div
