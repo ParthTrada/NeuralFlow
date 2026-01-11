@@ -78,7 +78,14 @@ export const DatasetBrowserModal = ({
   const handlePreview = (dataset) => {
     setSelectedDataset(dataset);
     const data = dataset.getData();
-    setPreviewData(data.slice(0, 5)); // Show first 5 rows
+    // Handle text-generation datasets that return an object with sequences array
+    if (data && data.sequences && Array.isArray(data.sequences)) {
+      setPreviewData(data.sequences.slice(0, 5));
+    } else if (Array.isArray(data)) {
+      setPreviewData(data.slice(0, 5)); // Show first 5 rows
+    } else {
+      setPreviewData([]); // Fallback for unexpected data format
+    }
     setMobileView('preview'); // Switch to preview on mobile
   };
 
