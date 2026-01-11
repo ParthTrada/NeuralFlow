@@ -493,10 +493,18 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     const updatedNodes = [...currentNodes];
     let hasChanges = false;
     
+    // Define consistent parameters for each dataset type
+    const textSeqLength = 64; // Consistent sequence length for text models
+    const textVocabSize = datasetInfo.vocabSize || 10000;
+    
+    // Find all relevant layers
     const inputNode = updatedNodes.find(n => n.data.layerType === 'Input');
     const outputNode = updatedNodes.find(n => n.data.layerType === 'Output');
-    const firstDenseNode = updatedNodes.find(n => n.data.layerType === 'Dense');
-    const embeddingNode = updatedNodes.find(n => n.data.layerType === 'Embedding');
+    const embeddingNodes = updatedNodes.filter(n => n.data.layerType === 'Embedding');
+    const posEncodingNodes = updatedNodes.filter(n => n.data.layerType === 'PositionalEncoding');
+    const multiHeadNodes = updatedNodes.filter(n => n.data.layerType === 'MultiHeadAttention');
+    const lstmNodes = updatedNodes.filter(n => n.data.layerType === 'LSTM' || n.data.layerType === 'GRU');
+    const denseNodes = updatedNodes.filter(n => n.data.layerType === 'Dense');
     
     // Adjust Input layer based on dataset type
     if (inputNode) {
@@ -511,10 +519,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         newConfig.channels = 1;
         hasChanges = true;
       } else if (datasetInfo.category === 'text') {
-        // For text datasets
+        // For text datasets - use consistent sequence length
         newConfig.inputType = 'text';
-        newConfig.seqLength = 100;
-        newConfig.vocabSize = datasetInfo.vocabSize || 10000;
+        newConfig.seqLength = textSeqLength;
+        newConfig.vocabSize = textVocabSize;
         hasChanges = true;
       } else if (datasetInfo.category === 'sequence') {
         // For sequence/time-series datasets
@@ -554,32 +562,85 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       hasChanges = true;
     }
     
-    // Adjust first Dense layer input size for tabular data
-    if (firstDenseNode && datasetInfo.category === 'tabular') {
-      const denseIdx = updatedNodes.findIndex(n => n.id === firstDenseNode.id);
-      updatedNodes[denseIdx] = {
-        ...firstDenseNode,
-        data: {
-          ...firstDenseNode.data,
-          config: {
-            ...firstDenseNode.data.config,
-            inputSize: datasetInfo.features || 4
+    // Adjust ALL Embedding layers for text datasets
+    if (datasetInfo.category === 'text') {
+      embeddingNodes.forEach(embNode => {
+        const embIdx = updatedNodes.findIndex(n => n.id === embNode.id);
+        updatedNodes[embIdx] = {
+          ...embNode,
+          data: {
+            ...embNode.data,
+            config: {
+              ...embNode.data.config,
+              vocabSize: textVocabSize,
+              inputLength: textSeqLength
+            }
           }
-        }
-      };
-      hasChanges = true;
+        };
+        hasChanges = true;
+      });
+      
+      // Adjust PositionalEncoding layers
+      posEncodingNodes.forEach(posNode => {
+        const posIdx = updatedNodes.findIndex(n => n.id === posNode.id);
+        updatedNodes[posIdx] = {
+          ...posNode,
+          data: {
+            ...posNode.data,
+            config: {
+              ...posNode.data.config,
+              maxLen: textSeqLength
+            }
+          }
+        };
+        hasChanges = true;
+      });
+      
+      // Adjust MultiHeadAttention layers
+      multiHeadNodes.forEach(mhaNode => {
+        const mhaIdx = updatedNodes.findIndex(n => n.id === mhaNode.id);
+        // Keep existing config but ensure it's consistent
+        updatedNodes[mhaIdx] = {
+          ...mhaNode,
+          data: {
+            ...mhaNode.data,
+            config: {
+              ...mhaNode.data.config
+            }
+          }
+        };
+      });
     }
     
-    // Adjust Embedding layer for text datasets
-    if (embeddingNode && datasetInfo.category === 'text') {
-      const embIdx = updatedNodes.findIndex(n => n.id === embeddingNode.id);
-      updatedNodes[embIdx] = {
-        ...embeddingNode,
+    // Adjust LSTM/GRU layers for sequence data
+    if (datasetInfo.category === 'sequence') {
+      lstmNodes.forEach(lstmNode => {
+        const lstmIdx = updatedNodes.findIndex(n => n.id === lstmNode.id);
+        updatedNodes[lstmIdx] = {
+          ...lstmNode,
+          data: {
+            ...lstmNode.data,
+            config: {
+              ...lstmNode.data.config,
+              inputSize: datasetInfo.features || 9
+            }
+          }
+        };
+        hasChanges = true;
+      });
+    }
+    
+    // Adjust first Dense layer input size for tabular data
+    if (datasetInfo.category === 'tabular' && denseNodes.length > 0) {
+      const firstDense = denseNodes[0];
+      const denseIdx = updatedNodes.findIndex(n => n.id === firstDense.id);
+      updatedNodes[denseIdx] = {
+        ...firstDense,
         data: {
-          ...embeddingNode.data,
+          ...firstDense.data,
           config: {
-            ...embeddingNode.data.config,
-            vocabSize: datasetInfo.vocabSize || 10000
+            ...firstDense.data.config,
+            inputSize: datasetInfo.features || 4
           }
         }
       };
