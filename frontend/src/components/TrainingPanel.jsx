@@ -264,10 +264,42 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       const cols = Object.keys(data[0]);
       setColumns(cols);
-      setTargetColumn(cols[cols.length - 1]);
+      
+      // Auto-detect text column (first string column that looks like text)
+      const isTextModel = networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding;
+      let detectedTextCol = '';
+      let detectedTargetCol = cols[cols.length - 1];
+      
+      if (isTextModel) {
+        // Look for a text-like column (longer strings, not just labels)
+        for (const col of cols) {
+          const sampleValue = String(data[0][col] || '');
+          if (sampleValue.length > 20 && col.toLowerCase() !== 'sentiment' && col.toLowerCase() !== 'label') {
+            detectedTextCol = col;
+            break;
+          }
+        }
+        // If no text column found, use first column
+        if (!detectedTextCol) {
+          detectedTextCol = cols[0];
+        }
+        // Target is usually the last column or one named 'sentiment'/'label'
+        const sentimentCol = cols.find(c => c.toLowerCase() === 'sentiment' || c.toLowerCase() === 'label');
+        if (sentimentCol) {
+          detectedTargetCol = sentimentCol;
+        }
+      }
+      
+      setTextColumn(detectedTextCol);
+      setTargetColumn(detectedTargetCol);
       setProcessedData({ raw: data, type: 'csv' });
       setStatus('ready');
-      toast.success(`Loaded ${data.length} rows from CSV`);
+      
+      if (isTextModel) {
+        toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
+      } else {
+        toast.success(`Loaded ${data.length} rows from CSV`);
+      }
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
