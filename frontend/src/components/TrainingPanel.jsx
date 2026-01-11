@@ -759,6 +759,51 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           // Log the shape for debugging
           console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM, 'classes:', actualNumClasses);
         }
+      } else if (processedData.type === 'image' && processedData.isImageData) {
+        // Process image data - create tensors now for training
+        const { raw, pixelColumns, targetColumn: imgTargetCol, uniqueLabels } = processedData;
+        const numSamples = raw.length;
+        const height = processedData.imageConfig?.height || 28;
+        const width = processedData.imageConfig?.width || 28;
+        const channels = processedData.imageConfig?.channels || 1;
+        
+        // Check if model has Conv2D layers
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
+        if (modelHasConv2D) {
+          // Create 4D tensor for CNN: [batch, height, width, channels]
+          const imageData = raw.map(row => {
+            const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
+            // Reshape flat array to [height, width, channels]
+            const image = [];
+            for (let h = 0; h < height; h++) {
+              const rowData = [];
+              for (let w = 0; w < width; w++) {
+                rowData.push([pixels[h * width + w] || 0]);
+              }
+              image.push(rowData);
+            }
+            return image;
+          });
+          xTrain = tf.tensor4d(imageData, [numSamples, height, width, channels]);
+          console.log('Created 4D tensor for CNN:', xTrain.shape);
+        } else {
+          // Create 2D tensor for MLP: [batch, features]
+          const flatData = raw.map(row => 
+            pixelColumns.map(col => (row[col] || 0) / 255.0)
+          );
+          xTrain = tf.tensor2d(flatData, [numSamples, pixelColumns.length]);
+          console.log('Created 2D tensor for MLP:', xTrain.shape);
+        }
+        
+        // Create one-hot encoded labels
+        const labels = raw.map(row => row[imgTargetCol]);
+        const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
+        yTrain = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), uniqueLabels.length);
+        actualNumClasses = uniqueLabels.length;
+        
+        console.log('Image data processed - samples:', numSamples, 'classes:', actualNumClasses);
+        toast.info(`Image data: ${numSamples} samples, ${actualNumClasses} classes`);
       } else {
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
