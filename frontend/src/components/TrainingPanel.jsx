@@ -192,6 +192,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [generationTemp, setGenerationTemp] = useState(0.8);
   const [generationLength, setGenerationLength] = useState(200);
   
+  // Pre-trained Mini-GPT state
+  const [isMiniGPTLoaded, setIsMiniGPTLoaded] = useState(false);
+  const [isLoadingMiniGPT, setIsLoadingMiniGPT] = useState(false);
+  const [miniGPTVocab, setMiniGPTVocab] = useState(null);
+  
   const modelRef = useRef(null);
   const stopTrainingRef = useRef(false);
   const fileInputRef = useRef(null);
