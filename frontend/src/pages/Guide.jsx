@@ -16,6 +16,15 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
+// Real platform screenshots
+const SCREENSHOTS = {
+  templates: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/4yd9qtsv_Screenshot%202026-01-11%20at%202.24.00%E2%80%AFAM.png',
+  canvas: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/r71b3f5q_Screenshot%202026-01-11%20at%202.25.09%E2%80%AFAM.png',
+  datasets: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/dgaibmco_Screenshot%202026-01-11%20at%202.25.40%E2%80%AFAM.png',
+  training: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/l99zcwk3_Screenshot%202026-01-11%20at%202.26.27%E2%80%AFAM.png',
+  code: 'https://customer-assets.emergentagent.com/job_model-dataset-sync/artifacts/725etyvq_Screenshot%202026-01-11%20at%202.27.14%E2%80%AFAM.png',
+};
+
 // Animated Background Component (same as Landing page)
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
@@ -28,7 +37,7 @@ const AnimatedBackground = () => {
 
     const resize = () => {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight * 3; // Taller for scrolling
+      canvas.height = window.innerHeight * 3;
       initNodes();
     };
 
@@ -50,7 +59,6 @@ const AnimatedBackground = () => {
       ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw connections
       ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < nodes.length; i++) {
@@ -68,7 +76,6 @@ const AnimatedBackground = () => {
         }
       }
 
-      // Draw nodes
       ctx.globalAlpha = 1;
       nodes.forEach(node => {
         ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
@@ -105,11 +112,18 @@ const AnimatedBackground = () => {
   );
 };
 
-// Card Component (same style as Landing page)
-const GuideCard = ({ children, className = '' }) => (
-  <div className={`relative p-6 rounded-2xl border backdrop-blur-sm border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-violet-500/30 transition-all duration-300 ${className}`}>
-    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-    <div className="relative z-10">{children}</div>
+// Screenshot Card with glow effect
+const ScreenshotCard = ({ src, alt, className = '' }) => (
+  <div className={`relative group ${className}`}>
+    <div className="absolute -inset-1 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
+    <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-sm">
+      <img 
+        src={src} 
+        alt={alt} 
+        className="w-full h-auto object-cover"
+        loading="lazy"
+      />
+    </div>
   </div>
 );
 
