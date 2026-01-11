@@ -221,9 +221,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   }, [isMiniGPTTemplate]);
   
-  // Initialize pre-trained Mini-GPT
+  // Initialize pre-trained Mini-GPT with actual training
   const initializeMiniGPT = async () => {
     setIsLoadingMiniGPT(true);
+    setMiniGPTTrainingComplete(false);
+    setMiniGPTTrainingProgress({ epoch: 0, loss: 0, accuracy: 0 });
+    
     try {
       // Build vocabulary from Shakespeare text
       const { charToIdx, idxToChar, vocabSize } = buildCharVocabulary(shakespeareText);
@@ -239,11 +242,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         });
         modelRef.current = model;
         
-        // Note: In a real implementation, we would load pre-trained weights here
-        // For now, we'll use randomly initialized weights as a demo
-        // The model will generate random-ish but structurally valid output
+        // Process Shakespeare data for training
+        toast.info('Preparing training data...', { duration: 2000 });
+        const trainingData = processCharLevelData(shakespeareText, {
+          seqLength: 64,
+          targetVocabSize: vocabSize
+        });
         
         setProcessedData({
+          ...trainingData,
           isTextGeneration: true,
           charToIdx,
           idxToChar,
@@ -252,14 +259,67 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           fullText: shakespeareText,
         });
         
+        // Set default prompt
         setGenerationPrompt('ROMEO: But, soft! what light through yonder window breaks?');
+        
+        // Start training
+        toast.info('Training Mini-GPT on Shakespeare... This takes about 1-2 minutes.', { duration: 4000 });
+        setStatus('training');
+        setIsTraining(true);
+        
+        const MINI_GPT_EPOCHS = 30; // Reduced for faster training
+        const MINI_GPT_BATCH_SIZE = 32;
+        
+        const history = [];
+        
+        for (let epoch = 0; epoch < MINI_GPT_EPOCHS; epoch++) {
+          if (stopTrainingRef.current) {
+            toast.info('Training stopped by user');
+            break;
+          }
+          
+          const result = await model.fit(trainingData.xTrain, trainingData.yTrain, {
+            epochs: 1,
+            batchSize: MINI_GPT_BATCH_SIZE,
+            shuffle: true,
+            verbose: 0,
+          });
+          
+          const loss = result.history.loss[0];
+          const accuracy = result.history.acc ? result.history.acc[0] : 0;
+          
+          history.push({ epoch: epoch + 1, loss, accuracy });
+          setTrainingHistory([...history]);
+          setCurrentEpoch(epoch + 1);
+          setMiniGPTTrainingProgress({
+            epoch: epoch + 1,
+            totalEpochs: MINI_GPT_EPOCHS,
+            loss: loss.toFixed(3),
+            accuracy: (accuracy * 100).toFixed(1)
+          });
+          
+          // Update UI every epoch
+          if ((epoch + 1) % 5 === 0) {
+            console.log(`Mini-GPT Epoch ${epoch + 1}/${MINI_GPT_EPOCHS} - Loss: ${loss.toFixed(3)}, Acc: ${(accuracy * 100).toFixed(1)}%`);
+          }
+        }
+        
+        setIsTraining(false);
+        setMiniGPTTrainingComplete(true);
         setIsMiniGPTLoaded(true);
         setStatus('complete');
-        toast.success('Mini-GPT ready! Try generating some Shakespeare-style text.');
+        
+        const finalLoss = history[history.length - 1]?.loss || 0;
+        const finalAcc = history[history.length - 1]?.accuracy || 0;
+        
+        toast.success(`Mini-GPT trained! Final Loss: ${finalLoss.toFixed(3)}, Accuracy: ${(finalAcc * 100).toFixed(1)}%`);
       }
     } catch (error) {
-      console.error('Failed to initialize Mini-GPT:', error);
-      toast.error('Failed to load Mini-GPT model');
+      console.error('Failed to train Mini-GPT:', error);
+      toast.error('Training failed. Switching to Markov chain fallback.');
+      setUseMarkovFallback(true);
+      setIsMiniGPTLoaded(true);
+      setStatus('complete');
     } finally {
       setIsLoadingMiniGPT(false);
     }
