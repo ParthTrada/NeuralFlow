@@ -589,66 +589,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     return hasChanges ? updatedNodes : null;
   };
 
-  // Process image dataset into proper tensor format
-  const processImageDataset = (rawData, datasetInfo) => {
-    const numSamples = rawData.length;
-    const height = 28;
-    const width = 28;
-    const channels = 1;
-    
-    // Check if model has Conv2D layers
-    const hasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
-    
-    // Extract pixel data and labels
-    const pixelColumns = Object.keys(rawData[0]).filter(k => k.startsWith('pixel_'));
-    const targetColumn = datasetInfo.targetColumn;
-    
-    // Get unique labels
-    const labels = rawData.map(row => row[targetColumn]);
-    const uniqueLabels = [...new Set(labels)];
-    const numClasses = uniqueLabels.length;
-    
-    // Create tensors
-    let xTensor;
-    
-    if (hasConv2D) {
-      // Create 4D tensor for CNN: [batch, height, width, channels]
-      const imageData = rawData.map(row => {
-        const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
-        // Reshape flat array to [height, width, channels]
-        const image = [];
-        for (let h = 0; h < height; h++) {
-          const row_data = [];
-          for (let w = 0; w < width; w++) {
-            row_data.push([pixels[h * width + w] || 0]);
-          }
-          image.push(row_data);
-        }
-        return image;
-      });
-      xTensor = tf.tensor4d(imageData, [numSamples, height, width, channels]);
-    } else {
-      // Create 2D tensor for MLP: [batch, features]
-      const flatData = rawData.map(row => 
-        pixelColumns.map(col => (row[col] || 0) / 255.0)
-      );
-      xTensor = tf.tensor2d(flatData, [numSamples, pixelColumns.length]);
-    }
-    
-    // Create one-hot encoded labels
-    const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
-    const yTensor = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), numClasses);
-    
-    return {
-      xTrain: xTensor,
-      yTrain: yTensor,
-      inputShape: hasConv2D ? [height, width, channels] : [pixelColumns.length],
-      numClasses,
-      uniqueLabels,
-      type: 'image'
-    };
-  };
-
   // Start training
   const handleStartTraining = async () => {
     if (!processedData) {
