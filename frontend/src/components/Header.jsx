@@ -1,6 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu, Undo2, Redo2 } from 'lucide-react';
+import { Sun, Moon, Play, Code, Trash2, Cpu, GraduationCap, FolderOpen, LogIn, LogOut, Layers, Menu, Undo2, Redo2, BookOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Tooltip,
