@@ -16,7 +16,10 @@ import {
   Info,
   FileText,
   FolderTree,
-  Table
+  Table,
+  Database,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
@@ -37,6 +40,8 @@ import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs';
 import { buildTFModel, compileModel, trainModel, disposeModel } from '../utils/tensorflowModel';
 import { parseCSV, processCSVData, processTextCSVData, processImageFolder, generateSampleData } from '../utils/dataProcessor';
+import { sampleDatasets, downloadDatasetCSV } from '../utils/sampleDatasets';
+import DatasetBrowserModal from './DatasetBrowserModal';
 
 // Analyze network to determine data requirements
 const analyzeNetworkRequirements = (nodes) => {
