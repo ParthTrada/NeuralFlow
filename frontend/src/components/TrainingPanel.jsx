@@ -1753,8 +1753,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                             </Button>
                           </div>
                         )}
-                      </>
-                    )}
                   </div>
                   
                   {/* Info about exporting */}
