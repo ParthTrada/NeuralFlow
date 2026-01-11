@@ -93,20 +93,19 @@ const templates = [
   },
   {
     id: 'transformer',
-    name: 'Transformer',
-    description: 'Attention-based for NLP',
-    tip: 'Uses self-attention to process all positions simultaneously. Powers GPT, BERT, and modern language models. Excellent for NLP.',
+    name: 'Transformer (BERT-style)',
+    description: 'Encoder-only for classification',
+    tip: 'Uses Embedding + Positional Encoding + Transformer Encoder blocks. Like BERT, great for text classification, sentiment analysis, and NLU tasks.',
     icon: Brain,
     color: '#f59e0b',
-    layers: 7,
+    layers: 6,
     nodes: [
-      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'sequence', seqLength: 32, features: 256 } } },
-      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Multi-Head Attention', layerType: 'MultiHeadAttention', config: { embedDim: 256, numHeads: 8 } } },
-      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'LayerNorm', layerType: 'LayerNorm', config: { normalizedShape: 256 } } },
-      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 256, units: 512, activation: 'relu' } } },
-      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Dropout', layerType: 'Dropout', config: { rate: 0.1 } } },
-      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Dense', layerType: 'Dense', config: { inputSize: 512, units: 128, activation: 'relu' } } },
-      { id: 'node_6', type: 'layerNode', position: { x: 0, y: 780 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 128, numClasses: 10, activation: 'softmax' } } },
+      { id: 'node_0', type: 'layerNode', position: { x: 0, y: 0 }, data: { label: 'Input', layerType: 'Input', config: { inputType: 'text', vocabSize: 30000, seqLength: 128 } } },
+      { id: 'node_1', type: 'layerNode', position: { x: 0, y: 130 }, data: { label: 'Embedding', layerType: 'Embedding', config: { vocabSize: 30000, embedDim: 256 } } },
+      { id: 'node_2', type: 'layerNode', position: { x: 0, y: 260 }, data: { label: 'Positional Encoding', layerType: 'PositionalEncoding', config: { maxLen: 128, dModel: 256, dropout: 0.1 } } },
+      { id: 'node_3', type: 'layerNode', position: { x: 0, y: 390 }, data: { label: 'Transformer Encoder', layerType: 'TransformerEncoder', config: { dModel: 256, nHead: 8, dimFeedforward: 1024, numLayers: 4 } } },
+      { id: 'node_4', type: 'layerNode', position: { x: 0, y: 520 }, data: { label: 'Global Avg Pool', layerType: 'GlobalAvgPool1D', config: {} } },
+      { id: 'node_5', type: 'layerNode', position: { x: 0, y: 650 }, data: { label: 'Output', layerType: 'Output', config: { inputSize: 256, numClasses: 10, activation: 'softmax' } } },
     ],
     edges: [
       { id: 'e0-1', source: 'node_0', target: 'node_1', animated: true },
@@ -114,7 +113,6 @@ const templates = [
       { id: 'e2-3', source: 'node_2', target: 'node_3', animated: true },
       { id: 'e3-4', source: 'node_3', target: 'node_4', animated: true },
       { id: 'e4-5', source: 'node_4', target: 'node_5', animated: true },
-      { id: 'e5-6', source: 'node_5', target: 'node_6', animated: true },
     ]
   },
   {
