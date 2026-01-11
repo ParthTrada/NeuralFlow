@@ -925,8 +925,14 @@ export const getDatasetById = (datasetId) => {
 
 // Convert dataset to CSV string
 export const datasetToCSV = (dataset) => {
-  const data = dataset.getData();
-  if (!data || data.length === 0) return '';
+  const rawData = dataset.getData();
+  
+  // Handle text-generation datasets that return an object with sequences array
+  const data = (rawData && rawData.sequences && Array.isArray(rawData.sequences)) 
+    ? rawData.sequences 
+    : rawData;
+  
+  if (!data || !Array.isArray(data) || data.length === 0) return '';
   
   const columns = Object.keys(data[0]);
   const header = columns.join(',');
