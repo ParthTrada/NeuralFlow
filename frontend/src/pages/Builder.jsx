@@ -507,6 +507,10 @@ export default function Builder() {
         isMobile={isMobile}
         onToggleLayers={toggleLayerPalette}
         showLayerPalette={showLayerPalette}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
       />
 
       <LayerPalette 
