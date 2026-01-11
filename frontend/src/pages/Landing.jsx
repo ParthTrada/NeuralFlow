@@ -204,17 +204,6 @@ export default function Landing() {
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
-            <button
-              onClick={() => navigate('/guide')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                isDark 
-                  ? 'text-zinc-400 hover:text-white hover:bg-white/5' 
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
-              }`}
-              data-testid="guide-link"
-            >
-              Guide
-            </button>
             {[
               { name: 'Features', href: '#features' },
               { name: 'How It Works', href: '#how-it-works' },
