@@ -867,6 +867,124 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-24">
+              {/* Network Requirements Summary */}
+              {networkReqs && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowDataGuide(!showDataGuide)}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Info className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-sm">Data Requirements Guide</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {showDataGuide ? 'Hide' : 'Show'}
+                    </span>
+                  </button>
+                  
+                  {showDataGuide && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-3 rounded-lg bg-muted/50 border border-border space-y-3"
+                    >
+                      {/* Model Summary */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-primary/20 text-primary">
+                          {networkReqs.modelType}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                          {networkReqs.taskType}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                          {networkReqs.numClasses} {networkReqs.taskType === 'classification' ? 'classes' : 'output'}
+                        </span>
+                      </div>
+                      
+                      {/* Input Requirements */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-foreground/80">Expected Input:</p>
+                        <p className="text-xs text-muted-foreground">{networkReqs.inputDescription}</p>
+                      </div>
+                      
+                      {/* Data Format Guide based on model type */}
+                      {networkReqs.modelType === 'RNN/LSTM' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <Table className="w-3 h-3" /> CSV Format for LSTM:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># {networkReqs.features} features + 1 target column</div>
+                            <div className="text-muted-foreground"># Each row = 1 timestep in sequence</div>
+                            <div className="mt-1">f1, f2, f3, ..., f{networkReqs.features}, label</div>
+                            <div>0.1, 0.5, 0.3, ..., 0.8, class_A</div>
+                            <div>0.2, 0.4, 0.2, ..., 0.7, class_A</div>
+                            <div>0.3, 0.3, 0.4, ..., 0.9, class_B</div>
+                            <div className="text-muted-foreground">... (min {networkReqs.seqLength}+ rows)</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Sliding window creates sequences of {networkReqs.seqLength} timesteps from your data.
+                            Need at least 2 different labels for classification.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {networkReqs.modelType === 'CNN' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <FolderTree className="w-3 h-3" /> Image Folder Structure:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px]">
+                            <div>📁 training_data/</div>
+                            <div>├── 📁 class_A/</div>
+                            <div>│   ├── image1.jpg</div>
+                            <div>│   ├── image2.jpg</div>
+                            <div>│   └── ...</div>
+                            <div>├── 📁 class_B/</div>
+                            <div>│   ├── image1.jpg</div>
+                            <div>│   └── ...</div>
+                            <div>└── 📁 class_C/</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Images will be resized to {networkReqs.inputShape[0]}×{networkReqs.inputShape[1]}.
+                            Each subfolder = one class.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {networkReqs.modelType === 'MLP' && (
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <p className="text-xs font-semibold text-foreground/80 flex items-center gap-1">
+                            <Table className="w-3 h-3" /> CSV Format for MLP:
+                          </p>
+                          <div className="bg-background/50 rounded p-2 font-mono text-[10px] overflow-x-auto">
+                            <div className="text-muted-foreground"># {networkReqs.inputShape[0]} features + 1 target column</div>
+                            <div className="mt-1">feature1, feature2, ..., feature{networkReqs.inputShape[0]}, label</div>
+                            <div>0.5, 0.3, ..., 0.8, class_A</div>
+                            <div>0.2, 0.7, ..., 0.4, class_B</div>
+                            <div>0.9, 0.1, ..., 0.6, class_A</div>
+                            <div className="text-muted-foreground">...</div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            💡 Each row = 1 sample. Last column = target label.
+                            Numeric values work best.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Quick Generate Button */}
+                      <div className="pt-2 border-t border-border/50">
+                        <p className="text-[10px] text-muted-foreground mb-2">
+                          🚀 Quick start: Use Sample data to test your network
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+              
               {/* Data Upload Section */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
