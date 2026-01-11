@@ -182,15 +182,22 @@ export default function Builder() {
       ...edge,
       id: `e_${timestamp}_${index}`,
       source: idMap[edge.source],
-      target: idMap[edge.target]
+      target: idMap[edge.target],
+      targetHandle: edge.targetHandle // Preserve target handle for multi-input nodes
     }));
     
     // Add to existing nodes and edges
-    setNodes((nds) => [...nds, ...newNodes]);
-    setEdges((eds) => [...eds, ...newEdges]);
+    const updatedNodes = [...nodes, ...newNodes];
+    const updatedEdges = [...edges, ...newEdges];
+    
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+    
+    // Record to history (immediate for discrete action)
+    recordHistory(updatedNodes, updatedEdges, true);
     
     toast.success(`Added ${templateName || 'template'} to canvas!`);
-  }, [nodes, setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, recordHistory]);
 
   const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId, trainingData) => {
     setNodes(savedNodes || []);
