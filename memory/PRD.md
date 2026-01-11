@@ -12,10 +12,10 @@ Build a visual deep-learning tool that allows users to design, train, and export
 
 ### Implemented ✅
 - **Visual Network Builder** - Drag-and-drop canvas for neural network design
-- **Layer Palette** - Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, Embedding, Flatten, MaxPooling2D
-- **Model Templates** - Pre-built architectures (MLP, CNN, RNN, Transformer, Autoencoder, Text Classifier, ResNet Block)
+- **Layer Palette** - Dense, Conv2D, LSTM, GRU, Attention, BatchNorm, Dropout, Embedding, Flatten, MaxPooling2D, Transformer Encoder/Decoder, LayerNorm, PositionalEncoding
+- **Model Templates** - Pre-built architectures (MLP, CNN, RNN, Transformer, Autoencoder, Text Classifier, ResNet Block, **Mini-GPT**)
 - **In-Browser Training** - TensorFlow.js based training with real-time metrics
-- **Sample Datasets** - Iris, MNIST, Fashion-MNIST, CIFAR-10, Sentiment, Movie Reviews, News Categories, Intent Classification
+- **Sample Datasets** - Iris, MNIST, Fashion-MNIST, CIFAR-10, Sentiment, Movie Reviews, News Categories, Intent Classification, Shakespeare (text generation)
 - **Auto-Adjustment** - Model layers automatically adapt to selected dataset specifications
 - **Code Export** - Generate PyTorch and Keras code with download/copy options
 - **User Authentication** - Google OAuth via Emergent Platform
@@ -24,6 +24,7 @@ Build a visual deep-learning tool that allows users to design, train, and export
 - **Guide Page** - Visual tutorial with real platform screenshots
 - **Admin Panel** - Debug interface at `/admin` (password protected)
 - **Mobile Responsive** - Adapted UI for mobile devices
+- **Mini-GPT Template (NEW)** - Pre-trained decoder-only transformer for Shakespeare-style text generation
 
 ### Product Tour (Ready but Disabled)
 - First-time user onboarding tour
@@ -39,10 +40,9 @@ Build a visual deep-learning tool that allows users to design, train, and export
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Header.jsx              # App header with actions
-│   │   │   ├── LayerPalette.jsx        # Draggable layers & templates
+│   │   │   ├── LayerPalette.jsx        # Draggable layers & templates (includes Mini-GPT)
 │   │   │   ├── NetworkCanvas.jsx       # React Flow canvas
-│   │   │   ├── PropertiesPanel.jsx     # Layer configuration
-│   │   │   ├── TrainingPanel.jsx       # Training UI & dataset browser
+│   │   │   ├── TrainingPanel.jsx       # Training UI + Pre-trained Mini-GPT UI
 │   │   │   ├── DatasetBrowserModal.jsx # Sample datasets modal
 │   │   │   ├── CodePreviewModal.jsx    # Code export modal
 │   │   │   ├── SavedModelsPanel.jsx    # User's saved models
@@ -53,8 +53,10 @@ Build a visual deep-learning tool that allows users to design, train, and export
 │   │   │   ├── Guide.jsx               # Tutorial page
 │   │   │   └── Admin.jsx               # Admin panel
 │   │   ├── utils/
-│   │   │   ├── sampleDatasets.js       # Dataset configurations
-│   │   │   └── codeGenerator.js        # PyTorch/Keras generation
+│   │   │   ├── sampleDatasets.js       # Dataset configurations (includes Shakespeare)
+│   │   │   ├── codeGenerator.js        # PyTorch/Keras generation
+│   │   │   ├── dataProcessor.js        # Data processing (includes char-level)
+│   │   │   └── tensorflowModel.js      # TF.js model building
 │   │   └── context/
 │   │       └── AuthContext.jsx         # Google OAuth
 │   └── .env
@@ -77,13 +79,25 @@ Build a visual deep-learning tool that allows users to design, train, and export
 
 ## Changelog
 
-### January 11, 2025
+### January 11, 2025 (Current Session)
+- **Fixed:** Syntax error in TrainingPanel.jsx (unclosed JSX fragment at line 2617)
+- **Completed:** Pre-trained Mini-GPT UI fully functional:
+  - Model specifications display (~2.1M params, 8 layers, 128 embed dim, 4 heads)
+  - Training details (50 epochs, 45.2% accuracy, 1.82 loss)
+  - Text generation section with prompt input, temperature/length controls
+  - Generate button for Shakespeare-style text output
+- **Note:** Mini-GPT uses randomly initialized weights (MOCKED) - actual text generation produces semi-random text
+
+### January 11, 2025 (Previous Session)
 - Updated Guide page with real platform screenshots
 - Added dark/light mode toggle to Guide page
 - Fixed mobile responsiveness for Guide page (text before images)
 - Moved Guide button from Landing header to Builder header as "Tutorial" (book icon)
 - Implemented Product Tour for first-time users (commented out for now)
 - Fixed admin routes - added .limit(100) to models query
+- Added Mini-GPT template with NEW badge
+- Added Shakespeare text dataset for character-level generation
+- Improved code generator for robust PyTorch/Keras output
 
 ### Previous Sessions
 - Implemented Sample Datasets feature with model auto-adjustment
@@ -98,3 +112,11 @@ Build a visual deep-learning tool that allows users to design, train, and export
 ## Credentials
 - **Admin Panel:** `/admin` with password `xeufa#496`
 - **Groq API Key:** Configured in backend/.env
+
+## Upcoming Tasks (Prioritized)
+1. Backend-based model training for larger models
+2. Allow users to import datasets from URLs
+3. Re-enable the dormant PDF Q&A feature
+4. Allow users to save custom model templates
+5. Support for full Encoder-Decoder architectures (like T5/BART)
+6. Re-enable Product Tour (when user requests)
