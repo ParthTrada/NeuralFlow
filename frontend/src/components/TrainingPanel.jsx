@@ -501,6 +501,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         learningRate,
         optimizer,
         status,
+        trainingDuration, // Save the training duration
         datasetName: selectedDatasetInfo?.name || processedData?.datasetName || 'Custom Dataset',
         datasetSize: processedData?.trainX?.length || processedData?.numSamples || null,
         // Include labels and input shape for prediction after loading
@@ -519,7 +520,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       console.log('Syncing training data to parent:', trainingData.finalMetrics);
       onTrainingDataChange(trainingData);
     }
-  }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange, selectedDatasetInfo, processedData]);
+  }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange, selectedDatasetInfo, processedData, trainingDuration]);
 
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
