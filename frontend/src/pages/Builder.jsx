@@ -199,6 +199,11 @@ export default function Builder() {
       setCurrentTemplateId(templateId);
     }
     
+    // Reset training state when loading a new template
+    setTrainedWeights(null);
+    setSavedTrainingData(null);
+    setCurrentModelId(null);
+    
     // Record to history (immediate for discrete action)
     recordHistory(updatedNodes, updatedEdges, true);
     
