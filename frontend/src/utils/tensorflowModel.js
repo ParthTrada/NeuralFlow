@@ -345,20 +345,39 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     validationSplit = 0.2,
   } = options;
 
+  console.log('trainModel called - epochs:', epochs, 'batchSize:', batchSize);
+
   const history = await model.fit(xTrain, yTrain, {
     epochs,
     batchSize,
     validationSplit,
     shuffle: true,
     callbacks: {
+      onTrainBegin: () => {
+        console.log('>>> TRAINING STARTED <<<');
+      },
       onEpochBegin: (epoch) => {
-        if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
+        console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
+        if (callbacks.onEpochBegin) {
+          callbacks.onEpochBegin(epoch);
+        }
+      },
+      onBatchEnd: (batch, logs) => {
+        if (callbacks.onBatchEnd) {
+          callbacks.onBatchEnd(batch, logs);
+        }
       },
       onEpochEnd: (epoch, logs) => {
-        if (callbacks.onEpochEnd) callbacks.onEpochEnd(epoch, logs);
+        console.log(`Epoch ${epoch + 1}/${epochs} done - loss:`, logs?.loss, 'acc:', logs?.acc);
+        if (callbacks.onEpochEnd) {
+          callbacks.onEpochEnd(epoch, logs);
+        }
       },
       onTrainEnd: () => {
-        if (callbacks.onTrainEnd) callbacks.onTrainEnd();
+        console.log('>>> TRAINING COMPLETED <<<');
+        if (callbacks.onTrainEnd) {
+          callbacks.onTrainEnd();
+        }
       }
     }
   });
