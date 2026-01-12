@@ -1090,26 +1090,35 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          setCurrentEpoch(epoch + 1);
+          setCurrentBatch(0);
+          setCurrentEpoch(epoch);
+          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
+        },
+        onBatchEnd: (batch, logs) => {
+          setCurrentBatch(batch + 1);
         },
         onEpochEnd: (epoch, logs) => {
+          console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
-            if (modelRef.current) {
-              modelRef.current.stopTraining = true;
-            }
+            modelRef.current.stopTraining = true;
             return;
           }
           
-          setCurrentEpoch(epoch + 1);
+          const newEpoch = epoch + 1;
+          setCurrentEpoch(newEpoch);
+          
           setTrainingHistory(prev => [...prev, {
-            epoch: epoch + 1,
+            epoch: newEpoch,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
             accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
             valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
             valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
           }]);
         },
-        onTrainEnd: () => {
+        onTrainEnd: async () => {
+          console.log('>>> onTrainEnd callback triggered');
+          
+          // Update UI immediately
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs);
@@ -1119,6 +1128,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           if (modelRef.current && onWeightsTrained) {
             setTimeout(async () => {
               try {
+                console.log('Exporting model weights...');
                 const weightsData = await modelRef.current.getWeights();
                 const weightsArray = await Promise.all(
                   weightsData.map(async (w) => ({
@@ -1130,8 +1140,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 const weightsJson = JSON.stringify(weightsArray);
                 const weightsBase64 = btoa(weightsJson);
                 onWeightsTrained(weightsBase64);
+                console.log('Weights exported successfully');
               } catch (e) {
-                // Silent fail for weight export
+                console.error('Failed to export weights:', e);
               }
             }, 100);
           }
@@ -1139,6 +1150,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       });
 
     } catch (error) {
+      console.error('Training error:', error);
       setStatus('error');
       setErrorMessage(error.message);
       setIsTraining(false);
