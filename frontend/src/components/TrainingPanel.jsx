@@ -2354,21 +2354,94 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
               <Separator />
 
-              {/* Training Config */}
+              {/* Training Config - Enhanced */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
                   2. Config
                 </h3>
 
-                <div className="space-y-3 sm:space-y-4">
+                {/* Quick Presets */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Gauge className="w-3.5 h-3.5" />
+                    <span>Quick Presets</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.entries(TRAINING_PRESETS).map(([key, preset]) => (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          setSelectedPreset(key);
+                          setEpochs(preset.epochs);
+                          setBatchSize(preset.batchSize);
+                          setLearningRate(preset.learningRate);
+                          setOptimizer(preset.optimizer);
+                        }}
+                        disabled={isTraining}
+                        className={cn(
+                          "p-2 rounded-lg border text-center transition-all",
+                          selectedPreset === key
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50 hover:bg-muted/50",
+                          isTraining && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <span className="text-lg">{preset.icon}</span>
+                        <p className="text-[10px] font-medium mt-1">{preset.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    {TRAINING_PRESETS[selectedPreset]?.description}
+                  </p>
+                </div>
+
+                {/* Smart Tips */}
+                {nodes.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Lightbulb className="w-3.5 h-3.5 text-yellow-500" />
+                      <span>Smart Tips</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {getSmartTips(nodes, processedData?.xTrain?.shape?.[0]).slice(0, 2).map((tip, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "p-2 rounded-lg text-xs",
+                            tip.type === 'warning' && "bg-amber-500/10 border border-amber-500/20",
+                            tip.type === 'info' && "bg-blue-500/10 border border-blue-500/20",
+                            tip.type === 'success' && "bg-green-500/10 border border-green-500/20"
+                          )}
+                        >
+                          <p className={cn(
+                            "font-medium text-[10px]",
+                            tip.type === 'warning' && "text-amber-400",
+                            tip.type === 'info' && "text-blue-400",
+                            tip.type === 'success' && "text-green-400"
+                          )}>
+                            {tip.title}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{tip.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Basic Hyperparameters */}
+                <div className="space-y-3">
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs sm:text-sm">
-                      <Label>Epochs</Label>
-                      <span className="text-muted-foreground">{epochs}</span>
+                      <Label className="flex items-center gap-1.5">
+                        <Timer className="w-3 h-3 text-muted-foreground" />
+                        Epochs
+                      </Label>
+                      <span className="text-muted-foreground font-mono">{epochs}</span>
                     </div>
                     <Slider
                       value={[epochs]}
-                      onValueChange={([v]) => setEpochs(v)}
+                      onValueChange={([v]) => { setEpochs(v); setSelectedPreset('custom'); }}
                       min={1}
                       max={100}
                       step={1}
@@ -2379,12 +2452,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs sm:text-sm">
-                      <Label>Batch Size</Label>
-                      <span className="text-muted-foreground">{batchSize}</span>
+                      <Label className="flex items-center gap-1.5">
+                        <Database className="w-3 h-3 text-muted-foreground" />
+                        Batch Size
+                      </Label>
+                      <span className="text-muted-foreground font-mono">{batchSize}</span>
                     </div>
                     <Slider
                       value={[batchSize]}
-                      onValueChange={([v]) => setBatchSize(v)}
+                      onValueChange={([v]) => { setBatchSize(v); setSelectedPreset('custom'); }}
                       min={8}
                       max={128}
                       step={8}
@@ -2395,12 +2471,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs sm:text-sm">
-                      <Label>Learning Rate</Label>
-                      <span className="text-muted-foreground">{learningRate}</span>
+                      <Label className="flex items-center gap-1.5">
+                        <TrendingDown className="w-3 h-3 text-muted-foreground" />
+                        Learning Rate
+                      </Label>
+                      <span className="text-muted-foreground font-mono">{learningRate.toFixed(4)}</span>
                     </div>
                     <Slider
                       value={[Math.log10(learningRate) + 4]}
-                      onValueChange={([v]) => setLearningRate(Math.pow(10, v - 4))}
+                      onValueChange={([v]) => { setLearningRate(Math.pow(10, v - 4)); setSelectedPreset('custom'); }}
                       min={0}
                       max={3}
                       step={0.1}
@@ -2410,18 +2489,185 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs sm:text-sm">Optimizer</Label>
-                    <Select value={optimizer} onValueChange={setOptimizer} disabled={isTraining}>
+                    <Label className="text-xs sm:text-sm flex items-center gap-1.5">
+                      <Settings className="w-3 h-3 text-muted-foreground" />
+                      Optimizer
+                    </Label>
+                    <Select value={optimizer} onValueChange={(v) => { setOptimizer(v); setSelectedPreset('custom'); }} disabled={isTraining}>
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-optimizer">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="adam" className="text-xs sm:text-sm">Adam</SelectItem>
-                        <SelectItem value="sgd" className="text-xs sm:text-sm">SGD</SelectItem>
+                        <SelectItem value="adam" className="text-xs sm:text-sm">Adam (Recommended)</SelectItem>
+                        <SelectItem value="sgd" className="text-xs sm:text-sm">SGD + Momentum</SelectItem>
                         <SelectItem value="rmsprop" className="text-xs sm:text-sm">RMSprop</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Advanced Settings Accordion */}
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="w-full flex items-center justify-between p-2.5 text-xs font-medium hover:bg-muted/50 transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+                      Advanced Settings
+                    </span>
+                    {showAdvanced ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showAdvanced && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-3 border-t border-border space-y-3 bg-muted/30">
+                          {/* Validation Split */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs">
+                              <Label>Validation Split</Label>
+                              <span className="text-muted-foreground font-mono">{(validationSplit * 100).toFixed(0)}%</span>
+                            </div>
+                            <Slider
+                              value={[validationSplit * 100]}
+                              onValueChange={([v]) => setValidationSplit(v / 100)}
+                              min={10}
+                              max={40}
+                              step={5}
+                              disabled={isTraining}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Data reserved for validation</p>
+                          </div>
+
+                          {/* Early Stopping */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-xs">Early Stopping</Label>
+                              <p className="text-[10px] text-muted-foreground">Stop if no improvement</p>
+                            </div>
+                            <button
+                              onClick={() => setEarlyStopping(!earlyStopping)}
+                              disabled={isTraining}
+                              className={cn(
+                                "relative w-9 h-5 rounded-full transition-colors",
+                                earlyStopping ? "bg-primary" : "bg-muted-foreground/30",
+                                isTraining && "opacity-50"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                                  earlyStopping ? "translate-x-4" : "translate-x-0"
+                                )}
+                              />
+                            </button>
+                          </div>
+
+                          {earlyStopping && (
+                            <div className="space-y-2 pl-2 border-l-2 border-primary/30">
+                              <div className="flex justify-between text-xs">
+                                <Label>Patience</Label>
+                                <span className="text-muted-foreground font-mono">{earlyStoppingPatience} epochs</span>
+                              </div>
+                              <Slider
+                                value={[earlyStoppingPatience]}
+                                onValueChange={([v]) => setEarlyStoppingPatience(v)}
+                                min={3}
+                                max={20}
+                                step={1}
+                                disabled={isTraining}
+                              />
+                            </div>
+                          )}
+
+                          {/* Learning Rate Scheduler */}
+                          <div className="space-y-2">
+                            <Label className="text-xs">LR Scheduler</Label>
+                            <Select value={lrScheduler} onValueChange={setLrScheduler} disabled={isTraining}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none" className="text-xs">None</SelectItem>
+                                <SelectItem value="step" className="text-xs">Step Decay (÷10 every 30 epochs)</SelectItem>
+                                <SelectItem value="cosine" className="text-xs">Cosine Annealing</SelectItem>
+                                <SelectItem value="plateau" className="text-xs">Reduce on Plateau</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Weight Decay */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs">
+                              <Label>Weight Decay (L2)</Label>
+                              <span className="text-muted-foreground font-mono">{weightDecay}</span>
+                            </div>
+                            <Slider
+                              value={[Math.log10(weightDecay) + 5]}
+                              onValueChange={([v]) => setWeightDecay(Math.pow(10, v - 5))}
+                              min={0}
+                              max={3}
+                              step={0.5}
+                              disabled={isTraining}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Regularization to prevent overfitting</p>
+                          </div>
+
+                          {/* Gradient Clipping */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-xs">Gradient Clipping</Label>
+                              <p className="text-[10px] text-muted-foreground">Prevent exploding gradients</p>
+                            </div>
+                            <button
+                              onClick={() => setGradientClipping(!gradientClipping)}
+                              disabled={isTraining}
+                              className={cn(
+                                "relative w-9 h-5 rounded-full transition-colors",
+                                gradientClipping ? "bg-primary" : "bg-muted-foreground/30",
+                                isTraining && "opacity-50"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                                  gradientClipping ? "translate-x-4" : "translate-x-0"
+                                )}
+                              />
+                            </button>
+                          </div>
+
+                          {gradientClipping && (
+                            <div className="space-y-2 pl-2 border-l-2 border-primary/30">
+                              <div className="flex justify-between text-xs">
+                                <Label>Max Norm</Label>
+                                <span className="text-muted-foreground font-mono">{gradientClipNorm.toFixed(1)}</span>
+                              </div>
+                              <Slider
+                                value={[gradientClipNorm * 10]}
+                                onValueChange={([v]) => setGradientClipNorm(v / 10)}
+                                min={1}
+                                max={50}
+                                step={1}
+                                disabled={isTraining}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
