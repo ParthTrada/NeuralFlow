@@ -352,18 +352,13 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     shuffle: true,
     yieldEvery: 'epoch',
     callbacks: {
-      onEpochBegin: async (epoch) => {
-        console.log(`[TF] Epoch ${epoch + 1} starting...`);
+      onEpochBegin: (epoch) => {
         if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
-        await tf.nextFrame();
       },
-      onEpochEnd: async (epoch, logs) => {
-        console.log(`[TF] Epoch ${epoch + 1} ended - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
+      onEpochEnd: (epoch, logs) => {
         if (callbacks.onEpochEnd) callbacks.onEpochEnd(epoch, logs);
-        await tf.nextFrame();
       },
       onTrainEnd: () => {
-        console.log('[TF] Training complete');
         if (callbacks.onTrainEnd) callbacks.onTrainEnd();
       }
     }
