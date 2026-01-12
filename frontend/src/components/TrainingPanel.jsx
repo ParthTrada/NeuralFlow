@@ -434,12 +434,31 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const cols = Object.keys(data[0]);
       setColumns(cols);
       
+      // Auto-detect image data (MNIST-style with pixel columns)
+      // Check for pixel_0, pixel_1, ... OR pixel0, pixel1, ... patterns
+      const pixelColumns = cols.filter(k => 
+        k.startsWith('pixel_') || 
+        k.startsWith('pixel') && /^pixel\d+$/.test(k)
+      );
+      const isImageData = pixelColumns.length >= 100; // At least 10x10 image
+      
       // Auto-detect text column (first string column that looks like text)
       const isTextModel = networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding;
       let detectedTextCol = '';
       let detectedTargetCol = cols[cols.length - 1];
       
-      if (isTextModel) {
+      // For image data, find the label column
+      if (isImageData) {
+        const labelCol = cols.find(c => 
+          c.toLowerCase() === 'label' || 
+          c.toLowerCase() === 'class' || 
+          c.toLowerCase() === 'target' ||
+          !c.toLowerCase().startsWith('pixel')
+        );
+        if (labelCol) {
+          detectedTargetCol = labelCol;
+        }
+      } else if (isTextModel) {
         // Look for a text-like column (longer strings, not just labels)
         for (const col of cols) {
           const sampleValue = String(data[0][col] || '');
@@ -461,13 +480,48 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       setTextColumn(detectedTextCol);
       setTargetColumn(detectedTargetCol);
-      setProcessedData({ raw: data, type: 'csv' });
-      setStatus('ready');
       
-      if (isTextModel) {
-        toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
+      if (isImageData) {
+        // Detect image dimensions from pixel count
+        const numPixels = pixelColumns.length;
+        const sqrt = Math.sqrt(numPixels);
+        const height = Number.isInteger(sqrt) ? sqrt : 28;
+        const width = Number.isInteger(sqrt) ? sqrt : 28;
+        const channels = 1; // Grayscale for MNIST-style
+        
+        // Get unique labels for classification
+        const uniqueLabels = [...new Set(data.map(row => row[detectedTargetCol]))];
+        
+        // Check if model has Conv2D layers
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
+        setProcessedData({
+          raw: data,
+          type: 'image',
+          isImageData: true,
+          imageConfig: {
+            height,
+            width,
+            channels,
+            numPixels
+          },
+          pixelColumns,
+          targetColumn: detectedTargetCol,
+          uniqueLabels,
+          numClasses: uniqueLabels.length,
+          inputShape: modelHasConv2D ? [height, width, channels] : [numPixels]
+        });
+        setStatus('ready');
+        toast.success(`Loaded ${data.length} images (${height}x${width}), ${uniqueLabels.length} classes`);
       } else {
-        toast.success(`Loaded ${data.length} rows from CSV`);
+        setProcessedData({ raw: data, type: 'csv' });
+        setStatus('ready');
+        
+        if (isTextModel) {
+          toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
+        } else {
+          toast.success(`Loaded ${data.length} rows from CSV`);
+        }
       }
     } catch (error) {
       setStatus('error');
