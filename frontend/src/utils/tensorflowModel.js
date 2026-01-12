@@ -352,20 +352,23 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'epoch',
+    yieldEvery: 'auto',
     callbacks: {
-      onEpochEnd: async (epoch, logs) => {
+      onEpochEnd: (epoch, logs) => {
         console.log(`Epoch ${epoch + 1}/${epochs} - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
         if (callbacks.onEpochEnd) {
-          callbacks.onEpochEnd(epoch, logs);
+          // Use setTimeout to ensure React can process the state update
+          setTimeout(() => {
+            callbacks.onEpochEnd(epoch, logs);
+          }, 0);
         }
-        // Force browser to render by waiting for next animation frame
-        await tf.nextFrame();
       },
       onTrainEnd: () => {
         console.log('>>> TRAINING COMPLETED <<<');
         if (callbacks.onTrainEnd) {
-          callbacks.onTrainEnd();
+          setTimeout(() => {
+            callbacks.onTrainEnd();
+          }, 0);
         }
       }
     }
