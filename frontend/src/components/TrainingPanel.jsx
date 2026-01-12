@@ -1111,22 +1111,29 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           }
           
           const newEpoch = epoch + 1;
-          setCurrentEpoch(newEpoch);
-          setTrainingHistory(prev => [...prev, {
-            epoch: newEpoch,
-            loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
-            accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
-            valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
-            valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
-          }]);
           
-          // Force browser to repaint the scroll container
+          // Use flushSync to force synchronous DOM update
+          flushSync(() => {
+            setCurrentEpoch(newEpoch);
+            setTrainingHistory(prev => [...prev, {
+              epoch: newEpoch,
+              loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
+              accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
+              valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
+              valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
+            }]);
+          });
+          
+          // Force browser repaint
           forceRepaint();
         },
         onTrainEnd: () => {
-          setIsTraining(false);
-          setStatus('complete');
-          setCurrentEpoch(epochs);
+          flushSync(() => {
+            setIsTraining(false);
+            setStatus('complete');
+            setCurrentEpoch(epochs);
+          });
+          forceRepaint();
           toast.success('Training complete!');
           
           // Export weights in background
