@@ -2802,8 +2802,53 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
               {trainingHistory.length > 0 && (
                 <div className="space-y-3 sm:space-y-4">
                   <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
-                    3. Progress
+                    3. Results
                   </h3>
+                  
+                  {/* Training Summary Card - Shows when loaded from saved model */}
+                  {savedTrainingData && savedTrainingData.finalMetrics && (
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-xs font-medium text-primary">Trained Model Loaded</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Dataset:</span>
+                          <span className="ml-1 font-medium">{savedTrainingData.datasetName || 'Unknown'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Epochs:</span>
+                          <span className="ml-1 font-medium">{savedTrainingData.epochs || trainingHistory.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Final Loss:</span>
+                          <span className="ml-1 font-medium text-red-400">{savedTrainingData.finalMetrics.loss}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Final Accuracy:</span>
+                          <span className="ml-1 font-medium text-green-400">{savedTrainingData.finalMetrics.accuracy}</span>
+                        </div>
+                        {savedTrainingData.finalMetrics.valAccuracy && (
+                          <>
+                            <div>
+                              <span className="text-muted-foreground">Val Loss:</span>
+                              <span className="ml-1 font-medium text-orange-400">{savedTrainingData.finalMetrics.valLoss}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Val Accuracy:</span>
+                              <span className="ml-1 font-medium text-blue-400">{savedTrainingData.finalMetrics.valAccuracy}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {savedTrainingData.savedAt && (
+                        <div className="mt-2 pt-2 border-t border-primary/10 text-[10px] text-muted-foreground">
+                          Trained on {new Date(savedTrainingData.savedAt).toLocaleDateString()} at {new Date(savedTrainingData.savedAt).toLocaleTimeString()}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="h-36 sm:h-48 w-full">
                     <ResponsiveContainer width="100%" height="100%">
