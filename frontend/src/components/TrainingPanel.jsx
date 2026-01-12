@@ -2479,45 +2479,47 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                   )}
                   
+                  {/* Graph section */}
                   <div className="h-36 sm:h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trainingHistory}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis 
-                          dataKey="epoch" 
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={10}
-                          tickMargin={5}
-                        />
-                        <YAxis 
-                          yAxisId="left"
-                          stroke="hsl(var(--destructive))"
-                          fontSize={10}
-                          domain={[0, 'auto']}
-                          width={35}
-                        />
-                        <YAxis 
-                          yAxisId="right"
-                          orientation="right"
-                          stroke="hsl(var(--primary))"
-                          fontSize={10}
-                          domain={[0, 1]}
-                          width={35}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            fontSize: '11px'
-                          }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: '10px' }} />
-                        <Line 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="loss" 
-                          stroke="hsl(var(--destructive))" 
+                    {trainingHistory.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trainingHistory}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis 
+                            dataKey="epoch" 
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={10}
+                            tickMargin={5}
+                          />
+                          <YAxis 
+                            yAxisId="left"
+                            stroke="hsl(var(--destructive))"
+                            fontSize={10}
+                            domain={[0, 'auto']}
+                            width={35}
+                          />
+                          <YAxis 
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="hsl(var(--primary))"
+                            fontSize={10}
+                            domain={[0, 1]}
+                            width={35}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              fontSize: '11px'
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '10px' }} />
+                          <Line 
+                            yAxisId="left"
+                            type="monotone" 
+                            dataKey="loss" 
+                            stroke="hsl(var(--destructive))" 
                           strokeWidth={2}
                           dot={false}
                           name="Loss"
