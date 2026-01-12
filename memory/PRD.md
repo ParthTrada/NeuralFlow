@@ -82,15 +82,33 @@ Build a visual deep-learning tool that allows users to design, train, and export
 ## Changelog
 
 ### January 12, 2025 (Current Session)
-- **Fixed (P0):** Training UI not updating during training - Critical bug where epoch counter was stuck at 0 and graph didn't render
+- **Improved (P1):** Code Generation - Completely overhauled PyTorch & TensorFlow/Keras code export
+  - **PyTorch code now includes:**
+    - Professional docstring with Architecture, Model Type, Task, Output Classes
+    - Requirements section (`pip install torch torchvision tqdm numpy scikit-learn`)
+    - Configuration class with all training hyperparameters
+    - Context-aware data loading (CNN → image transforms, RNN/Text → sequence processing, MLP → tabular)
+    - Complete training loop with EarlyStopping, checkpointing, metrics logging
+    - `train_one_epoch()` and `evaluate()` functions with progress bars
+    - Model saving/loading utilities
+    - Inference/prediction function
+  - **TensorFlow/Keras code now includes:**
+    - Same professional format with docstrings
+    - Configuration class
+    - Context-aware data loading matching model type
+    - Training callbacks (EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard)
+    - Model creation, compilation, training, and evaluation functions
+  - Both generators auto-detect model type (CNN, RNN, Transformer, MLP) and generate appropriate boilerplate
+
+- **Fixed (P0) - Previous:** Training UI not updating during training - Critical bug where epoch counter was stuck at 0 and graph didn't render
   - Root cause: TensorFlow.js `model.fit()` was blocking the UI thread, preventing React state updates
   - Solution: Added `yieldEvery: 'batch'` option and `tf.nextFrame()` calls in `tensorflowModel.js` to allow UI updates
   - Verified: Epoch counter increments correctly (1-N), graph appears after first epoch, training status transitions properly
-- **Added:** Batch progress tracking during training
+- **Added - Previous:** Batch progress tracking during training
   - Shows "Epoch X/N" with "Batch Y/M" below during training
   - Batch counter resets to 0 at start of each epoch
   - Total batches calculated correctly from training samples / batch size
-- **Confirmed:** Batch size slider has correct min=1 setting
+- **Confirmed - Previous:** Batch size slider has correct min=1 setting
 
 ### January 11, 2025 (Previous Session)
 - **Fixed:** Syntax error in TrainingPanel.jsx (unclosed JSX fragment at line 2617)
