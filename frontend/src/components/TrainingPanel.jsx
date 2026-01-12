@@ -75,67 +75,72 @@ const MINI_GPT_SPECS = {
   description: 'A character-level language model trained on Shakespeare plays. Generates text one character at a time using learned patterns from Romeo & Juliet, Hamlet, Macbeth, and more.',
 };
 
-// Training presets for quick configuration
+// Training presets - Research-backed configurations (2024 best practices)
+// Based on: https://arxiv.org/abs/2410.22854, industry standards
 const TRAINING_PRESETS = {
-  fast: {
-    name: 'Fast Training',
-    icon: '🏃',
-    description: 'Quick experiments & prototyping',
-    epochs: 10,
+  prototype: {
+    name: 'Prototype',
+    icon: 'Beaker',  // Lucide icon name
+    description: 'Quick iteration & debugging. Validates model architecture.',
+    epochs: 5,
     batchSize: 64,
-    learningRate: 0.01,
+    learningRate: 0.003,  // Higher LR for fast convergence check
     optimizer: 'adam',
+    tips: ['Use for testing architecture', 'Not for final accuracy'],
   },
-  balanced: {
-    name: 'Balanced',
-    icon: '⚖️',
-    description: 'Good balance of speed & accuracy',
-    epochs: 30,
+  development: {
+    name: 'Development',
+    icon: 'Code',  // Lucide icon name
+    description: 'Standard training with early stopping. Good generalization.',
+    epochs: 50,
     batchSize: 32,
-    learningRate: 0.001,
+    learningRate: 0.001,  // AdamW default, works well across architectures
     optimizer: 'adam',
+    tips: ['Recommended for most cases', 'Use validation split 20%'],
   },
-  accurate: {
-    name: 'Best Accuracy',
-    icon: '🎯',
-    description: 'Maximum accuracy, slower training',
+  finetune: {
+    name: 'Fine-tune',
+    icon: 'Target',  // Lucide icon name
+    description: 'Lower LR, more epochs. Best for final model quality.',
     epochs: 100,
-    batchSize: 16,
-    learningRate: 0.0001,
+    batchSize: 16,  // Smaller batch for better generalization
+    learningRate: 0.0001,  // Low LR for fine-grained optimization
     optimizer: 'adam',
+    tips: ['Use cosine LR schedule', 'Enable early stopping'],
   },
 };
 
-// Smart tips based on model architecture
+// Smart tips based on model architecture - Research-backed recommendations
 const getSmartTips = (nodes, datasetSize) => {
   const tips = [];
   const layerTypes = nodes.map(n => n.data?.layerType).filter(Boolean);
   const hasTransformer = layerTypes.some(t => t.includes('Transformer') || t.includes('Attention'));
   const hasConv = layerTypes.some(t => t.includes('Conv'));
   const hasLSTM = layerTypes.some(t => t === 'LSTM' || t === 'GRU');
-  const paramCount = nodes.length * 1000; // Rough estimate
+  const layerCount = nodes.length;
   
+  // Architecture-specific tips based on 2024 research
   if (hasTransformer) {
     tips.push({
       type: 'info',
-      title: 'Transformer Architecture',
-      message: 'Use learning rate 0.0001-0.001 with warmup. Adam optimizer recommended.',
+      title: 'Transformer Detected',
+      message: 'Use LR 1e-5 to 5e-4 with linear warmup (5% of steps) + cosine decay. AdamW with weight decay 0.01 recommended.',
     });
   }
   
   if (hasConv) {
     tips.push({
       type: 'info',
-      title: 'CNN Architecture',
-      message: 'Batch size 32-64 works well. Consider data augmentation for better generalization.',
+      title: 'CNN Detected',
+      message: 'LR 1e-4 to 3e-3 for Adam. Batch 32-128 works best. Consider data augmentation for better generalization.',
     });
   }
   
   if (hasLSTM) {
     tips.push({
-      type: 'info',
-      title: 'RNN/LSTM Architecture',
-      message: 'Use gradient clipping (max norm 1.0) to prevent exploding gradients.',
+      type: 'warning',
+      title: 'RNN/LSTM Detected',
+      message: 'Enable gradient clipping (max norm 1.0) to prevent exploding gradients. LR 1e-4 to 1e-3 recommended.',
     });
   }
   
