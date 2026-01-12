@@ -3178,6 +3178,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         </p>
                       </div>
                     )}
+                    
+                    {/* Message when user can't save (not authenticated or no model saved) */}
+                    {trainingHistory.length > 0 && !onSaveTrainingData && (
+                      <div className="pt-4 border-t border-border mt-4">
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <p className="text-xs text-amber-400 text-center">
+                            💡 Sign in and save your model to preserve training results
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
