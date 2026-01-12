@@ -2397,53 +2397,66 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                   2. Config
                 </h3>
 
-                {/* Quick Presets */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Gauge className="w-3.5 h-3.5" />
-                    <span>Training Mode</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(TRAINING_PRESETS).map(([key, preset]) => {
-                      const PresetIcon = key === 'prototype' ? Beaker : key === 'development' ? Code : Target;
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            setSelectedPreset(key);
-                            setEpochs(preset.epochs);
-                            setBatchSize(preset.batchSize);
-                            setLearningRate(preset.learningRate);
-                            setOptimizer(preset.optimizer);
-                          }}
-                          disabled={isTraining}
-                          className={cn(
-                            "p-2.5 rounded-lg border text-center transition-all flex flex-col items-center gap-1.5",
-                            selectedPreset === key
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border hover:border-primary/50 hover:bg-muted/50",
-                            isTraining && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <PresetIcon className={cn(
-                            "w-5 h-5",
-                            selectedPreset === key ? "text-primary" : "text-muted-foreground"
-                          )} />
-                          <p className="text-[10px] font-medium">{preset.name}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/50 text-center">
-                    <p className="text-[10px] text-muted-foreground">
-                      {TRAINING_PRESETS[selectedPreset]?.description}
+                {/* Quick Presets - Tabs Style (matching Load Data) */}
+                <Tabs value={selectedPreset} onValueChange={(key) => {
+                  const preset = TRAINING_PRESETS[key];
+                  if (preset) {
+                    setSelectedPreset(key);
+                    setEpochs(preset.epochs);
+                    setBatchSize(preset.batchSize);
+                    setLearningRate(preset.learningRate);
+                    setOptimizer(preset.optimizer);
+                    // Also update advanced settings
+                    setValidationSplit(preset.validationSplit);
+                    setEarlyStopping(preset.earlyStopping);
+                    setEarlyStoppingPatience(preset.earlyStoppingPatience);
+                    setLrScheduler(preset.lrScheduler);
+                    setWeightDecay(preset.weightDecay);
+                    setGradientClipping(preset.gradientClipping);
+                    setGradientClipNorm(preset.gradientClipNorm);
+                  }
+                }}>
+                  <TabsList className="grid grid-cols-3 w-full h-9 sm:h-10">
+                    <TabsTrigger 
+                      value="prototype" 
+                      className="text-xs sm:text-sm" 
+                      disabled={isTraining}
+                      data-testid="preset-prototype"
+                    >
+                      <Beaker className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Prototype
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="development" 
+                      className="text-xs sm:text-sm" 
+                      disabled={isTraining}
+                      data-testid="preset-development"
+                    >
+                      <Code className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Development
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="finetune" 
+                      className="text-xs sm:text-sm" 
+                      disabled={isTraining}
+                      data-testid="preset-finetune"
+                    >
+                      <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Fine-tune
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
+                {/* Preset Description */}
+                <div className="p-2 rounded-lg bg-muted/50 text-center">
+                  <p className="text-[10px] text-muted-foreground">
+                    {TRAINING_PRESETS[selectedPreset]?.description}
+                  </p>
+                  {TRAINING_PRESETS[selectedPreset]?.tips && (
+                    <p className="text-[9px] text-primary/70 mt-1">
+                      💡 {TRAINING_PRESETS[selectedPreset].tips[0]}
                     </p>
-                    {TRAINING_PRESETS[selectedPreset]?.tips && (
-                      <p className="text-[9px] text-primary/70 mt-1">
-                        💡 {TRAINING_PRESETS[selectedPreset].tips[0]}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 {/* Smart Tips */}
