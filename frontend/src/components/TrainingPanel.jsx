@@ -1071,8 +1071,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       // Calculate total batches for progress tracking
       const numSamples = xTrain?.shape?.[0] || 0;
       const trainSamples = Math.floor(numSamples * (1 - validationSplit));
-      const totalBatches = Math.ceil(trainSamples / batchSize);
-      console.log(`Starting training: ${numSamples} samples (${trainSamples} train), ${totalBatches} batches per epoch, ${epochs} epochs`);
+      const batchCount = Math.ceil(trainSamples / batchSize);
+      setTotalBatches(batchCount);
+      setCurrentBatch(0);
+      setCurrentEpoch(0);
+      console.log(`Starting training: ${numSamples} samples (${trainSamples} train), ${batchCount} batches per epoch, ${epochs} epochs`);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
@@ -1080,13 +1083,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
+          setCurrentBatch(0);
+          setCurrentEpoch(epoch);
+          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
         },
         onBatchEnd: (batch, logs) => {
-          // Log every 10 batches to avoid console spam
-          if (batch % 10 === 0) {
-            console.log(`Batch ${batch + 1}/${totalBatches} - loss: ${logs?.loss?.toFixed(4)}`);
-          }
+          setCurrentBatch(batch + 1);
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
@@ -1095,22 +1097,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             return;
           }
           
-          // Force state update for epoch counter
           const newEpoch = epoch + 1;
           setCurrentEpoch(newEpoch);
-          console.log('Set currentEpoch to:', newEpoch);
           
-          setTrainingHistory(prev => {
-            const newHistory = [...prev, {
-              epoch: newEpoch,
-              loss: logs.loss != null ? Number(logs.loss).toFixed(4) : null,
-              accuracy: logs.acc != null ? Number(logs.acc).toFixed(4) : null,
-              valLoss: logs.val_loss != null ? Number(logs.val_loss).toFixed(4) : null,
-              valAccuracy: logs.val_acc != null ? Number(logs.val_acc).toFixed(4) : null,
-            }];
-            console.log('Training history updated, length:', newHistory.length);
-            return newHistory;
-          });
+          setTrainingHistory(prev => [...prev, {
+            epoch: newEpoch,
+            loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
+            accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
+            valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
+            valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
+          }]);
         },
         onTrainEnd: async () => {
           console.log('>>> onTrainEnd callback triggered');
