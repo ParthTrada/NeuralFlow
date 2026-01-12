@@ -354,11 +354,13 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     shuffle: true,
     yieldEvery: 'epoch',
     callbacks: {
-      onEpochEnd: (epoch, logs) => {
+      onEpochEnd: async (epoch, logs) => {
         console.log(`Epoch ${epoch + 1}/${epochs} - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
         if (callbacks.onEpochEnd) {
           callbacks.onEpochEnd(epoch, logs);
         }
+        // Force browser to render by waiting for next animation frame
+        await tf.nextFrame();
       },
       onTrainEnd: () => {
         console.log('>>> TRAINING COMPLETED <<<');
