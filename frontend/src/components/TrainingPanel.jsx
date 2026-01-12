@@ -1072,12 +1072,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       // Calculate total batches for progress tracking
       const numSamples = xTrain?.shape?.[0] || 0;
-      const trainSamples = Math.floor(numSamples * (1 - validationSplit));
-      const batchCount = Math.ceil(trainSamples / batchSize);
-      setTotalBatches(batchCount);
-      setCurrentBatch(0);
-      setCurrentEpoch(0);
-      console.log(`Starting training: ${numSamples} samples (${trainSamples} train), ${batchCount} batches per epoch, ${epochs} epochs`);
+      console.log(`Starting training: ${numSamples} samples, batch size ${batchSize}, ${epochs} epochs`);
+      
+      // Initialize epoch to 1 for display
+      setCurrentEpoch(1);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
@@ -1085,12 +1083,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          setCurrentBatch(0);
-          setCurrentEpoch(epoch);
+          // epoch is 0-indexed, display as 1-indexed
+          setCurrentEpoch(epoch + 1);
           console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
         },
         onBatchEnd: (batch, logs) => {
-          setCurrentBatch(batch + 1);
+          // Just log, don't update state too frequently
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
@@ -1099,11 +1097,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             return;
           }
           
-          const newEpoch = epoch + 1;
-          setCurrentEpoch(newEpoch);
-          
+          // Add to training history for graph
           setTrainingHistory(prev => [...prev, {
-            epoch: newEpoch,
+            epoch: epoch + 1,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
             accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
             valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
