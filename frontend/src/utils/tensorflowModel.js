@@ -350,7 +350,6 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'auto',
     callbacks: {
       onEpochBegin: (epoch) => {
         if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
