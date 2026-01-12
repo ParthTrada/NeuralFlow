@@ -2700,7 +2700,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       </div>
                       {/* Timer */}
                       <div className="flex items-center gap-1 text-xs font-mono">
-                        <Clock className="w-3 h-3" />
+                        <Timer className="w-3 h-3" />
                         <span>{formatDuration(trainingDuration)}</span>
                       </div>
                     </div>
