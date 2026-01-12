@@ -1176,6 +1176,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setProcessedData(null);
     setTrainingHistory([]);
     setCurrentEpoch(0);
+    setCurrentBatch(0);
+    setTotalBatches(0);
     setStatus('idle');
     setErrorMessage('');
     setColumns([]);
