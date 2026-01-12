@@ -219,17 +219,21 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const lastModelIdRef = useRef(null);
   const scrollContainerRef = useRef(null);
   
-  // Force repaint by triggering micro-scroll
+  // Force repaint by dispatching scroll event and micro-scrolling
   const forceRepaint = useCallback(() => {
-    if (scrollContainerRef.current) {
-      const el = scrollContainerRef.current;
-      const currentScroll = el.scrollTop;
-      // Micro-scroll to force browser repaint
-      el.scrollTop = currentScroll + 1;
-      requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (scrollContainerRef.current) {
+        const el = scrollContainerRef.current;
+        // Dispatch scroll event
+        el.dispatchEvent(new Event('scroll', { bubbles: true }));
+        // Also do micro-scroll
+        const currentScroll = el.scrollTop;
+        el.scrollTop = currentScroll + 1;
         el.scrollTop = currentScroll;
-      });
-    }
+      }
+      // Also try to force layout recalc
+      document.body.offsetHeight;
+    });
   }, []);
   
   // Analyze network requirements
