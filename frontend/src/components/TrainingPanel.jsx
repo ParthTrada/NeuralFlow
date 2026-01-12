@@ -1098,14 +1098,18 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         },
         onBatchEnd: (batch, logs) => {
           setCurrentBatch(batch + 1);
-          if (stopTrainingRef.current) {
+          if (stopTrainingRef.current && modelRef.current) {
             modelRef.current.stopTraining = true;
           }
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1} done - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
+          setCurrentEpoch(epoch + 1);
+          
           if (stopTrainingRef.current) {
-            modelRef.current.stopTraining = true;
+            if (modelRef.current) {
+              modelRef.current.stopTraining = true;
+            }
             return;
           }
           
