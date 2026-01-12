@@ -472,7 +472,7 @@ export default function Landing() {
           {[
             { step: '01', title: 'Design', desc: 'Drag and drop layers onto the canvas to build your network architecture.' },
             { step: '02', title: 'Train', desc: 'Upload your data and train the model directly in your browser.' },
-            { step: '03', title: 'Export', desc: 'Download production-ready PyTorch code or share your model.' },
+            { step: '03', title: 'Export', desc: 'Download production-ready PyTorch or Keras code, or share your model.' },
           ].map((item, idx) => (
             <motion.div
               key={item.step}
