@@ -1089,16 +1089,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         batchSize,
         validationSplit: validationSplit,
       }, {
-        onEpochBegin: (epoch) => {
-          setCurrentBatch(0);
-          setCurrentEpoch(epoch);
-          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
-        },
-        onBatchEnd: (batch, logs) => {
-          setCurrentBatch(batch + 1);
-        },
         onEpochEnd: (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
             modelRef.current.stopTraining = true;
             return;
@@ -1106,7 +1097,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           
           const newEpoch = epoch + 1;
           setCurrentEpoch(newEpoch);
-          
           setTrainingHistory(prev => [...prev, {
             epoch: newEpoch,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
@@ -1115,10 +1105,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
           }]);
         },
-        onTrainEnd: async () => {
-          console.log('>>> onTrainEnd callback triggered');
-          
-          // Update UI immediately
+        onTrainEnd: () => {
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs);
