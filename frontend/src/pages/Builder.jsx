@@ -601,6 +601,7 @@ export default function Builder() {
         onSaveTrainingData={handleSaveTrainingData}
         onTrainingDataChange={setSavedTrainingData}
         isAuthenticated={isAuthenticated}
+        onLogin={login}
         onOpenSavePanel={() => {
           setIsTrainingPanelOpen(false);
           setIsModelsOpen(true);
