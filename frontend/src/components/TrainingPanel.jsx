@@ -67,6 +67,97 @@ const MINI_GPT_SPECS = {
   description: 'A character-level language model trained on Shakespeare plays. Generates text one character at a time using learned patterns from Romeo & Juliet, Hamlet, Macbeth, and more.',
 };
 
+// Training presets for quick configuration
+const TRAINING_PRESETS = {
+  fast: {
+    name: 'Fast Training',
+    icon: '🏃',
+    description: 'Quick experiments & prototyping',
+    epochs: 10,
+    batchSize: 64,
+    learningRate: 0.01,
+    optimizer: 'adam',
+  },
+  balanced: {
+    name: 'Balanced',
+    icon: '⚖️',
+    description: 'Good balance of speed & accuracy',
+    epochs: 30,
+    batchSize: 32,
+    learningRate: 0.001,
+    optimizer: 'adam',
+  },
+  accurate: {
+    name: 'Best Accuracy',
+    icon: '🎯',
+    description: 'Maximum accuracy, slower training',
+    epochs: 100,
+    batchSize: 16,
+    learningRate: 0.0001,
+    optimizer: 'adam',
+  },
+};
+
+// Smart tips based on model architecture
+const getSmartTips = (nodes, datasetSize) => {
+  const tips = [];
+  const layerTypes = nodes.map(n => n.data?.layerType).filter(Boolean);
+  const hasTransformer = layerTypes.some(t => t.includes('Transformer') || t.includes('Attention'));
+  const hasConv = layerTypes.some(t => t.includes('Conv'));
+  const hasLSTM = layerTypes.some(t => t === 'LSTM' || t === 'GRU');
+  const paramCount = nodes.length * 1000; // Rough estimate
+  
+  if (hasTransformer) {
+    tips.push({
+      type: 'info',
+      title: 'Transformer Architecture',
+      message: 'Use learning rate 0.0001-0.001 with warmup. Adam optimizer recommended.',
+    });
+  }
+  
+  if (hasConv) {
+    tips.push({
+      type: 'info',
+      title: 'CNN Architecture',
+      message: 'Batch size 32-64 works well. Consider data augmentation for better generalization.',
+    });
+  }
+  
+  if (hasLSTM) {
+    tips.push({
+      type: 'info',
+      title: 'RNN/LSTM Architecture',
+      message: 'Use gradient clipping (max norm 1.0) to prevent exploding gradients.',
+    });
+  }
+  
+  if (datasetSize && datasetSize < 500) {
+    tips.push({
+      type: 'warning',
+      title: 'Small Dataset',
+      message: `Only ${datasetSize} samples. Consider using smaller batch size and more epochs to avoid overfitting.`,
+    });
+  }
+  
+  if (datasetSize && datasetSize > 5000) {
+    tips.push({
+      type: 'success',
+      title: 'Good Dataset Size',
+      message: 'Large dataset! You can use larger batch sizes for faster training.',
+    });
+  }
+  
+  if (paramCount > 1000000) {
+    tips.push({
+      type: 'info',
+      title: 'Large Model',
+      message: 'Consider using learning rate scheduling (cosine annealing) for better convergence.',
+    });
+  }
+  
+  return tips;
+};
+
 // Analyze network to determine data requirements
 const analyzeNetworkRequirements = (nodes) => {
   if (!nodes || nodes.length === 0) {
