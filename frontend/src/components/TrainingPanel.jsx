@@ -474,8 +474,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   }, [onSaveTrainingData, trainingHistory, epochs, batchSize, learningRate, optimizer, status]);
 
   // Sync training data to parent when training completes
+  // IMPORTANT: Skip this when restoring a loaded model to prevent overwriting saved data
   useEffect(() => {
-    if (status === 'complete' && trainingHistory.length > 0 && onTrainingDataChange) {
+    // Don't sync if we're in the process of restoring a loaded model
+    if (isRestoringModelRef.current) {
+      console.log('Skipping training data sync - model is being restored');
+      return;
+    }
+    
+    // Only sync when training actually completes (not when loading a completed model)
+    // We check if processedData has actual training data (trainX), not just restored metadata
+    const hasActualTrainingData = processedData?.trainX?.length > 0 || processedData?.type !== 'restored';
+    
+    if (status === 'complete' && trainingHistory.length > 0 && onTrainingDataChange && hasActualTrainingData) {
       // Get final metrics from last epoch
       const lastEpoch = trainingHistory[trainingHistory.length - 1];
       const finalLoss = lastEpoch?.loss?.toFixed(4) || 'N/A';
@@ -505,6 +516,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         },
         savedAt: new Date().toISOString()
       };
+      console.log('Syncing training data to parent:', trainingData.finalMetrics);
       onTrainingDataChange(trainingData);
     }
   }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange, selectedDatasetInfo, processedData]);
