@@ -30,20 +30,50 @@ export const buildTFModel = (nodes, edges) => {
   // Filter out Input nodes and get layer configs
   const layerNodes = sortedNodes.filter(n => n.data.layerType !== 'Input');
   
-  // Find input shape - first check Input node, then first layer's inputSize
+  // Find input shape - check Input node configuration
   const inputNode = sortedNodes.find(n => n.data.layerType === 'Input');
   let inputShape = null;
   
-  if (inputNode?.data?.config?.inputShape) {
-    const shapeStr = inputNode.data.config.inputShape;
-    if (typeof shapeStr === 'string') {
-      try {
-        inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
-      } catch {
-        inputShape = [parseInt(shapeStr) || 784];
+  if (inputNode?.data?.config) {
+    const config = inputNode.data.config;
+    const inputType = config.inputType;
+    
+    // Determine input shape based on input type
+    if (inputType === 'image' || config.height) {
+      // Image input: [height, width, channels]
+      const height = config.height || 28;
+      const width = config.width || 28;
+      const channels = config.channels || 1;
+      inputShape = [height, width, channels];
+      console.log('Input shape (image):', inputShape);
+    } else if (inputType === 'sequence' || (config.seqLength && config.features)) {
+      // Sequence input for LSTM/RNN: [seqLength, features]
+      const seqLength = config.seqLength || 10;
+      const features = config.features || 1;
+      inputShape = [seqLength, features];
+      console.log('Input shape (sequence):', inputShape);
+    } else if (inputType === 'text' || config.seqLength) {
+      // Text input for Embedding: [seqLength]
+      const seqLength = config.seqLength || 100;
+      inputShape = [seqLength];
+      console.log('Input shape (text):', inputShape);
+    } else if (config.inputShape) {
+      // Explicit inputShape
+      const shapeStr = config.inputShape;
+      if (typeof shapeStr === 'string') {
+        try {
+          inputShape = JSON.parse(shapeStr.replace(/[\[\]]/g, m => m));
+        } catch {
+          inputShape = [parseInt(shapeStr) || 784];
+        }
+      } else if (Array.isArray(shapeStr)) {
+        inputShape = shapeStr;
       }
-    } else if (Array.isArray(shapeStr)) {
-      inputShape = shapeStr;
+      console.log('Input shape (explicit):', inputShape);
+    } else if (config.inputSize) {
+      // Flat input: [inputSize]
+      inputShape = [config.inputSize];
+      console.log('Input shape (flat):', inputShape);
     }
   }
   
@@ -59,6 +89,8 @@ export const buildTFModel = (nodes, edges) => {
   if (!inputShape) {
     inputShape = [784];
   }
+  
+  console.log('Building model with inputShape:', inputShape);
 
   const model = tf.sequential();
   let isFirstLayer = true;
