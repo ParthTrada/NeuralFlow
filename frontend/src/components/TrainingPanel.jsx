@@ -1079,7 +1079,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const isTextModel = hasEmbedding || inputNode?.data?.config?.inputType === 'text';
       
       // FIRST: Process data to get actual number of classes
-      if (processedData.type === 'csv' && processedData.raw) {
+      if ((processedData.type === 'csv' || processedData.type === 'sequence') && processedData.raw) {
         if (isTextModel && textColumn) {
           // Use text processor for NLP models
           console.log(`Processing text data: text="${textColumn}", target="${targetColumn}"`);
