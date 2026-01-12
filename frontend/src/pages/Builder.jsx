@@ -606,6 +606,7 @@ export default function Builder() {
           setIsModelsOpen(true);
         }}
         currentTemplateId={currentTemplateId}
+        resetKey={trainingPanelResetKey}
         onUpdateNodes={(updatedNodes) => {
           setNodes(updatedNodes);
           recordHistory(updatedNodes, edges, true);
