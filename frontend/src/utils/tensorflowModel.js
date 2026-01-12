@@ -341,7 +341,7 @@ export const compileModel = (model, options = {}) => {
 export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks = {}) => {
   const {
     epochs = 10,
-    batchSize = 8,
+    batchSize = 32,
     validationSplit = 0.2,
   } = options;
 
@@ -352,24 +352,9 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'batch',
     callbacks: {
-      onTrainBegin: () => {
-        console.log('>>> TRAINING STARTED <<<');
-      },
-      onEpochBegin: (epoch) => {
-        console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
-        if (callbacks.onEpochBegin) {
-          callbacks.onEpochBegin(epoch);
-        }
-      },
-      onBatchEnd: (batch, logs) => {
-        if (callbacks.onBatchEnd) {
-          callbacks.onBatchEnd(batch, logs);
-        }
-      },
       onEpochEnd: (epoch, logs) => {
-        console.log(`Epoch ${epoch + 1}/${epochs} done - loss:`, logs?.loss, 'acc:', logs?.acc);
+        console.log(`Epoch ${epoch + 1}/${epochs} - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
         if (callbacks.onEpochEnd) {
           callbacks.onEpochEnd(epoch, logs);
         }
