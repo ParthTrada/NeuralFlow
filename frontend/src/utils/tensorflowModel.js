@@ -352,6 +352,7 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
+    yieldEvery: 'epoch',
     callbacks: {
       onEpochEnd: (epoch, logs) => {
         console.log(`Epoch ${epoch + 1}/${epochs} - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
