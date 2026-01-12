@@ -213,6 +213,11 @@ export default function Builder() {
   }, [nodes, edges, setNodes, setEdges, recordHistory]);
 
   const handleLoadModel = useCallback((savedNodes, savedEdges, weights, modelId, trainingData) => {
+    console.log('Builder handleLoadModel called');
+    console.log('modelId:', modelId);
+    console.log('trainingData received:', trainingData);
+    console.log('trainingData finalMetrics:', trainingData?.finalMetrics);
+    
     setNodes(savedNodes || []);
     setEdges(savedEdges || []);
     setSelectedNode(null);
