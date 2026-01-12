@@ -185,6 +185,8 @@ export const SavedModelsPanel = ({
   };
 
   const handleLoad = (model) => {
+    console.log('Loading model:', model.name, 'model_id:', model.model_id);
+    console.log('Training data being passed:', model.training_data);
     onLoadModel(model.nodes, model.edges, model.trained_weights, model.model_id, model.training_data);
     onClose();
     toast.success(`Loaded "${model.name}" v${model.version || 1}`);
