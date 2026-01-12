@@ -2677,6 +2677,34 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       </div>
                     </div>
                   )}
+                  
+                  {/* Training Status Indicator - Shows during/after training */}
+                  {(status === 'training' || status === 'complete' || status === 'error') && (
+                    <div 
+                      className={`flex items-center justify-between p-3 rounded-lg text-xs sm:text-sm ${
+                        status === 'training' ? 'bg-primary/10 text-primary border border-primary/20' :
+                        status === 'complete' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                        status === 'error' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : ''
+                      }`}
+                      style={status === 'training' ? { transform: 'translateZ(0)' } : {}}
+                    >
+                      <div className="flex items-center gap-2">
+                        {status === 'training' && <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />}
+                        {status === 'complete' && <CheckCircle2 className="w-4 h-4 flex-shrink-0" />}
+                        {status === 'error' && <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+                        <span key={`epoch-${currentEpoch}`} className="font-medium">
+                          {status === 'training' && `Training: Epoch ${currentEpoch}/${epochs}`}
+                          {status === 'complete' && 'Training Complete!'}
+                          {status === 'error' && errorMessage}
+                        </span>
+                      </div>
+                      {/* Timer */}
+                      <div className="flex items-center gap-1 text-xs font-mono">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatDuration(trainingDuration)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
