@@ -350,12 +350,17 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
+    yieldEvery: 'epoch', // Critical: Allow UI to update between epochs
     callbacks: {
-      onEpochBegin: (epoch) => {
+      onEpochBegin: async (epoch) => {
         if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
+        // Small delay to ensure React can process state updates
+        await tf.nextFrame();
       },
-      onEpochEnd: (epoch, logs) => {
+      onEpochEnd: async (epoch, logs) => {
         if (callbacks.onEpochEnd) callbacks.onEpochEnd(epoch, logs);
+        // Allow React to re-render after state update
+        await tf.nextFrame();
       },
       onTrainEnd: () => {
         if (callbacks.onTrainEnd) callbacks.onTrainEnd();
