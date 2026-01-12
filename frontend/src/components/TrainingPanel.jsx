@@ -2381,9 +2381,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     <Slider
                       value={[batchSize]}
                       onValueChange={([v]) => setBatchSize(v)}
-                      min={8}
-                      max={128}
-                      step={8}
+                      min={4}
+                      max={64}
+                      step={4}
                       disabled={isTraining}
                       data-testid="batch-size-slider"
                     />
