@@ -168,7 +168,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   
   // Training config
   const [epochs, setEpochs] = useState(10);
-  const [batchSize, setBatchSize] = useState(8);
+  const [batchSize, setBatchSize] = useState(32);
   const [learningRate, setLearningRate] = useState(0.001);
   const [optimizer, setOptimizer] = useState('adam');
   const [validationSplit] = useState(0.2); // Fixed at 20%
