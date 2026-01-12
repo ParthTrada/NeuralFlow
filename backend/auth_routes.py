@@ -239,6 +239,7 @@ def create_auth_routes(db):
             "nodes": data.nodes,
             "edges": data.edges,
             "trained_weights": data.trained_weights,
+            "training_data": data.training_data,
             "version": version,
             "version_note": data.version_note or f"Version {version}",
             "is_public": False,
