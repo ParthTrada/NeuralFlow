@@ -274,7 +274,10 @@ const layerTips = {
   }
 };
 
-const LearningPanel = () => (
+const LearningPanel = () => {
+  const navigate = useNavigate();
+  
+  return (
   <div className="p-4 space-y-6">
     {/* Header */}
     <div className="text-center pb-2">
@@ -285,6 +288,17 @@ const LearningPanel = () => (
       <p className="text-sm text-muted-foreground mt-1">
         {learningContent.intro.description}
       </p>
+      {/* Tutorial Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-3 gap-2"
+        onClick={() => navigate('/guide')}
+        data-testid="tutorial-btn-panel"
+      >
+        <BookOpen className="w-4 h-4" />
+        View Tutorial
+      </Button>
     </div>
 
     <Separator />
@@ -330,6 +344,7 @@ const LearningPanel = () => (
     </div>
   </div>
 );
+};
 
 const LayerTipsPanel = ({ layerType }) => {
   const tips = layerTips[layerType];
