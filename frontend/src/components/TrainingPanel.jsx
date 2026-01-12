@@ -1212,8 +1212,10 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       // Calculate total batches for progress tracking
       const numSamples = xTrain?.shape?.[0] || 0;
-      const totalBatches = Math.ceil(numSamples * (1 - 0.2) / batchSize); // accounting for validation split
-      console.log(`Starting training: ${numSamples} samples, ${totalBatches} batches per epoch, ${epochs} epochs`);
+      const trainSamples = Math.floor(numSamples * (1 - validationSplit));
+      const totalBatches = Math.ceil(trainSamples / batchSize);
+      setTotalBatchesPerEpoch(totalBatches);
+      console.log(`Starting training: ${numSamples} samples (${trainSamples} train), ${totalBatches} batches per epoch, ${epochs} epochs`);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
@@ -1222,11 +1224,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }, {
         onEpochBegin: (epoch) => {
           console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
+          setCurrentBatch(0); // Reset batch counter at start of each epoch
         },
         onBatchEnd: (batch, logs) => {
+          setCurrentBatch(batch + 1);
           // Log every 10 batches to avoid console spam
           if (batch % 10 === 0) {
-            console.log(`Batch ${batch}/${totalBatches} - loss: ${logs?.loss?.toFixed(4)}`);
+            console.log(`Batch ${batch + 1}/${totalBatches} - loss: ${logs?.loss?.toFixed(4)}`);
           }
         },
         onEpochEnd: (epoch, logs) => {
