@@ -371,15 +371,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       // Reset all training-related internal state
       setTrainingHistory([]);
       setStatus('idle');
-      setProgress(0);
       setCurrentEpoch(0);
       setProcessedData(null);
-      setCurrentDataset(null);
-      setDataPreview([]);
-      setPreviewRows([]);
+      setSelectedDatasetInfo(null);
+      setColumns([]);
       modelRef.current = null;
       setMiniGPTTrainingComplete(false);
-      setMiniGPTGeneratedText('');
+      setGeneratedText('');
+      setErrorMessage('');
       console.log('TrainingPanel: Reset state for new template');
     }
   }, [resetKey]);
