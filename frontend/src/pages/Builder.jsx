@@ -615,6 +615,10 @@ export default function Builder() {
         currentNodes={nodes}
         currentEdges={edges}
         trainedWeights={trainedWeights}
+        trainingData={savedTrainingData}
+        onModelSaved={(modelId) => {
+          setCurrentModelId(modelId);
+        }}
       />
 
       {/* Product Tour for first-time users - Disabled for now */}
