@@ -580,7 +580,7 @@ export const loadImage = async (file) => {
 };
 
 // Process image for model input
-export const processImage = async (img, targetSize = [28, 28], grayscale = true) => {
+export const processImage = async (img, targetSize = [28, 28], grayscale = true, keepShape = false) => {
   let tensor = tf.browser.fromPixels(img);
   
   // Convert to grayscale if needed
@@ -594,10 +594,13 @@ export const processImage = async (img, targetSize = [28, 28], grayscale = true)
   // Normalize to [0, 1]
   tensor = tensor.div(255.0);
   
-  // Flatten if needed
-  const flattened = tensor.reshape([targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)]);
-  
-  return flattened;
+  // Keep 3D shape [height, width, channels] for CNN, or flatten for MLP
+  if (keepShape) {
+    return tensor; // [height, width, channels]
+  } else {
+    const flattened = tensor.reshape([targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)]);
+    return flattened;
+  }
 };
 
 // Process multiple images with labels from folder structure
