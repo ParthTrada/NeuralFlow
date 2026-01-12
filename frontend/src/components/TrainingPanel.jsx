@@ -2377,36 +2377,49 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Gauge className="w-3.5 h-3.5" />
-                    <span>Quick Presets</span>
+                    <span>Training Mode</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(TRAINING_PRESETS).map(([key, preset]) => (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          setSelectedPreset(key);
-                          setEpochs(preset.epochs);
-                          setBatchSize(preset.batchSize);
-                          setLearningRate(preset.learningRate);
-                          setOptimizer(preset.optimizer);
-                        }}
-                        disabled={isTraining}
-                        className={cn(
-                          "p-2 rounded-lg border text-center transition-all",
-                          selectedPreset === key
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/50 hover:bg-muted/50",
-                          isTraining && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <span className="text-lg">{preset.icon}</span>
-                        <p className="text-[10px] font-medium mt-1">{preset.name}</p>
-                      </button>
-                    ))}
+                    {Object.entries(TRAINING_PRESETS).map(([key, preset]) => {
+                      const PresetIcon = key === 'prototype' ? Beaker : key === 'development' ? Code : Target;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setSelectedPreset(key);
+                            setEpochs(preset.epochs);
+                            setBatchSize(preset.batchSize);
+                            setLearningRate(preset.learningRate);
+                            setOptimizer(preset.optimizer);
+                          }}
+                          disabled={isTraining}
+                          className={cn(
+                            "p-2.5 rounded-lg border text-center transition-all flex flex-col items-center gap-1.5",
+                            selectedPreset === key
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border hover:border-primary/50 hover:bg-muted/50",
+                            isTraining && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          <PresetIcon className={cn(
+                            "w-5 h-5",
+                            selectedPreset === key ? "text-primary" : "text-muted-foreground"
+                          )} />
+                          <p className="text-[10px] font-medium">{preset.name}</p>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    {TRAINING_PRESETS[selectedPreset]?.description}
-                  </p>
+                  <div className="p-2 rounded-lg bg-muted/50 text-center">
+                    <p className="text-[10px] text-muted-foreground">
+                      {TRAINING_PRESETS[selectedPreset]?.description}
+                    </p>
+                    {TRAINING_PRESETS[selectedPreset]?.tips && (
+                      <p className="text-[9px] text-primary/70 mt-1">
+                        💡 {TRAINING_PRESETS[selectedPreset].tips[0]}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Smart Tips */}
