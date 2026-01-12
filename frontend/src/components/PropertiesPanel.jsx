@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Lightbulb, BookOpen, Layers, Zap, Brain, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
