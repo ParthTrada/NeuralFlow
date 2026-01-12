@@ -2533,46 +2533,46 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                             }}
                           />
                           <Legend wrapperStyle={{ fontSize: '10px' }} />
-                          {/* Training Loss */}
+                          {/* Training Loss - Red */}
                           <Line 
                             yAxisId="left"
                             type="monotone" 
                             dataKey="loss" 
-                            stroke="hsl(var(--destructive))" 
+                            stroke="#ef4444"
                             strokeWidth={2}
                             dot={false}
                             name="Loss"
                             connectNulls
                           />
-                          {/* Validation Loss */}
+                          {/* Validation Loss - Orange */}
                           <Line 
                             yAxisId="left"
                             type="monotone" 
                             dataKey="valLoss" 
-                            stroke="hsl(var(--destructive))" 
+                            stroke="#f97316"
                             strokeWidth={2}
                             strokeDasharray="5 5"
                             dot={false}
                             name="Val Loss"
                             connectNulls
                           />
-                          {/* Training Accuracy */}
+                          {/* Training Accuracy - Purple */}
                           <Line 
                             yAxisId="right"
                             type="monotone" 
                             dataKey="accuracy" 
-                            stroke="hsl(var(--primary))" 
+                            stroke="#8b5cf6"
                             strokeWidth={2}
                             dot={false}
                             name="Acc"
                             connectNulls
                           />
-                          {/* Validation Accuracy */}
+                          {/* Validation Accuracy - Cyan */}
                           <Line 
                             yAxisId="right"
                             type="monotone" 
                             dataKey="valAccuracy" 
-                            stroke="hsl(var(--primary))" 
+                            stroke="#06b6d4"
                             strokeWidth={2}
                             strokeDasharray="5 5"
                             dot={false}
