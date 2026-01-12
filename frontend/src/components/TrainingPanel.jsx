@@ -281,7 +281,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [optimizer, setOptimizer] = useState('adam');
   
   // Advanced training config
-  const [selectedPreset, setSelectedPreset] = useState('balanced');
+  const [selectedPreset, setSelectedPreset] = useState('development');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [validationSplit, setValidationSplit] = useState(0.2);
   const [earlyStopping, setEarlyStopping] = useState(false);
