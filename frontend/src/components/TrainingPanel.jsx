@@ -1070,20 +1070,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const numSamples = xTrain?.shape?.[0] || 0;
       const trainSamples = Math.floor(numSamples * (1 - validationSplit));
       const totalBatches = Math.ceil(trainSamples / batchSize);
-      setTotalBatchesPerEpoch(totalBatches);
       console.log(`Starting training: ${numSamples} samples (${trainSamples} train), ${totalBatches} batches per epoch, ${epochs} epochs`);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
         batchSize,
-        validationSplit: validationSplit, // Use preset's validation split
+        validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
           console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
-          setCurrentBatch(0); // Reset batch counter at start of each epoch
         },
         onBatchEnd: (batch, logs) => {
-          setCurrentBatch(batch + 1);
           // Log every 10 batches to avoid console spam
           if (batch % 10 === 0) {
             console.log(`Batch ${batch + 1}/${totalBatches} - loss: ${logs?.loss?.toFixed(4)}`);
