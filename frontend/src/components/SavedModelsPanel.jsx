@@ -146,16 +146,24 @@ export const SavedModelsPanel = ({
 
     setSaving(true);
     try {
-      await axios.post(`${API_URL}/auth/models`, {
+      const response = await axios.post(`${API_URL}/auth/models`, {
         name: saveName,
         nodes: currentNodes,
         edges: currentEdges,
         trained_weights: includeWeights ? trainedWeights : null,
+        training_data: includeWeights && trainingData ? trainingData : null,
         version_note: versionNote || undefined
       }, {
         withCredentials: true
       });
-      toast.success('Model saved!');
+      
+      // Notify parent of the saved model ID
+      if (onModelSaved && response.data?.model_id) {
+        onModelSaved(response.data.model_id);
+      }
+      
+      const hasTraining = includeWeights && (trainedWeights || trainingData);
+      toast.success(hasTraining ? 'Model and training results saved!' : 'Model saved!');
       setSaveName('');
       setVersionNote('');
       setIncludeWeights(false);
