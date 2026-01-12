@@ -3161,32 +3161,57 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     )}
                     
-                    {/* Save Training Results Button */}
-                    {trainingHistory.length > 0 && onSaveTrainingData && (
+                    {/* Save Training Results Section - Different states based on auth and model */}
+                    {trainingHistory.length > 0 && (
                       <div className="pt-4 border-t border-border mt-4">
-                        <Button
-                          onClick={handleSaveTrainingData}
-                          className="w-full"
-                          variant="outline"
-                          data-testid="save-training-btn"
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Training Results
-                        </Button>
-                        <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                          Save training history with your model to restore it later
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Message when user can't save (not authenticated or no model saved) */}
-                    {trainingHistory.length > 0 && !onSaveTrainingData && (
-                      <div className="pt-4 border-t border-border mt-4">
-                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                          <p className="text-xs text-amber-400 text-center">
-                            💡 Sign in and save your model to preserve training results
-                          </p>
-                        </div>
+                        {/* State 1: Authenticated and has saved model - show save button */}
+                        {isAuthenticated && modelId && (
+                          <>
+                            <Button
+                              onClick={handleSaveTrainingData}
+                              className="w-full"
+                              variant="outline"
+                              data-testid="save-training-btn"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Training Results
+                            </Button>
+                            <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                              Save training history with your model to restore it later
+                            </p>
+                          </>
+                        )}
+                        
+                        {/* State 2: Authenticated but no model saved - prompt to save model */}
+                        {isAuthenticated && !modelId && (
+                          <div className="space-y-3">
+                            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                              <p className="text-xs text-blue-400 text-center">
+                                💾 Save your model to preserve training results
+                              </p>
+                            </div>
+                            {onOpenSavePanel && (
+                              <Button
+                                onClick={onOpenSavePanel}
+                                className="w-full"
+                                variant="outline"
+                                data-testid="open-save-panel-btn"
+                              >
+                                <Save className="w-4 h-4 mr-2" />
+                                Save Model Now
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* State 3: Not authenticated - prompt to sign in */}
+                        {!isAuthenticated && (
+                          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-xs text-amber-400 text-center">
+                              🔐 Sign in to save your training results
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
