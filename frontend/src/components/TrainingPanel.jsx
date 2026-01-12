@@ -2504,7 +2504,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     <Slider
                       value={[epochs]}
-                      onValueChange={([v]) => { setEpochs(v); setSelectedPreset('custom'); }}
+                      onValueChange={([v]) => setEpochs(v)}
                       min={1}
                       max={100}
                       step={1}
@@ -2523,7 +2523,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     <Slider
                       value={[batchSize]}
-                      onValueChange={([v]) => { setBatchSize(v); setSelectedPreset('custom'); }}
+                      onValueChange={([v]) => setBatchSize(v)}
                       min={8}
                       max={128}
                       step={8}
@@ -2542,7 +2542,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     <Slider
                       value={[Math.log10(learningRate) + 4]}
-                      onValueChange={([v]) => { setLearningRate(Math.pow(10, v - 4)); setSelectedPreset('custom'); }}
+                      onValueChange={([v]) => setLearningRate(Math.pow(10, v - 4))}
                       min={0}
                       max={3}
                       step={0.1}
@@ -2556,7 +2556,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                       <Settings className="w-3 h-3 text-muted-foreground" />
                       Optimizer
                     </Label>
-                    <Select value={optimizer} onValueChange={(v) => { setOptimizer(v); setSelectedPreset('custom'); }} disabled={isTraining}>
+                    <Select value={optimizer} onValueChange={setOptimizer} disabled={isTraining}>
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm" data-testid="select-optimizer">
                         <SelectValue />
                       </SelectTrigger>
