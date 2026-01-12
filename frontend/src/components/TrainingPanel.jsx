@@ -220,6 +220,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const imageInputRef = useRef(null);
   const lastModelIdRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const isRestoringModelRef = useRef(false); // Flag to prevent sync useEffect from overwriting loaded data
   
   // Force repaint by dispatching scroll event and micro-scrolling
   const forceRepaint = useCallback(() => {
