@@ -1090,12 +1090,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          console.log(`[UI] onEpochBegin: epoch ${epoch + 1}`);
           setCurrentEpoch(epoch + 1);
         },
         onEpochEnd: (epoch, logs) => {
-          console.log(`[UI] onEpochEnd: epoch ${epoch + 1}, loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
-          
           if (stopTrainingRef.current) {
             if (modelRef.current) {
               modelRef.current.stopTraining = true;
@@ -1112,20 +1109,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
           }]);
         },
-        onTrainEnd: async () => {
-          console.log('[UI] onTrainEnd callback triggered');
-          
-          // Update UI immediately
+        onTrainEnd: () => {
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs);
           toast.success('Training complete!');
           
-          // Export weights in background (don't block UI)
+          // Export weights in background
           if (modelRef.current && onWeightsTrained) {
             setTimeout(async () => {
               try {
-                console.log('Exporting model weights...');
                 const weightsData = await modelRef.current.getWeights();
                 const weightsArray = await Promise.all(
                   weightsData.map(async (w) => ({
