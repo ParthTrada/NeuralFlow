@@ -77,11 +77,18 @@ Build a visual deep-learning tool that allows users to design, train, and export
 - **Groq API** - For PDF Q&A feature (currently disabled)
 
 ## Known Issues
-- **P0:** Google Auth may be unreliable on production domain (`neuralflows.ai`) - needs user verification after deployment
+- **P2:** Google Auth may be unreliable on production domain (`neuralflows.ai`) - needs user verification after deployment
 
 ## Changelog
 
-### January 11, 2025 (Current Session)
+### January 12, 2025 (Current Session)
+- **Fixed (P0):** Training UI not updating during training - Critical bug where epoch counter was stuck at 0 and graph didn't render
+  - Root cause: TensorFlow.js `model.fit()` was blocking the UI thread, preventing React state updates
+  - Solution: Added `yieldEvery: 'epoch'` option and `tf.nextFrame()` calls in `tensorflowModel.js` to allow UI updates between epochs
+  - Verified: Epoch counter increments correctly (1-N), graph appears after first epoch, training status transitions properly
+- **Confirmed:** Batch size slider has correct min=1 setting
+
+### January 11, 2025 (Previous Session)
 - **Fixed:** Syntax error in TrainingPanel.jsx (unclosed JSX fragment at line 2617)
 - **Completed:** Pre-trained Mini-GPT UI fully functional:
   - Model specifications display (~2.1M params, 8 layers, 128 embed dim, 4 heads)
