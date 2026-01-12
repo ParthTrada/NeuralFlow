@@ -1218,6 +1218,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         batchSize,
         validationSplit: 0.2,
       }, {
+        onEpochBegin: (epoch) => {
+          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
+        },
         onBatchEnd: (batch, logs) => {
           // Log every 10 batches to avoid console spam
           if (batch % 10 === 0) {
