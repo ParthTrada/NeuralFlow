@@ -271,6 +271,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     }
   }, [resetKey]);
   
+  // Training timer effect
+  useEffect(() => {
+    let interval;
+    if (isTraining && trainingStartTime) {
+      interval = setInterval(() => {
+        setTrainingDuration(Math.floor((Date.now() - trainingStartTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTraining, trainingStartTime]);
+  
+  // Format duration as mm:ss
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
   // Initialize Mini-GPT when template is loaded
   useEffect(() => {
     if (isMiniGPTTemplate && !isMiniGPTLoaded && !isLoadingMiniGPT) {
