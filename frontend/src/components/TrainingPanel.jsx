@@ -2427,8 +2427,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
               <Separator />
 
-              {/* Training Progress */}
-              {trainingHistory.length > 0 && (
+              {/* Training Progress - Shows during training OR when there's history */}
+              {(status === 'training' || trainingHistory.length > 0) && (
                 <div className="space-y-3 sm:space-y-4">
                   <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">
                     3. Results
