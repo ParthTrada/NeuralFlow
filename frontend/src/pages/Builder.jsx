@@ -204,6 +204,7 @@ export default function Builder() {
     setTrainedWeights(null);
     setSavedTrainingData(null);
     setCurrentModelId(null);
+    setTrainingPanelResetKey(prev => prev + 1); // Trigger TrainingPanel internal state reset
     
     // Record to history (immediate for discrete action)
     recordHistory(updatedNodes, updatedEdges, true);
