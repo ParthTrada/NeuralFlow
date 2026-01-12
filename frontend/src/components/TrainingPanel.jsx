@@ -1026,6 +1026,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setCurrentBatch(0);
     setTotalBatches(0);
     setStatus('training');
+    setTrainingStartTime(Date.now());
+    setTrainingDuration(0);
     stopTrainingRef.current = false;
 
     try {
