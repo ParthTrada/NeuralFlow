@@ -144,27 +144,33 @@ const getSmartTips = (nodes, datasetSize) => {
     });
   }
   
+  // Dataset size recommendations based on research
   if (datasetSize && datasetSize < 500) {
     tips.push({
       type: 'warning',
-      title: 'Small Dataset',
-      message: `Only ${datasetSize} samples. Consider using smaller batch size and more epochs to avoid overfitting.`,
+      title: 'Small Dataset Warning',
+      message: `Only ${datasetSize} samples. Use batch size 16-32, enable early stopping, and consider dropout 0.3-0.5 to prevent overfitting.`,
     });
-  }
-  
-  if (datasetSize && datasetSize > 5000) {
-    tips.push({
-      type: 'success',
-      title: 'Good Dataset Size',
-      message: 'Large dataset! You can use larger batch sizes for faster training.',
-    });
-  }
-  
-  if (paramCount > 1000000) {
+  } else if (datasetSize && datasetSize < 2000) {
     tips.push({
       type: 'info',
-      title: 'Large Model',
-      message: 'Consider using learning rate scheduling (cosine annealing) for better convergence.',
+      title: 'Medium Dataset',
+      message: `${datasetSize} samples. Use batch 32, validation split 20%, and enable early stopping with patience 5-10.`,
+    });
+  } else if (datasetSize && datasetSize > 5000) {
+    tips.push({
+      type: 'success',
+      title: 'Large Dataset',
+      message: `${datasetSize} samples - great! Use larger batch (64-128) for faster training. Consider LR warmup.`,
+    });
+  }
+  
+  // Model depth recommendations
+  if (layerCount > 10) {
+    tips.push({
+      type: 'info',
+      title: 'Deep Network',
+      message: 'Use cosine LR schedule with warmup. Consider residual connections if not already present.',
     });
   }
   
