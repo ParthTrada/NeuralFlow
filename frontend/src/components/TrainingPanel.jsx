@@ -176,8 +176,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [isTraining, setIsTraining] = useState(false);
   const [trainingHistory, setTrainingHistory] = useState([]);
   const [currentEpoch, setCurrentEpoch] = useState(0);
-  const [currentBatch, setCurrentBatch] = useState(0);
-  const [totalBatchesPerEpoch, setTotalBatchesPerEpoch] = useState(0);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
   
