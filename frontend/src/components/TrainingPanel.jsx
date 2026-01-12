@@ -176,17 +176,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [batchSize, setBatchSize] = useState(32);
   const [learningRate, setLearningRate] = useState(0.001);
   const [optimizer, setOptimizer] = useState('adam');
-  
-  // Advanced training config
-  const [selectedPreset, setSelectedPreset] = useState('development');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [validationSplit, setValidationSplit] = useState(0.2);
-  const [earlyStopping, setEarlyStopping] = useState(false);
-  const [earlyStoppingPatience, setEarlyStoppingPatience] = useState(5);
-  const [lrScheduler, setLrScheduler] = useState('none');
-  const [weightDecay, setWeightDecay] = useState(0.0001);
-  const [gradientClipping, setGradientClipping] = useState(false);
-  const [gradientClipNorm, setGradientClipNorm] = useState(1.0);
+  const [validationSplit] = useState(0.2); // Fixed at 20%
   
   // Training state
   const [isTraining, setIsTraining] = useState(false);
