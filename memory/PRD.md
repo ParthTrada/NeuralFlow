@@ -84,8 +84,12 @@ Build a visual deep-learning tool that allows users to design, train, and export
 ### January 12, 2025 (Current Session)
 - **Fixed (P0):** Training UI not updating during training - Critical bug where epoch counter was stuck at 0 and graph didn't render
   - Root cause: TensorFlow.js `model.fit()` was blocking the UI thread, preventing React state updates
-  - Solution: Added `yieldEvery: 'epoch'` option and `tf.nextFrame()` calls in `tensorflowModel.js` to allow UI updates between epochs
+  - Solution: Added `yieldEvery: 'batch'` option and `tf.nextFrame()` calls in `tensorflowModel.js` to allow UI updates
   - Verified: Epoch counter increments correctly (1-N), graph appears after first epoch, training status transitions properly
+- **Added:** Batch progress tracking during training
+  - Shows "Epoch X/N" with "Batch Y/M" below during training
+  - Batch counter resets to 0 at start of each epoch
+  - Total batches calculated correctly from training samples / batch size
 - **Confirmed:** Batch size slider has correct min=1 setting
 
 ### January 11, 2025 (Previous Session)
