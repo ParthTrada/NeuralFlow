@@ -3177,54 +3177,32 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     </div>
                     )}
                     
-                    {/* Save Training Results Section - Different states based on auth and model */}
-                    {trainingHistory.length > 0 && (
+                    {/* Save Section - Shows after training completes */}
+                    {status === 'complete' && trainingHistory.length > 0 && (
                       <div className="pt-4 border-t border-border mt-4">
-                        {/* State 1: Authenticated and has saved model - show save button */}
-                        {isAuthenticated && modelId && (
-                          <>
+                        {/* Authenticated - show save button */}
+                        {isAuthenticated && (
+                          <div className="space-y-3">
                             <Button
-                              onClick={handleSaveTrainingData}
+                              onClick={onOpenSavePanel}
                               className="w-full"
-                              variant="outline"
-                              data-testid="save-training-btn"
+                              variant="default"
+                              data-testid="save-model-btn"
                             >
                               <Save className="w-4 h-4 mr-2" />
-                              Save Training Results
+                              Save Model & Training
                             </Button>
-                            <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                              Save training history with your model to restore it later
+                            <p className="text-[10px] text-muted-foreground text-center">
+                              Save your trained model to restore it later
                             </p>
-                          </>
-                        )}
-                        
-                        {/* State 2: Authenticated but no model saved - prompt to save model */}
-                        {isAuthenticated && !modelId && (
-                          <div className="space-y-3">
-                            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                              <p className="text-xs text-blue-400 text-center">
-                                💾 Save your model to preserve training results
-                              </p>
-                            </div>
-                            {onOpenSavePanel && (
-                              <Button
-                                onClick={onOpenSavePanel}
-                                className="w-full"
-                                variant="outline"
-                                data-testid="open-save-panel-btn"
-                              >
-                                <Save className="w-4 h-4 mr-2" />
-                                Save Model Now
-                              </Button>
-                            )}
                           </div>
                         )}
                         
-                        {/* State 3: Not authenticated - prompt to sign in */}
+                        {/* Not authenticated - prompt to sign in */}
                         {!isAuthenticated && (
                           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                             <p className="text-xs text-amber-400 text-center">
-                              🔐 Sign in to save your training results
+                              🔐 Sign in to save your trained model
                             </p>
                           </div>
                         )}
