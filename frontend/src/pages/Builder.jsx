@@ -596,6 +596,7 @@ export default function Builder() {
         savedWeights={trainedWeights}
         savedTrainingData={savedTrainingData}
         onSaveTrainingData={handleSaveTrainingData}
+        onTrainingDataChange={setSavedTrainingData}
         isAuthenticated={isAuthenticated}
         onOpenSavePanel={() => {
           setIsTrainingPanelOpen(false);
