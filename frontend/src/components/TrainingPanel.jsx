@@ -1068,12 +1068,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       // Calculate total batches for progress tracking
       const numSamples = xTrain?.shape?.[0] || 0;
-      const trainSamples = Math.floor(numSamples * (1 - validationSplit));
-      const batchCount = Math.ceil(trainSamples / batchSize);
-      setTotalBatches(batchCount);
-      setCurrentBatch(0);
+      console.log(`Starting training: ${numSamples} samples, batch ${batchSize}, ${epochs} epochs`);
+      
       setCurrentEpoch(1);
-      console.log(`Starting training: ${numSamples} samples, ${trainSamples} train, ${batchCount} batches/epoch, ${epochs} epochs`);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
@@ -1082,20 +1079,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }, {
         onEpochBegin: (epoch) => {
           setCurrentEpoch(epoch + 1);
-          setCurrentBatch(0);
-          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
-        },
-        onBatchEnd: (batch, logs) => {
-          setCurrentBatch(batch + 1);
         },
         onEpochEnd: (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
+          console.log(`Epoch ${epoch + 1} done - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
             modelRef.current.stopTraining = true;
             return;
           }
           
-          // Add to training history for graph
           setTrainingHistory(prev => [...prev, {
             epoch: epoch + 1,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
