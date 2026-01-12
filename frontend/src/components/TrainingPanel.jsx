@@ -1130,9 +1130,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                 const weightsJson = JSON.stringify(weightsArray);
                 const weightsBase64 = btoa(weightsJson);
                 onWeightsTrained(weightsBase64);
-                console.log('Weights exported successfully');
               } catch (e) {
-                console.error('Failed to export weights:', e);
+                // Silent fail for weight export
               }
             }, 100);
           }
@@ -1140,7 +1139,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       });
 
     } catch (error) {
-      console.error('Training error:', error);
       setStatus('error');
       setErrorMessage(error.message);
       setIsTraining(false);
