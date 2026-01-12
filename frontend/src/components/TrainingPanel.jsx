@@ -503,6 +503,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     onSaveTrainingData(trainingData);
   }, [onSaveTrainingData, trainingHistory, epochs, batchSize, learningRate, optimizer, status]);
 
+  // Sync training data to parent when training completes
+  useEffect(() => {
+    if (status === 'complete' && trainingHistory.length > 0 && onTrainingDataChange) {
+      const trainingData = {
+        trainingHistory,
+        epochs,
+        batchSize,
+        learningRate,
+        optimizer,
+        status,
+        savedAt: new Date().toISOString()
+      };
+      onTrainingDataChange(trainingData);
+    }
+  }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange]);
+
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
     const uploadedFile = e.target.files[0];
