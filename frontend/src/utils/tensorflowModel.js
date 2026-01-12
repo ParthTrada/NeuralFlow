@@ -5,6 +5,15 @@ tf.ready().then(() => {
   console.log('TensorFlow.js backend:', tf.getBackend());
 });
 
+// Force browser repaint helper
+const forceRepaint = () => {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+};
+
 // Build TensorFlow.js model from our node graph
 export const buildTFModel = (nodes, edges) => {
   if (!nodes || nodes.length === 0) {
