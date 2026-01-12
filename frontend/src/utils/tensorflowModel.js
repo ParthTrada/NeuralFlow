@@ -1,5 +1,10 @@
 import * as tf from '@tensorflow/tfjs';
 
+// Ensure WebGL backend is ready
+tf.ready().then(() => {
+  console.log('TensorFlow.js backend:', tf.getBackend());
+});
+
 // Build TensorFlow.js model from our node graph
 export const buildTFModel = (nodes, edges) => {
   if (!nodes || nodes.length === 0) {
