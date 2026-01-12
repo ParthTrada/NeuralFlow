@@ -1100,14 +1100,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             return;
           }
           
-          setCurrentEpoch(epoch + 1);
-          setTrainingHistory(prev => [...prev, {
-            epoch: epoch + 1,
-            loss: logs.loss != null ? Number(logs.loss).toFixed(4) : null,
-            accuracy: logs.acc != null ? Number(logs.acc).toFixed(4) : null,
-            valLoss: logs.val_loss != null ? Number(logs.val_loss).toFixed(4) : null,
-            valAccuracy: logs.val_acc != null ? Number(logs.val_acc).toFixed(4) : null,
-          }]);
+          // Force state update for epoch counter
+          const newEpoch = epoch + 1;
+          setCurrentEpoch(newEpoch);
+          console.log('Set currentEpoch to:', newEpoch);
+          
+          setTrainingHistory(prev => {
+            const newHistory = [...prev, {
+              epoch: newEpoch,
+              loss: logs.loss != null ? Number(logs.loss).toFixed(4) : null,
+              accuracy: logs.acc != null ? Number(logs.acc).toFixed(4) : null,
+              valLoss: logs.val_loss != null ? Number(logs.val_loss).toFixed(4) : null,
+              valAccuracy: logs.val_acc != null ? Number(logs.val_acc).toFixed(4) : null,
+            }];
+            console.log('Training history updated, length:', newHistory.length);
+            return newHistory;
+          });
         },
         onTrainEnd: async () => {
           console.log('>>> onTrainEnd callback triggered');
