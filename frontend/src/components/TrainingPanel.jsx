@@ -2323,7 +2323,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     <span className="truncate">
                       {status === 'loading' && 'Processing...'}
                       {status === 'ready' && 'Data ready'}
-                      {status === 'training' && `Training... Epoch ${currentEpoch}/${epochs}`}
+                      {status === 'training' && `Epoch ${currentEpoch + 1}/${epochs} - Batch ${currentBatch}/${totalBatches}`}
                       {status === 'complete' && 'Complete!'}
                       {status === 'error' && errorMessage}
                     </span>
