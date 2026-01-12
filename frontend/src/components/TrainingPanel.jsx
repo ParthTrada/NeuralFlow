@@ -248,6 +248,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   useEffect(() => {
     if (resetKey > 0) {
       // Reset all training-related internal state
+      console.log('TrainingPanel: Resetting state due to resetKey change:', resetKey);
       setTrainingHistory([]);
       setStatus('idle');
       setCurrentEpoch(0);
@@ -260,7 +261,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       setMiniGPTTrainingComplete(false);
       setGeneratedText('');
       setErrorMessage('');
-      console.log('TrainingPanel: Reset state for new template');
+      setTargetColumn('');
+      setTextColumn('');
+      setPredictionInput('');
+      setPredictionResult(null);
+      console.log('TrainingPanel: Reset complete for new template');
     }
   }, [resetKey]);
   
