@@ -1070,17 +1070,31 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
       // Calculate total batches for progress tracking
       const numSamples = xTrain?.shape?.[0] || 0;
-      console.log(`Starting training: ${numSamples} samples, batch ${batchSize}, ${epochs} epochs`);
+      const trainingSamples = Math.floor(numSamples * (1 - validationSplit));
+      const calculatedTotalBatches = Math.ceil(trainingSamples / batchSize);
+      console.log(`Starting training: ${numSamples} samples, batch ${batchSize}, ${epochs} epochs, ~${calculatedTotalBatches} batches/epoch`);
       
       setCurrentEpoch(1);
+      setCurrentBatch(0);
+      setTotalBatches(calculatedTotalBatches);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
         batchSize,
         validationSplit: validationSplit,
       }, {
-        onEpochBegin: (epoch) => {
+        onEpochBegin: (epoch, info) => {
           setCurrentEpoch(epoch + 1);
+          setCurrentBatch(0); // Reset batch counter at start of each epoch
+          if (info?.totalBatches) {
+            setTotalBatches(info.totalBatches);
+          }
+        },
+        onBatchEnd: (batch, logs) => {
+          setCurrentBatch(batch + 1);
+          if (stopTrainingRef.current) {
+            modelRef.current.stopTraining = true;
+          }
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1} done - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
@@ -1104,6 +1118,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs); // Ensure epoch counter shows completion
+          setCurrentBatch(0);
           toast.success('Training complete!');
           
           // Export weights in background (don't block UI)
