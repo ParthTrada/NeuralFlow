@@ -345,34 +345,48 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     validationSplit = 0.2,
   } = options;
 
-  const history = await model.fit(xTrain, yTrain, {
-    epochs,
-    batchSize,
-    validationSplit,
-    shuffle: true,
-    yieldEvery: 'auto', // Yield to UI thread to prevent blocking
-    callbacks: {
-      onEpochEnd: (epoch, logs) => {
-        console.log(`Epoch ${epoch + 1} completed:`, logs);
-        if (callbacks.onEpochEnd) {
-          callbacks.onEpochEnd(epoch, logs);
-        }
-      },
-      onBatchEnd: (batch, logs) => {
-        if (callbacks.onBatchEnd) {
-          callbacks.onBatchEnd(batch, logs);
-        }
-      },
-      onTrainEnd: () => {
-        console.log('Training completed');
-        if (callbacks.onTrainEnd) {
-          callbacks.onTrainEnd();
+  console.log('trainModel called - epochs:', epochs, 'batchSize:', batchSize);
+  console.log('xTrain shape:', xTrain?.shape, 'yTrain shape:', yTrain?.shape);
+
+  try {
+    const history = await model.fit(xTrain, yTrain, {
+      epochs,
+      batchSize,
+      validationSplit,
+      shuffle: true,
+      yieldEvery: 'batch', // Yield after each batch to allow UI updates
+      callbacks: {
+        onTrainBegin: () => {
+          console.log('Training started!');
+        },
+        onEpochBegin: (epoch) => {
+          console.log(`Starting epoch ${epoch + 1}/${epochs}`);
+        },
+        onEpochEnd: (epoch, logs) => {
+          console.log(`Epoch ${epoch + 1} completed:`, logs);
+          if (callbacks.onEpochEnd) {
+            callbacks.onEpochEnd(epoch, logs);
+          }
+        },
+        onBatchEnd: (batch, logs) => {
+          if (callbacks.onBatchEnd) {
+            callbacks.onBatchEnd(batch, logs);
+          }
+        },
+        onTrainEnd: () => {
+          console.log('Training completed');
+          if (callbacks.onTrainEnd) {
+            callbacks.onTrainEnd();
+          }
         }
       }
-    }
-  });
+    });
 
-  return history;
+    return history;
+  } catch (error) {
+    console.error('Error in model.fit:', error);
+    throw error;
+  }
 };
 
 // Make predictions
