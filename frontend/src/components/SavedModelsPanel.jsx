@@ -101,6 +101,13 @@ export const SavedModelsPanel = ({
       fetchModels();
     }
   }, [isOpen, user]);
+  
+  // Auto-enable including weights when there's training data
+  useEffect(() => {
+    if (isOpen && (trainedWeights || trainingData)) {
+      setIncludeWeights(true);
+    }
+  }, [isOpen, trainedWeights, trainingData]);
 
   const fetchModels = async () => {
     setLoading(true);
