@@ -61,7 +61,7 @@ NeuralFlows is a free web application that allows users to design deep learning 
 
 ## How to Use
 
-1. Visit https://deeplearn-viz.preview.emergentagent.com/
+1. Visit https://realtimefeed.preview.emergentagent.com/
 2. Click "Start Building" to open the builder
 3. Select a template or add layers from the sidebar
 4. Configure layer parameters in the right panel
@@ -88,4 +88,4 @@ NeuralFlows is a free web application that allows users to design deep learning 
 
 ## Contact
 
-Website: https://deeplearn-viz.preview.emergentagent.com/
+Website: https://realtimefeed.preview.emergentagent.com/

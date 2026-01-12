@@ -9,9 +9,9 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://deeplearn-viz.preview.emergentagent.com/api/openapi.json"
+    "url": "https://realtimefeed.preview.emergentagent.com/api/openapi.json"
   },
-  "logo_url": "https://deeplearn-viz.preview.emergentagent.com/favicon.svg",
+  "logo_url": "https://realtimefeed.preview.emergentagent.com/favicon.svg",
   "contact_email": "support@neuralflows.com",
-  "legal_info_url": "https://deeplearn-viz.preview.emergentagent.com/"
+  "legal_info_url": "https://realtimefeed.preview.emergentagent.com/"
 }
