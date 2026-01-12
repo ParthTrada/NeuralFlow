@@ -346,6 +346,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         // Reset all training-related state for new model
         setTrainingHistory([]);
         setCurrentEpoch(0);
+        setCurrentBatch(0);
+        setTotalBatches(0);
         setStatus('idle');
       }
       
