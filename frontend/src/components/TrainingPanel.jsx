@@ -329,6 +329,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   // Restore or reset training state when a different model is loaded
   useEffect(() => {
     if (modelId && modelId !== lastModelIdRef.current) {
+      console.log('Loading model:', modelId, 'savedWeights:', !!savedWeights, 'savedTrainingData:', !!savedTrainingData);
+      
       // Dispose existing model if any
       if (modelRef.current) {
         try {
@@ -341,33 +343,62 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       // Check if we have saved training data for this model
       if (savedTrainingData) {
-        console.log('Restoring saved training data for model:', modelId);
+        console.log('Restoring saved training data for model:', modelId, savedTrainingData);
         setTrainingHistory(savedTrainingData.trainingHistory || []);
         setStatus(savedTrainingData.trainingHistory?.length > 0 ? 'complete' : 'idle');
         setCurrentEpoch(savedTrainingData.trainingHistory?.length || 0);
-        // Rebuild model if we have weights
-        if (savedWeights && nodes.length > 0) {
-          try {
-            const model = buildTFModel(nodes, edges);
-            compileModel(model, {
-              optimizer: savedTrainingData.optimizer || 'adam',
-              learningRate: savedTrainingData.learningRate || 0.001,
-              loss: 'categoricalCrossentropy',
-              metrics: ['acc'],
-            });
-            // Load weights
-            const weightsJson = atob(savedWeights);
-            const weightsArray = JSON.parse(weightsJson);
-            const tensors = weightsArray.map(w => tf.tensor(w.data, w.shape));
-            model.setWeights(tensors);
-            modelRef.current = model;
-            console.log('Model restored with saved weights');
-          } catch (e) {
-            console.log('Could not restore model weights:', e.message);
-          }
+        
+        // Store labels from training data for prediction
+        if (savedTrainingData.uniqueLabels || savedTrainingData.uniqueTargets) {
+          setProcessedData({
+            type: 'restored',
+            uniqueLabels: savedTrainingData.uniqueLabels,
+            uniqueTargets: savedTrainingData.uniqueTargets,
+            numClasses: savedTrainingData.numClasses,
+            inputShape: savedTrainingData.inputShape
+          });
         }
-      } else {
-        // Reset all training-related state for new model
+      }
+      
+      // Rebuild model if we have weights (do this regardless of savedTrainingData)
+      if (savedWeights && nodes.length > 0) {
+        try {
+          console.log('Building model from nodes for weight restoration...');
+          const model = buildTFModel(nodes, edges);
+          
+          // Determine loss based on output layer
+          const outputNode = nodes.find(n => n.data.layerType === 'Output');
+          const numClasses = outputNode?.data?.config?.units || savedTrainingData?.numClasses || 2;
+          const loss = numClasses > 1 ? 'categoricalCrossentropy' : 'meanSquaredError';
+          
+          compileModel(model, {
+            optimizer: savedTrainingData?.optimizer || 'adam',
+            learningRate: savedTrainingData?.learningRate || 0.001,
+            loss: loss,
+            metrics: ['acc'],
+          });
+          
+          // Load weights
+          console.log('Loading saved weights...');
+          const weightsJson = atob(savedWeights);
+          const weightsArray = JSON.parse(weightsJson);
+          const tensors = weightsArray.map(w => tf.tensor(w.data, w.shape));
+          model.setWeights(tensors);
+          modelRef.current = model;
+          console.log('Model restored with saved weights successfully!');
+          
+          // If we didn't have savedTrainingData but have weights, set status to complete
+          if (!savedTrainingData) {
+            setStatus('complete');
+          }
+          
+          toast.success('Model loaded with trained weights!');
+        } catch (e) {
+          console.error('Could not restore model weights:', e.message, e);
+          toast.error('Could not restore trained weights: ' + e.message);
+        }
+      } else if (!savedTrainingData) {
+        // Reset all training-related state for new model without training
         setTrainingHistory([]);
         setCurrentEpoch(0);
         setCurrentBatch(0);
@@ -375,9 +406,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         setStatus('idle');
       }
       
-      // Always reset these
+      // Reset these but not processedData if we restored it
       setFile(null);
-      setProcessedData(null);
       setErrorMessage('');
       setColumns([]);
       setTargetColumn('');
