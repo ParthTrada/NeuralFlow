@@ -89,6 +89,14 @@ const TRAINING_PRESETS = {
     learningRate: 0.003,  // Higher LR for fast convergence check
     optimizer: 'adam',
     tips: ['Use for testing architecture', 'Not for final accuracy'],
+    // Advanced settings
+    validationSplit: 0.1,
+    earlyStopping: false,
+    earlyStoppingPatience: 3,
+    lrScheduler: 'none',
+    weightDecay: 0.0001,
+    gradientClipping: false,
+    gradientClipNorm: 1.0,
   },
   development: {
     name: 'Development',
@@ -99,6 +107,14 @@ const TRAINING_PRESETS = {
     learningRate: 0.001,  // AdamW default, works well across architectures
     optimizer: 'adam',
     tips: ['Recommended for most cases', 'Use validation split 20%'],
+    // Advanced settings
+    validationSplit: 0.2,
+    earlyStopping: true,
+    earlyStoppingPatience: 5,
+    lrScheduler: 'none',
+    weightDecay: 0.0001,
+    gradientClipping: false,
+    gradientClipNorm: 1.0,
   },
   finetune: {
     name: 'Fine-tune',
@@ -109,6 +125,14 @@ const TRAINING_PRESETS = {
     learningRate: 0.0001,  // Low LR for fine-grained optimization
     optimizer: 'adam',
     tips: ['Use cosine LR schedule', 'Enable early stopping'],
+    // Advanced settings
+    validationSplit: 0.2,
+    earlyStopping: true,
+    earlyStoppingPatience: 10,
+    lrScheduler: 'cosine',
+    weightDecay: 0.001,
+    gradientClipping: true,
+    gradientClipNorm: 1.0,
   },
 };
 
