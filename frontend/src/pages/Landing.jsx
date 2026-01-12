@@ -427,8 +427,8 @@ export default function Landing() {
           />
           <FeatureCard
             icon={Code2}
-            title="Export PyTorch Code"
-            description="Generate production-ready PyTorch code. Copy to clipboard or download as a .py file."
+            title="Export Code"
+            description="Generate production-ready PyTorch & TensorFlow/Keras code. Copy to clipboard or download as a .py file."
             delay={0.2}
             isDark={isDark}
           />
