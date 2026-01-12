@@ -434,31 +434,12 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const cols = Object.keys(data[0]);
       setColumns(cols);
       
-      // Auto-detect image data (MNIST-style with pixel columns)
-      // Check for pixel_0, pixel_1, ... OR pixel0, pixel1, ... patterns
-      const pixelColumns = cols.filter(k => 
-        k.startsWith('pixel_') || 
-        k.startsWith('pixel') && /^pixel\d+$/.test(k)
-      );
-      const isImageData = pixelColumns.length >= 100; // At least 10x10 image
-      
       // Auto-detect text column (first string column that looks like text)
       const isTextModel = networkReqs?.modelType === 'NLP/Text' || networkReqs?.hasEmbedding;
       let detectedTextCol = '';
       let detectedTargetCol = cols[cols.length - 1];
       
-      // For image data, find the label column
-      if (isImageData) {
-        const labelCol = cols.find(c => 
-          c.toLowerCase() === 'label' || 
-          c.toLowerCase() === 'class' || 
-          c.toLowerCase() === 'target' ||
-          !c.toLowerCase().startsWith('pixel')
-        );
-        if (labelCol) {
-          detectedTargetCol = labelCol;
-        }
-      } else if (isTextModel) {
+      if (isTextModel) {
         // Look for a text-like column (longer strings, not just labels)
         for (const col of cols) {
           const sampleValue = String(data[0][col] || '');
@@ -480,48 +461,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       setTextColumn(detectedTextCol);
       setTargetColumn(detectedTargetCol);
+      setProcessedData({ raw: data, type: 'csv' });
+      setStatus('ready');
       
-      if (isImageData) {
-        // Detect image dimensions from pixel count
-        const numPixels = pixelColumns.length;
-        const sqrt = Math.sqrt(numPixels);
-        const height = Number.isInteger(sqrt) ? sqrt : 28;
-        const width = Number.isInteger(sqrt) ? sqrt : 28;
-        const channels = 1; // Grayscale for MNIST-style
-        
-        // Get unique labels for classification
-        const uniqueLabels = [...new Set(data.map(row => row[detectedTargetCol]))];
-        
-        // Check if model has Conv2D layers
-        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
-        
-        setProcessedData({
-          raw: data,
-          type: 'image',
-          isImageData: true,
-          imageConfig: {
-            height,
-            width,
-            channels,
-            numPixels
-          },
-          pixelColumns,
-          targetColumn: detectedTargetCol,
-          uniqueLabels,
-          numClasses: uniqueLabels.length,
-          inputShape: modelHasConv2D ? [height, width, channels] : [numPixels]
-        });
-        setStatus('ready');
-        toast.success(`Loaded ${data.length} images (${height}x${width}), ${uniqueLabels.length} classes`);
+      if (isTextModel) {
+        toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
       } else {
-        setProcessedData({ raw: data, type: 'csv' });
-        setStatus('ready');
-        
-        if (isTextModel) {
-          toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
-        } else {
-          toast.success(`Loaded ${data.length} rows from CSV`);
-        }
+        toast.success(`Loaded ${data.length} rows from CSV`);
       }
     } catch (error) {
       setStatus('error');
@@ -539,24 +485,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setErrorMessage('');
 
     try {
-      // Check if model has Conv2D layers to determine tensor shape
-      const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
-      
       const imageData = await processImageFolder(files, {
         targetSize: [28, 28],
-        grayscale: true,
-        forCNN: modelHasConv2D
+        grayscale: true
       });
       
       setProcessedData({
         ...imageData,
-        type: 'images',
-        isImageData: true
+        type: 'images'
       });
       setStatus('ready');
-      
-      const shapeInfo = modelHasConv2D ? '4D (CNN)' : '2D (MLP)';
-      toast.success(`Loaded ${imageData.imageCount} images (${shapeInfo}) with ${imageData.numClasses} classes`);
+      toast.success(`Loaded ${imageData.imageCount} images with ${imageData.numClasses} classes`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
@@ -1004,90 +943,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       const seqLength = inputNode?.data?.config?.seqLength || 100;
       const vocabSize = inputNode?.data?.config?.vocabSize || 10000;
       const isTextModel = hasEmbedding || inputNode?.data?.config?.inputType === 'text';
-      const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
       
-      // FIRST: Check if this is image data (for CNN models)
-      if ((processedData.type === 'image' && processedData.isImageData) || 
-          (processedData.type === 'csv' && processedData.raw && modelHasConv2D)) {
-        // Process image data - create tensors now for training
-        let raw, pixelColumns, imgTargetCol, uniqueLabels;
-        let height = 28, width = 28, channels = 1;
-        
-        if (processedData.isImageData) {
-          // Already detected as image data
-          raw = processedData.raw;
-          pixelColumns = processedData.pixelColumns;
-          imgTargetCol = processedData.targetColumn;
-          uniqueLabels = processedData.uniqueLabels;
-          height = processedData.imageConfig?.height || 28;
-          width = processedData.imageConfig?.width || 28;
-          channels = processedData.imageConfig?.channels || 1;
-        } else {
-          // CSV with Conv2D model - auto-detect pixel columns
-          raw = processedData.raw;
-          const cols = Object.keys(raw[0]);
-          pixelColumns = cols.filter(k => 
-            k.startsWith('pixel_') || 
-            (k.startsWith('pixel') && /^pixel\d+$/.test(k))
-          );
-          
-          if (pixelColumns.length < 100) {
-            throw new Error(`CNN model requires image data. Found only ${pixelColumns.length} pixel columns. Please upload image data with pixel columns (e.g., MNIST CSV).`);
-          }
-          
-          // Auto-detect dimensions
-          const numPixels = pixelColumns.length;
-          const sqrt = Math.sqrt(numPixels);
-          height = Number.isInteger(sqrt) ? sqrt : 28;
-          width = Number.isInteger(sqrt) ? sqrt : 28;
-          channels = 1;
-          
-          // Find label column
-          imgTargetCol = cols.find(c => 
-            c.toLowerCase() === 'label' || 
-            c.toLowerCase() === 'class' || 
-            c.toLowerCase() === 'target'
-          ) || targetColumn || cols[cols.length - 1];
-          
-          uniqueLabels = [...new Set(raw.map(row => row[imgTargetCol]))];
-          
-          console.log(`Auto-detected image data: ${pixelColumns.length} pixels, ${height}x${width}, label column: ${imgTargetCol}`);
-        }
-        
-        const numSamples = raw.length;
-        
-        // Create 4D tensor for CNN: [batch, height, width, channels]
-        console.log(`Creating 4D tensor for CNN: [${numSamples}, ${height}, ${width}, ${channels}]`);
-        const imageData = raw.map(row => {
-          const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
-          // Reshape flat array to [height, width, channels]
-          const image = [];
-          for (let h = 0; h < height; h++) {
-            const rowData = [];
-            for (let w = 0; w < width; w++) {
-              const pixelChannels = [];
-              for (let c = 0; c < channels; c++) {
-                const pixelIdx = (h * width + w) * channels + c;
-                pixelChannels.push(pixels[pixelIdx] || 0);
-              }
-              rowData.push(pixelChannels);
-            }
-            image.push(rowData);
-          }
-          return image;
-        });
-        xTrain = tf.tensor4d(imageData, [numSamples, height, width, channels]);
-        console.log('Created 4D tensor for CNN:', xTrain.shape);
-        
-        // Create one-hot encoded labels
-        const labels = raw.map(row => row[imgTargetCol]);
-        const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
-        yTrain = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), uniqueLabels.length);
-        actualNumClasses = uniqueLabels.length;
-        
-        console.log('Image data processed - samples:', numSamples, 'classes:', actualNumClasses);
-        toast.info(`Image data: ${numSamples} samples, ${actualNumClasses} classes`);
-      } else if (processedData.type === 'csv' && processedData.raw) {
+      // FIRST: Process data to get actual number of classes
+      if (processedData.type === 'csv' && processedData.raw) {
         if (isTextModel && textColumn) {
           // Use text processor for NLP models
           console.log(`Processing text data: text="${textColumn}", target="${targetColumn}"`);
@@ -1123,6 +981,57 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           // Log the shape for debugging
           console.log('Processed CSV data shape:', xTrain.shape, 'isSequence:', hasLSTM, 'classes:', actualNumClasses);
         }
+      } else if (processedData.type === 'image' && processedData.isImageData) {
+        // Process image data - create tensors now for training
+        const { raw, pixelColumns, targetColumn: imgTargetCol, uniqueLabels } = processedData;
+        const numSamples = raw.length;
+        const height = processedData.imageConfig?.height || 28;
+        const width = processedData.imageConfig?.width || 28;
+        const channels = processedData.imageConfig?.channels || 1;
+        
+        // Check if model has Conv2D layers
+        const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+        
+        if (modelHasConv2D) {
+          // Create 4D tensor for CNN: [batch, height, width, channels]
+          const imageData = raw.map(row => {
+            const pixels = pixelColumns.map(col => (row[col] || 0) / 255.0);
+            // Reshape flat array to [height, width, channels]
+            const image = [];
+            for (let h = 0; h < height; h++) {
+              const rowData = [];
+              for (let w = 0; w < width; w++) {
+                const pixelChannels = [];
+                for (let c = 0; c < channels; c++) {
+                  // For RGB images, pixels are stored as R,G,B,R,G,B... or as separate pixel_0, pixel_1...
+                  const pixelIdx = (h * width + w) * channels + c;
+                  pixelChannels.push(pixels[pixelIdx] || 0);
+                }
+                rowData.push(pixelChannels);
+              }
+              image.push(rowData);
+            }
+            return image;
+          });
+          xTrain = tf.tensor4d(imageData, [numSamples, height, width, channels]);
+          console.log('Created 4D tensor for CNN:', xTrain.shape);
+        } else {
+          // Create 2D tensor for MLP: [batch, features]
+          const flatData = raw.map(row => 
+            pixelColumns.map(col => (row[col] || 0) / 255.0)
+          );
+          xTrain = tf.tensor2d(flatData, [numSamples, pixelColumns.length]);
+          console.log('Created 2D tensor for MLP:', xTrain.shape);
+        }
+        
+        // Create one-hot encoded labels
+        const labels = raw.map(row => row[imgTargetCol]);
+        const labelIndices = labels.map(l => uniqueLabels.indexOf(l));
+        yTrain = tf.oneHot(tf.tensor1d(labelIndices, 'int32'), uniqueLabels.length);
+        actualNumClasses = uniqueLabels.length;
+        
+        console.log('Image data processed - samples:', numSamples, 'classes:', actualNumClasses);
+        toast.info(`Image data: ${numSamples} samples, ${actualNumClasses} classes`);
       } else {
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
@@ -1181,27 +1090,25 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
           setCurrentBatch(0);
+          setCurrentEpoch(epoch);
+          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
         },
         onBatchEnd: (batch, logs) => {
           setCurrentBatch(batch + 1);
-          if (stopTrainingRef.current && modelRef.current) {
-            modelRef.current.stopTraining = true;
-          }
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
-            if (modelRef.current) {
-              modelRef.current.stopTraining = true;
-            }
+            modelRef.current.stopTraining = true;
             return;
           }
           
-          setCurrentEpoch(epoch + 1);
+          const newEpoch = epoch + 1;
+          setCurrentEpoch(newEpoch);
+          
           setTrainingHistory(prev => [...prev, {
-            epoch: epoch + 1,
+            epoch: newEpoch,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
             accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
             valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
