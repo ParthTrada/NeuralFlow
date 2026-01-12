@@ -1182,17 +1182,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       }
       
       // Build the model
+      console.log('Building model with', nodes.length, 'layers');
       modelRef.current = buildTFModel(nodes, edges);
+      console.log('Model built successfully');
       
       const isClassification = actualNumClasses > 1 || processedData.type === 'classification' || processedData.type === 'text';
       const loss = isClassification ? 'categoricalCrossentropy' : 'meanSquaredError';
       
+      console.log('Compiling model with loss:', loss, 'optimizer:', optimizer, 'lr:', learningRate);
       compileModel(modelRef.current, {
         optimizer,
         learningRate,
         loss,
         metrics: ['acc'],
       });
+      console.log('Model compiled, starting training...');
+      console.log('Training data shapes - X:', xTrain?.shape, 'Y:', yTrain?.shape);
 
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
