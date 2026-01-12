@@ -24,7 +24,15 @@ import {
   Cpu,
   Zap,
   BookOpen,
-  Brain
+  Brain,
+  Lightbulb,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Gauge,
+  Target,
+  Timer,
+  TrendingDown
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from './ui/button';
