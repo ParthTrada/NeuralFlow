@@ -458,6 +458,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         status,
         datasetName: selectedDatasetInfo?.name || processedData?.datasetName || 'Custom Dataset',
         datasetSize: processedData?.trainX?.length || processedData?.numSamples || null,
+        // Include labels and input shape for prediction after loading
+        uniqueLabels: processedData?.uniqueLabels || processedData?.uniqueTargets || null,
+        uniqueTargets: processedData?.uniqueTargets || processedData?.uniqueLabels || null,
+        numClasses: processedData?.numClasses || null,
+        inputShape: processedData?.inputShape || null,
         finalMetrics: {
           loss: finalLoss,
           accuracy: finalAccuracy,
