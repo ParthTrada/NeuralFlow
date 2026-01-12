@@ -1728,6 +1728,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           </div>
 
           <div 
+            ref={scrollContainerRef}
             className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
