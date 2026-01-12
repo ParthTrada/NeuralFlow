@@ -1181,25 +1181,32 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          setCurrentBatch(0);
-          setCurrentEpoch(epoch);
-          console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
+          // Only update epoch at the start, not batch (to reduce state updates)
+          setCurrentEpoch(epoch + 1);
         },
         onBatchEnd: (batch, logs) => {
-          setCurrentBatch(batch + 1);
+          // Throttle batch updates - only update every 5 batches to prevent React overflow
+          if (batch % 5 === 0 || batch === calculatedTotalBatches - 1) {
+            setCurrentBatch(batch + 1);
+          }
+          // Check for stop request
+          if (stopTrainingRef.current && modelRef.current) {
+            modelRef.current.stopTraining = true;
+          }
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
-            modelRef.current.stopTraining = true;
+            if (modelRef.current) {
+              modelRef.current.stopTraining = true;
+            }
             return;
           }
           
-          const newEpoch = epoch + 1;
-          setCurrentEpoch(newEpoch);
-          
+          // Reset batch counter and update history
+          setCurrentBatch(0);
           setTrainingHistory(prev => [...prev, {
-            epoch: newEpoch,
+            epoch: epoch + 1,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
             accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
             valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
@@ -1213,6 +1220,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs);
+          setCurrentBatch(0);
           toast.success('Training complete!');
           
           // Export weights in background
