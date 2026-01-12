@@ -35,6 +35,7 @@ class SaveNetworkRequest(BaseModel):
     nodes: list
     edges: list
     trained_weights: Optional[str] = None  # Base64 encoded weights
+    training_data: Optional[dict] = None   # Training history and config
     version_note: Optional[str] = None
 
 class ShareModelRequest(BaseModel):
