@@ -341,55 +341,49 @@ export const compileModel = (model, options = {}) => {
 export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks = {}) => {
   const {
     epochs = 10,
-    batchSize = 32,
+    batchSize = 8,
     validationSplit = 0.2,
   } = options;
 
   console.log('trainModel called - epochs:', epochs, 'batchSize:', batchSize);
   console.log('xTrain shape:', xTrain?.shape, 'yTrain shape:', yTrain?.shape);
 
-  try {
-    const history = await model.fit(xTrain, yTrain, {
-      epochs,
-      batchSize,
-      validationSplit,
-      shuffle: true,
-      yieldEvery: 'batch', // Yield after each batch to allow UI updates
-      callbacks: {
-        onTrainBegin: () => {
-          console.log('>>> TRAINING STARTED <<<');
-        },
-        onEpochBegin: (epoch) => {
-          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
-          if (callbacks.onEpochBegin) {
-            callbacks.onEpochBegin(epoch);
-          }
-        },
-        onEpochEnd: (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1} completed:`, logs);
-          if (callbacks.onEpochEnd) {
-            callbacks.onEpochEnd(epoch, logs);
-          }
-        },
-        onBatchEnd: (batch, logs) => {
-          if (callbacks.onBatchEnd) {
-            callbacks.onBatchEnd(batch, logs);
-          }
-        },
-        onTrainEnd: () => {
-          console.log('>>> TRAINING COMPLETED <<<');
-          if (callbacks.onTrainEnd) {
-            callbacks.onTrainEnd();
-          }
+  const history = await model.fit(xTrain, yTrain, {
+    epochs,
+    batchSize,
+    validationSplit,
+    shuffle: true,
+    callbacks: {
+      onTrainBegin: () => {
+        console.log('>>> TRAINING STARTED <<<');
+      },
+      onEpochBegin: (epoch) => {
+        console.log(`Epoch ${epoch + 1}/${epochs} starting...`);
+        if (callbacks.onEpochBegin) {
+          callbacks.onEpochBegin(epoch);
+        }
+      },
+      onBatchEnd: (batch, logs) => {
+        if (callbacks.onBatchEnd) {
+          callbacks.onBatchEnd(batch, logs);
+        }
+      },
+      onEpochEnd: (epoch, logs) => {
+        console.log(`Epoch ${epoch + 1}/${epochs} done - loss:`, logs?.loss, 'acc:', logs?.acc);
+        if (callbacks.onEpochEnd) {
+          callbacks.onEpochEnd(epoch, logs);
+        }
+      },
+      onTrainEnd: () => {
+        console.log('>>> TRAINING COMPLETED <<<');
+        if (callbacks.onTrainEnd) {
+          callbacks.onTrainEnd();
         }
       }
-    });
+    }
+  });
 
-    return history;
-  } catch (error) {
-    console.error('Error in model.fit:', error);
-    throw error;
-  }
+  return history;
 };
 
 // Make predictions
