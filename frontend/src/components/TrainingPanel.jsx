@@ -2533,28 +2533,54 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                             }}
                           />
                           <Legend wrapperStyle={{ fontSize: '10px' }} />
+                          {/* Training Loss */}
                           <Line 
                             yAxisId="left"
                             type="monotone" 
                             dataKey="loss" 
                             stroke="hsl(var(--destructive))" 
-                          strokeWidth={2}
-                          dot={false}
-                          name="Loss"
-                          connectNulls
-                        />
-                        <Line 
-                          yAxisId="right"
-                          type="monotone" 
-                          dataKey="accuracy" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={2}
-                          dot={false}
-                          name="Acc"
-                          connectNulls
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                            strokeWidth={2}
+                            dot={false}
+                            name="Loss"
+                            connectNulls
+                          />
+                          {/* Validation Loss */}
+                          <Line 
+                            yAxisId="left"
+                            type="monotone" 
+                            dataKey="valLoss" 
+                            stroke="hsl(var(--destructive))" 
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            name="Val Loss"
+                            connectNulls
+                          />
+                          {/* Training Accuracy */}
+                          <Line 
+                            yAxisId="right"
+                            type="monotone" 
+                            dataKey="accuracy" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={2}
+                            dot={false}
+                            name="Acc"
+                            connectNulls
+                          />
+                          {/* Validation Accuracy */}
+                          <Line 
+                            yAxisId="right"
+                            type="monotone" 
+                            dataKey="valAccuracy" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            name="Val Acc"
+                            connectNulls
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     ) : (
                       <div className="h-full flex items-center justify-center text-muted-foreground text-sm border border-dashed border-border rounded-lg">
                         <div className="text-center">
