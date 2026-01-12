@@ -350,8 +350,10 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
+    yieldEvery: 'auto', // Yield to UI thread to prevent blocking
     callbacks: {
       onEpochEnd: (epoch, logs) => {
+        console.log(`Epoch ${epoch + 1} completed:`, logs);
         if (callbacks.onEpochEnd) {
           callbacks.onEpochEnd(epoch, logs);
         }
@@ -362,6 +364,7 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
         }
       },
       onTrainEnd: () => {
+        console.log('Training completed');
         if (callbacks.onTrainEnd) {
           callbacks.onTrainEnd();
         }
