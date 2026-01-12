@@ -2306,19 +2306,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
                 {/* Status indicator */}
                 {status !== 'idle' && (
-                  <div className={`flex items-center gap-2 p-2 rounded-lg text-xs sm:text-sm ${
-                    status === 'ready' ? 'bg-green-500/10 text-green-500' :
-                    status === 'loading' ? 'bg-blue-500/10 text-blue-500' :
-                    status === 'training' ? 'bg-primary/10 text-primary' :
-                    status === 'complete' ? 'bg-green-500/10 text-green-500' :
-                    status === 'error' ? 'bg-red-500/10 text-red-500' : ''
-                  }`}>
+                  <div 
+                    className={`flex items-center gap-2 p-2 rounded-lg text-xs sm:text-sm ${
+                      status === 'ready' ? 'bg-green-500/10 text-green-500' :
+                      status === 'loading' ? 'bg-blue-500/10 text-blue-500' :
+                      status === 'training' ? 'bg-primary/10 text-primary' :
+                      status === 'complete' ? 'bg-green-500/10 text-green-500' :
+                      status === 'error' ? 'bg-red-500/10 text-red-500' : ''
+                    }`}
+                    style={status === 'training' ? { transform: 'translateZ(0)' } : {}}
+                  >
                     {status === 'loading' && <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />}
                     {status === 'ready' && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
                     {status === 'training' && <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />}
                     {status === 'complete' && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
                     {status === 'error' && <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
-                    <span className="truncate">
+                    <span key={`epoch-${currentEpoch}`} className="truncate">
                       {status === 'loading' && 'Processing...'}
                       {status === 'ready' && 'Data ready'}
                       {status === 'training' && `Epoch ${currentEpoch}/${epochs}`}
