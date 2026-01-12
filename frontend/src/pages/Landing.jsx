@@ -336,7 +336,7 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className={`text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl mb-8 sm:mb-12 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
           >
-            Design, train, and export neural networks—all in your browser. PyTorch & Keras ready.
+            Design neural networks visually, train them in the browser, and export production-ready PyTorch and Keras code.
           </motion.p>
 
           <motion.div
