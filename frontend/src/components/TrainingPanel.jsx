@@ -216,6 +216,20 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const lastModelIdRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  
+  // Force repaint by triggering micro-scroll
+  const forceRepaint = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const el = scrollContainerRef.current;
+      const currentScroll = el.scrollTop;
+      // Micro-scroll to force browser repaint
+      el.scrollTop = currentScroll + 1;
+      requestAnimationFrame(() => {
+        el.scrollTop = currentScroll;
+      });
+    }
+  }, []);
   
   // Analyze network requirements
   const networkReqs = useMemo(() => analyzeNetworkRequirements(nodes), [nodes]);
