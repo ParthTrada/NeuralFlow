@@ -740,7 +740,11 @@ export const generateKerasCode = (nodes, edges) => {
 
       case 'LSTM': {
         const units = config.hiddenSize || 128;
-        const returnSeq = idx < sortedNodes.length - 2 ? 'True' : 'False';
+        // Check if next layer needs sequence output (another RNN, Attention, etc.)
+        const nextNode = sortedNodes[idx + 1];
+        const nextLayerType = nextNode?.data?.layerType;
+        const sequenceLayers = ['LSTM', 'GRU', 'MultiHeadAttention', 'TransformerEncoder', 'TransformerDecoder', 'Attention'];
+        const returnSeq = sequenceLayers.includes(nextLayerType) ? 'True' : 'False';
         if (config.bidirectional) {
           layerLines.push(`        layers.Bidirectional(layers.LSTM(${units}, return_sequences=${returnSeq}), name='${safeName}'),`);
         } else {
@@ -751,7 +755,11 @@ export const generateKerasCode = (nodes, edges) => {
 
       case 'GRU': {
         const units = config.hiddenSize || 128;
-        const returnSeq = idx < sortedNodes.length - 2 ? 'True' : 'False';
+        // Check if next layer needs sequence output
+        const nextNode = sortedNodes[idx + 1];
+        const nextLayerType = nextNode?.data?.layerType;
+        const sequenceLayers = ['LSTM', 'GRU', 'MultiHeadAttention', 'TransformerEncoder', 'TransformerDecoder', 'Attention'];
+        const returnSeq = sequenceLayers.includes(nextLayerType) ? 'True' : 'False';
         layerLines.push(`        layers.GRU(${units}, return_sequences=${returnSeq}, name='${safeName}'),`);
         break;
       }
