@@ -1090,10 +1090,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          // Use requestAnimationFrame to ensure UI updates
-          requestAnimationFrame(() => {
-            setCurrentEpoch(epoch + 1);
-          });
+          setCurrentEpoch(epoch + 1);
         },
         onEpochEnd: (epoch, logs) => {
           if (stopTrainingRef.current) {
@@ -1103,25 +1100,20 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             return;
           }
           
-          // Use requestAnimationFrame to force React to re-render
-          requestAnimationFrame(() => {
-            setCurrentEpoch(epoch + 1);
-            setTrainingHistory(prev => [...prev, {
-              epoch: epoch + 1,
-              loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
-              accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
-              valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
-              valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
-            }]);
-          });
+          setCurrentEpoch(epoch + 1);
+          setTrainingHistory(prev => [...prev, {
+            epoch: epoch + 1,
+            loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
+            accuracy: logs.acc != null ? Number(logs.acc.toFixed(4)) : null,
+            valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
+            valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
+          }]);
         },
         onTrainEnd: () => {
-          requestAnimationFrame(() => {
-            setIsTraining(false);
-            setStatus('complete');
-            setCurrentEpoch(epochs);
-            toast.success('Training complete!');
-          });
+          setIsTraining(false);
+          setStatus('complete');
+          setCurrentEpoch(epochs);
+          toast.success('Training complete!');
           
           // Export weights in background
           if (modelRef.current && onWeightsTrained) {
