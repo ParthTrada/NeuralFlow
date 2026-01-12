@@ -518,15 +518,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         }
       }
       
+      // Extract dataset name from filename
+      const fileName = uploadedFile.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      
       setTextColumn(detectedTextCol);
       setTargetColumn(detectedTargetCol);
-      setProcessedData({ raw: data, type: 'csv' });
+      setProcessedData({ raw: data, type: 'csv', datasetName: fileName });
+      setSelectedDatasetInfo({ name: fileName, category: isTextModel ? 'text' : 'tabular' });
       setStatus('ready');
       
       if (isTextModel) {
-        toast.success(`Loaded ${data.length} rows. Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
+        toast.success(`Loaded ${data.length} rows from "${fileName}". Text: "${detectedTextCol}", Target: "${detectedTargetCol}"`);
       } else {
-        toast.success(`Loaded ${data.length} rows from CSV`);
+        toast.success(`Loaded ${data.length} rows from "${fileName}"`);
       }
     } catch (error) {
       setStatus('error');
