@@ -56,6 +56,7 @@ export default function Builder() {
   const [currentModelId, setCurrentModelId] = useState(null); // Track which model is loaded
   const [savedTrainingData, setSavedTrainingData] = useState(null); // Training history for loaded model
   const [currentTemplateId, setCurrentTemplateId] = useState(null); // Track template for dataset recommendations
+  const [trainingPanelResetKey, setTrainingPanelResetKey] = useState(0); // Key to reset TrainingPanel state
   
   // History management for undo/redo
   const history = useHistory({ nodes: [], edges: [] }, 50);
