@@ -209,21 +209,25 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
+    yieldEvery: 'epoch',
     callbacks: {
-      onEpochEnd: (epoch, logs) => {
+      onEpochEnd: async (epoch, logs) => {
         if (callbacks.onEpochEnd) {
           callbacks.onEpochEnd(epoch, logs);
         }
+        // Force browser to repaint after React state update
+        await forceRepaint();
       },
       onBatchEnd: (batch, logs) => {
         if (callbacks.onBatchEnd) {
           callbacks.onBatchEnd(batch, logs);
         }
       },
-      onTrainEnd: () => {
+      onTrainEnd: async () => {
         if (callbacks.onTrainEnd) {
           callbacks.onTrainEnd();
         }
+        await forceRepaint();
       }
     }
   });
