@@ -605,7 +605,7 @@ export const processImage = async (img, targetSize = [28, 28], grayscale = true,
 
 // Process multiple images with labels from folder structure
 export const processImageFolder = async (files, options = {}) => {
-  const { targetSize = [28, 28], grayscale = true } = options;
+  const { targetSize = [28, 28], grayscale = true, forCNN = false } = options;
   
   const images = [];
   const labels = [];
@@ -626,7 +626,7 @@ export const processImageFolder = async (files, options = {}) => {
     
     try {
       const img = await loadImage(file);
-      const tensor = await processImage(img, targetSize, grayscale);
+      const tensor = await processImage(img, targetSize, grayscale, forCNN);
       images.push(tensor);
       
       const pathParts = file.webkitRelativePath?.split('/') || file.name.split('_');
@@ -643,14 +643,25 @@ export const processImageFolder = async (files, options = {}) => {
 
   const xTensor = tf.stack(images);
   const yTensor = tf.oneHot(tf.tensor1d(labels, 'int32'), uniqueLabels.length);
+  
+  const channels = grayscale ? 1 : 3;
+  const inputShape = forCNN 
+    ? [targetSize[0], targetSize[1], channels]  // [height, width, channels] for CNN
+    : [targetSize[0] * targetSize[1] * channels]; // [flattened] for MLP
 
   return {
     xTrain: xTensor,
     yTrain: yTensor,
-    inputShape: [targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)],
+    inputShape,
     numClasses: uniqueLabels.length,
     uniqueLabels,
     imageCount: images.length,
+    imageConfig: {
+      height: targetSize[0],
+      width: targetSize[1],
+      channels
+    },
+    forCNN
   };
 };
 
