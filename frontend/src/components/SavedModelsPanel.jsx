@@ -115,6 +115,12 @@ export const SavedModelsPanel = ({
       const response = await axios.get(`${API_URL}/auth/models`, {
         withCredentials: true
       });
+      console.log('Fetched models from API:', response.data.map(m => ({
+        name: m.name,
+        model_id: m.model_id,
+        has_training_data: !!m.training_data,
+        training_metrics: m.training_data?.finalMetrics
+      })));
       // Group by name to show latest version first
       const grouped = {};
       response.data.forEach(model => {
