@@ -1118,6 +1118,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
             valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
           }]);
+          
+          // Force browser to repaint the scroll container
+          forceRepaint();
         },
         onTrainEnd: () => {
           setIsTraining(false);
