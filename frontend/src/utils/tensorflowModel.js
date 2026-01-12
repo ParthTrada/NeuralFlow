@@ -357,10 +357,13 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
       yieldEvery: 'batch', // Yield after each batch to allow UI updates
       callbacks: {
         onTrainBegin: () => {
-          console.log('Training started!');
+          console.log('>>> TRAINING STARTED <<<');
         },
         onEpochBegin: (epoch) => {
-          console.log(`Starting epoch ${epoch + 1}/${epochs}`);
+          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
+          if (callbacks.onEpochBegin) {
+            callbacks.onEpochBegin(epoch);
+          }
         },
         onEpochEnd: (epoch, logs) => {
           console.log(`Epoch ${epoch + 1} completed:`, logs);
@@ -374,7 +377,7 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
           }
         },
         onTrainEnd: () => {
-          console.log('Training completed');
+          console.log('>>> TRAINING COMPLETED <<<');
           if (callbacks.onTrainEnd) {
             callbacks.onTrainEnd();
           }
