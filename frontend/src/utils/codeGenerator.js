@@ -661,13 +661,23 @@ export const generateKerasCode = (nodes, edges) => {
   let needsTransformerEncoder = false;
   let needsTransformerDecoder = false;
 
+  // Track layer type counts for unique naming
+  const layerTypeCounts = {};
+  const getUniqueName = (layerType, label) => {
+    const baseName = label.replace(/[^a-zA-Z0-9_]/g, '_');
+    layerTypeCounts[layerType] = (layerTypeCounts[layerType] || 0) + 1;
+    const count = layerTypeCounts[layerType];
+    // Only add number suffix if there will be multiple of this type
+    return count === 1 ? `${baseName}_1` : `${baseName}_${count}`;
+  };
+
   // Generate layer lines
   const layerLines = [];
   
   sortedNodes.forEach((node, idx) => {
     const config = node.data.config || {};
     const label = node.data.label || node.data.layerType;
-    const safeName = label.replace(/[^a-zA-Z0-9_]/g, '_');
+    const safeName = getUniqueName(node.data.layerType, label);
     const incomingEdge = edges.find(e => e.target === node.id);
     const inputShape = incomingEdge ? nodeShapes.get(incomingEdge.source) : null;
     
