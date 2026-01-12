@@ -1,5 +1,19 @@
 import * as tf from '@tensorflow/tfjs';
 
+// Ensure WebGL backend is ready
+tf.ready().then(() => {
+  console.log('TensorFlow.js backend:', tf.getBackend());
+});
+
+// Force browser repaint helper
+const forceRepaint = () => {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+};
+
 // Build TensorFlow.js model from our node graph
 export const buildTFModel = (nodes, edges) => {
   if (!nodes || nodes.length === 0) {
@@ -155,7 +169,7 @@ export const compileModel = (model, options = {}) => {
     optimizer = 'adam',
     learningRate = 0.001,
     loss = 'categoricalCrossentropy',
-    metrics = ['acc']  // TensorFlow.js uses 'acc' internally
+    metrics = ['accuracy']
   } = options;
 
   let optimizerInstance;
@@ -195,21 +209,25 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
+    yieldEvery: 'epoch',
     callbacks: {
-      onEpochEnd: (epoch, logs) => {
+      onEpochEnd: async (epoch, logs) => {
         if (callbacks.onEpochEnd) {
           callbacks.onEpochEnd(epoch, logs);
         }
+        // Force browser to repaint after React state update
+        await forceRepaint();
       },
       onBatchEnd: (batch, logs) => {
         if (callbacks.onBatchEnd) {
           callbacks.onBatchEnd(batch, logs);
         }
       },
-      onTrainEnd: () => {
+      onTrainEnd: async () => {
         if (callbacks.onTrainEnd) {
           callbacks.onTrainEnd();
         }
+        await forceRepaint();
       }
     }
   });
