@@ -518,8 +518,8 @@ export const SavedModelsPanel = ({
                 rows={2}
               />
             </div>
-            {trainedWeights && (
-              <div className="flex items-center gap-2">
+            {(trainedWeights || trainingData) && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
                 <input
                   type="checkbox"
                   id="include-weights"
@@ -528,7 +528,7 @@ export const SavedModelsPanel = ({
                   className="rounded border-border"
                 />
                 <Label htmlFor="include-weights" className="text-sm cursor-pointer">
-                  Include trained weights
+                  Include training results & weights
                 </Label>
               </div>
             )}
@@ -538,7 +538,7 @@ export const SavedModelsPanel = ({
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'Saving...' : (includeWeights && (trainedWeights || trainingData) ? 'Save Model & Training' : 'Save Model')}
             </Button>
           </DialogFooter>
         </DialogContent>
