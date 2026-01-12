@@ -158,25 +158,6 @@ export const Header = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/guide')}
-                className="w-8 h-8"
-                data-testid="tutorial-btn"
-              >
-                <BookOpen className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Tutorial</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
                 onClick={onClearCanvas}
                 className="w-8 h-8"
                 data-testid="clear-canvas-btn"
