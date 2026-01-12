@@ -352,6 +352,9 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     if (modelId && modelId !== lastModelIdRef.current) {
       console.log('Loading model:', modelId, 'savedWeights:', !!savedWeights, 'savedTrainingData:', !!savedTrainingData);
       
+      // Set flag to prevent sync useEffect from overwriting loaded data
+      isRestoringModelRef.current = true;
+      
       // Dispose existing model if any
       if (modelRef.current) {
         try {
@@ -378,6 +381,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             numClasses: savedTrainingData.numClasses,
             inputShape: savedTrainingData.inputShape
           });
+        }
+        
+        // Also restore dataset info for display
+        if (savedTrainingData.datasetName) {
+          setSelectedDatasetInfo({ name: savedTrainingData.datasetName });
         }
       }
       
@@ -440,6 +448,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       
       // Update the ref
       lastModelIdRef.current = modelId;
+      
+      // Clear the restoring flag after a short delay to allow state to settle
+      setTimeout(() => {
+        isRestoringModelRef.current = false;
+      }, 100);
     }
   }, [modelId, savedTrainingData, savedWeights, nodes, edges]);
 
