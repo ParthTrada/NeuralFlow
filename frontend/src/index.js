@@ -7,7 +7,20 @@ import App from "@/App";
 // that occurs when ResizeObserver can't deliver all notifications in one frame
 // This commonly happens with chart libraries like recharts during rapid updates
 
-// Handle at window.onerror level
+// Patch ResizeObserver to prevent the error from being thrown
+const OriginalResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class ResizeObserver extends OriginalResizeObserver {
+  constructor(callback) {
+    super((entries, observer) => {
+      // Use requestAnimationFrame to batch notifications and prevent the loop error
+      window.requestAnimationFrame(() => {
+        callback(entries, observer);
+      });
+    });
+  }
+};
+
+// Handle at window.onerror level (fallback)
 const originalOnError = window.onerror;
 window.onerror = (message, source, lineno, colno, error) => {
   if (message && typeof message === 'string' && message.includes('ResizeObserver')) {
@@ -28,15 +41,6 @@ window.addEventListener('error', (e) => {
     return true;
   }
 }, true); // Use capture phase to catch it early
-
-// Handle unhandled promise rejections that might contain ResizeObserver errors
-window.addEventListener('unhandledrejection', (e) => {
-  if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
-    e.preventDefault();
-    e.stopPropagation();
-    return true;
-  }
-});
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
