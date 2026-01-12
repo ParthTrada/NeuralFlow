@@ -430,7 +430,7 @@ export const SavedModelsPanel = ({
                                 <Share2 className="w-3 h-3 mr-1" />
                                 Share
                               </Button>
-                              {model.trained_weights && (
+                              {(model.trained_weights || model.training_data) && (
                                 <Button
                                   variant="outline"
                                   size="sm"
