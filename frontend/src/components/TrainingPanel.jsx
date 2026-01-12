@@ -168,6 +168,17 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [learningRate, setLearningRate] = useState(0.001);
   const [optimizer, setOptimizer] = useState('adam');
   
+  // Advanced training config
+  const [selectedPreset, setSelectedPreset] = useState('balanced');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [validationSplit, setValidationSplit] = useState(0.2);
+  const [earlyStopping, setEarlyStopping] = useState(false);
+  const [earlyStoppingPatience, setEarlyStoppingPatience] = useState(5);
+  const [lrScheduler, setLrScheduler] = useState('none');
+  const [weightDecay, setWeightDecay] = useState(0.0001);
+  const [gradientClipping, setGradientClipping] = useState(false);
+  const [gradientClipNorm, setGradientClipNorm] = useState(1.0);
+  
   // Training state
   const [isTraining, setIsTraining] = useState(false);
   const [trainingHistory, setTrainingHistory] = useState([]);
