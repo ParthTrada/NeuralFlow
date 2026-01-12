@@ -1167,7 +1167,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
 
   const handleStopTraining = () => {
     stopTrainingRef.current = true;
+    if (modelRef.current) {
+      modelRef.current.stopTraining = true;
+    }
     setIsTraining(false);
+    setStatus('ready'); // Allow retraining
     toast.info('Training stopped');
   };
 
