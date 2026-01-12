@@ -1170,7 +1170,16 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         xTrain = processedData.xTrain;
         yTrain = processedData.yTrain;
         actualNumClasses = processedData.numClasses;
+        console.log('Using pre-processed data - type:', processedData.type, 'isSequence:', processedData.isSequence);
       }
+      
+      // Validate tensors before training
+      if (!xTrain || !yTrain) {
+        throw new Error('Training data not available. Please load a dataset first.');
+      }
+      
+      console.log('Tensor validation - xTrain:', xTrain?.shape, 'yTrain:', yTrain?.shape);
+      console.log('xTrain dtype:', xTrain?.dtype, 'yTrain dtype:', yTrain?.dtype);
       
       // Check if we need to adjust the output layer
       const configuredClasses = outputNode?.data?.config?.numClasses || 3;
