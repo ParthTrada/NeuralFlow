@@ -538,6 +538,13 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   // Sync training data to parent when training completes
   useEffect(() => {
     if (status === 'complete' && trainingHistory.length > 0 && onTrainingDataChange) {
+      // Get final metrics from last epoch
+      const lastEpoch = trainingHistory[trainingHistory.length - 1];
+      const finalLoss = lastEpoch?.loss?.toFixed(4) || 'N/A';
+      const finalAccuracy = lastEpoch?.accuracy ? (lastEpoch.accuracy * 100).toFixed(1) + '%' : 'N/A';
+      const finalValLoss = lastEpoch?.valLoss?.toFixed(4) || null;
+      const finalValAccuracy = lastEpoch?.valAccuracy ? (lastEpoch.valAccuracy * 100).toFixed(1) + '%' : null;
+      
       const trainingData = {
         trainingHistory,
         epochs,
@@ -545,11 +552,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         learningRate,
         optimizer,
         status,
+        datasetName: selectedDatasetInfo?.name || processedData?.datasetName || 'Custom Dataset',
+        datasetSize: processedData?.trainX?.length || processedData?.numSamples || null,
+        finalMetrics: {
+          loss: finalLoss,
+          accuracy: finalAccuracy,
+          valLoss: finalValLoss,
+          valAccuracy: finalValAccuracy,
+        },
         savedAt: new Date().toISOString()
       };
       onTrainingDataChange(trainingData);
     }
-  }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange]);
+  }, [status, trainingHistory, epochs, batchSize, learningRate, optimizer, onTrainingDataChange, selectedDatasetInfo, processedData]);
 
   // Handle CSV file upload
   const handleCSVUpload = async (e) => {
