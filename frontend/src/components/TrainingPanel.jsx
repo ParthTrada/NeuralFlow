@@ -365,6 +365,39 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     return currentTemplateId === 'mini-gpt';
   }, [currentTemplateId]);
   
+  // Reset internal state when resetKey changes (new template loaded)
+  useEffect(() => {
+    if (resetKey > 0) {
+      // Reset all training-related internal state
+      setTrainingHistory([]);
+      setStatus('idle');
+      setProgress(0);
+      setCurrentEpoch(0);
+      setProcessedData(null);
+      setCurrentDataset(null);
+      setDataPreview([]);
+      setPreviewRows([]);
+      modelRef.current = null;
+      setMiniGPTTrainingComplete(false);
+      setMiniGPTGeneratedText('');
+      console.log('TrainingPanel: Reset state for new template');
+    }
+  }, [resetKey]);
+  
+  // Restore training history when loading a saved model with training data
+  useEffect(() => {
+    if (savedTrainingData && savedTrainingData.trainingHistory && savedTrainingData.trainingHistory.length > 0) {
+      setTrainingHistory(savedTrainingData.trainingHistory);
+      setStatus('complete');
+      // Restore hyperparameters if available
+      if (savedTrainingData.epochs) setEpochs(savedTrainingData.epochs);
+      if (savedTrainingData.batchSize) setBatchSize(savedTrainingData.batchSize);
+      if (savedTrainingData.learningRate) setLearningRate(savedTrainingData.learningRate);
+      if (savedTrainingData.optimizer) setOptimizer(savedTrainingData.optimizer);
+      console.log('TrainingPanel: Restored training data from saved model');
+    }
+  }, [savedTrainingData, modelId]);
+  
   // Initialize Mini-GPT when template is loaded
   useEffect(() => {
     if (isMiniGPTTemplate && !isMiniGPTLoaded && !isLoadingMiniGPT) {
