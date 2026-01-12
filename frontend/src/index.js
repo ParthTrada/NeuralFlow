@@ -5,21 +5,36 @@ import App from "@/App";
 
 // Suppress ResizeObserver loop error - it's a benign browser warning
 // that occurs when ResizeObserver can't deliver all notifications in one frame
-const resizeObserverErr = window.onerror;
-window.onerror = (message, ...args) => {
-  if (message && message.includes('ResizeObserver loop')) {
+// This commonly happens with chart libraries like recharts during rapid updates
+
+// Handle at window.onerror level
+const originalOnError = window.onerror;
+window.onerror = (message, source, lineno, colno, error) => {
+  if (message && typeof message === 'string' && message.includes('ResizeObserver')) {
     return true; // Suppress the error
   }
-  if (resizeObserverErr) {
-    return resizeObserverErr(message, ...args);
+  if (originalOnError) {
+    return originalOnError(message, source, lineno, colno, error);
   }
+  return false;
 };
 
-// Also handle it for React error overlay
+// Handle at event listener level (catches more cases)
 window.addEventListener('error', (e) => {
-  if (e.message && e.message.includes('ResizeObserver loop')) {
+  if (e.message && e.message.includes('ResizeObserver')) {
     e.stopPropagation();
     e.stopImmediatePropagation();
+    e.preventDefault();
+    return true;
+  }
+}, true); // Use capture phase to catch it early
+
+// Handle unhandled promise rejections that might contain ResizeObserver errors
+window.addEventListener('unhandledrejection', (e) => {
+  if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
   }
 });
 
