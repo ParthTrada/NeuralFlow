@@ -585,7 +585,7 @@ export default function Builder() {
         modelId={currentModelId}
         savedWeights={trainedWeights}
         savedTrainingData={savedTrainingData}
-        onSaveTrainingData={handleSaveTrainingData}
+        onSaveTrainingData={isAuthenticated && currentModelId ? handleSaveTrainingData : null}
         currentTemplateId={currentTemplateId}
         onUpdateNodes={(updatedNodes) => {
           setNodes(updatedNodes);
