@@ -553,15 +553,22 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         forCNN: modelHasConv2D
       });
       
+      // Extract dataset name from folder path
+      const firstFile = files[0];
+      const pathParts = firstFile.webkitRelativePath?.split('/') || [];
+      const folderName = pathParts.length > 0 ? pathParts[0] : 'Uploaded Images';
+      
       setProcessedData({
         ...imageData,
         type: 'images',
-        isImageData: true
+        isImageData: true,
+        datasetName: folderName
       });
+      setSelectedDatasetInfo({ name: folderName, category: 'image' });
       setStatus('ready');
       
       const shapeInfo = modelHasConv2D ? '4D for CNN' : '2D for MLP';
-      toast.success(`Loaded ${imageData.imageCount} images (${shapeInfo}) with ${imageData.numClasses} classes`);
+      toast.success(`Loaded ${imageData.imageCount} images from "${folderName}" (${shapeInfo}) with ${imageData.numClasses} classes`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
