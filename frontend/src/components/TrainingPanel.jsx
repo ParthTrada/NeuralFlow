@@ -1216,7 +1216,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
         batchSize,
-        validationSplit: 0.2,
+        validationSplit: validationSplit, // Use preset's validation split
       }, {
         onEpochBegin: (epoch) => {
           console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
