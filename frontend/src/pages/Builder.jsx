@@ -219,8 +219,13 @@ export default function Builder() {
 
   // Handle saving training data
   const handleSaveTrainingData = useCallback(async (trainingData) => {
-    if (!currentModelId || !isAuthenticated) {
-      toast.error('Please save your model first');
+    if (!isAuthenticated) {
+      toast.error('Please sign in to save training results');
+      return;
+    }
+    
+    if (!currentModelId) {
+      toast.error('Please save your model first before saving training results');
       return;
     }
     
@@ -234,7 +239,13 @@ export default function Builder() {
       toast.success('Training results saved!');
     } catch (error) {
       console.error('Failed to save training data:', error);
-      toast.error('Failed to save training results');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please sign in again.');
+      } else if (error.response?.status === 404) {
+        toast.error('Model not found. Please save your model first.');
+      } else {
+        toast.error('Failed to save training results');
+      }
     }
   }, [currentModelId, isAuthenticated]);
 
