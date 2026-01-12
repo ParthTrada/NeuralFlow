@@ -1244,28 +1244,36 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           }]);
         },
         onTrainEnd: async () => {
+          console.log('>>> onTrainEnd callback triggered');
+          
+          // Update UI immediately
           setIsTraining(false);
           setStatus('complete');
-          
-          if (modelRef.current && onWeightsTrained) {
-            try {
-              const weightsData = await modelRef.current.getWeights();
-              const weightsArray = await Promise.all(
-                weightsData.map(async (w) => ({
-                  name: w.name,
-                  shape: w.shape,
-                  data: Array.from(await w.data())
-                }))
-              );
-              const weightsJson = JSON.stringify(weightsArray);
-              const weightsBase64 = btoa(weightsJson);
-              onWeightsTrained(weightsBase64);
-            } catch (e) {
-              console.error('Failed to export weights:', e);
-            }
-          }
-          
+          setCurrentEpoch(epochs); // Ensure epoch counter shows completion
           toast.success('Training complete!');
+          
+          // Export weights in background (don't block UI)
+          if (modelRef.current && onWeightsTrained) {
+            setTimeout(async () => {
+              try {
+                console.log('Exporting model weights...');
+                const weightsData = await modelRef.current.getWeights();
+                const weightsArray = await Promise.all(
+                  weightsData.map(async (w) => ({
+                    name: w.name,
+                    shape: w.shape,
+                    data: Array.from(await w.data())
+                  }))
+                );
+                const weightsJson = JSON.stringify(weightsArray);
+                const weightsBase64 = btoa(weightsJson);
+                onWeightsTrained(weightsBase64);
+                console.log('Weights exported successfully');
+              } catch (e) {
+                console.error('Failed to export weights:', e);
+              }
+            }, 100);
+          }
         }
       });
 
