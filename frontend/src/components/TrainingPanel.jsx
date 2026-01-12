@@ -2330,20 +2330,19 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                     {status === 'training' && <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />}
                     {status === 'complete' && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
                     {status === 'error' && <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />}
-                    <div className="flex flex-col">
-                      <span className="truncate">
-                        {status === 'loading' && 'Processing...'}
-                        {status === 'ready' && 'Data ready'}
-                        {status === 'training' && `Epoch ${currentEpoch}/${epochs}`}
-                        {status === 'complete' && 'Complete!'}
-                        {status === 'error' && errorMessage}
-                      </span>
-                      {status === 'training' && totalBatches > 0 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          Batch {currentBatch}/{totalBatches}
-                        </span>
+                    <span className="truncate">
+                      {status === 'loading' && 'Processing...'}
+                      {status === 'ready' && 'Data ready'}
+                      {status === 'training' && (
+                        <>
+                          Epoch {currentEpoch}/{epochs}
+                          {totalBatches > 0 && <span className="mx-1">·</span>}
+                          {totalBatches > 0 && `Batch ${currentBatch}/${totalBatches}`}
+                        </>
                       )}
-                    </div>
+                      {status === 'complete' && 'Complete!'}
+                      {status === 'error' && errorMessage}
+                    </span>
                   </div>
                 )}
                 
