@@ -286,7 +286,7 @@ const analyzeNetworkRequirements = (nodes) => {
   };
 };
 
-export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData, isAuthenticated, onOpenSavePanel, currentTemplateId, onUpdateNodes }) => {
+export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained, modelId, savedWeights, savedTrainingData, onSaveTrainingData, onTrainingDataChange, isAuthenticated, onOpenSavePanel, currentTemplateId, onUpdateNodes }) => {
   const [dataType, setDataType] = useState('csv');
   const [file, setFile] = useState(null);
   const [processedData, setProcessedData] = useState(null);
