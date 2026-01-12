@@ -345,21 +345,31 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     validationSplit = 0.2,
   } = options;
 
+  // Calculate total batches per epoch for progress tracking
+  const numSamples = xTrain.shape[0];
+  const trainSamples = Math.floor(numSamples * (1 - validationSplit));
+  const totalBatches = Math.ceil(trainSamples / batchSize);
+
   const history = await model.fit(xTrain, yTrain, {
     epochs,
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'epoch', // Critical: Allow UI to update between epochs
+    yieldEvery: 'batch', // Yield every batch for smooth UI updates
     callbacks: {
       onEpochBegin: async (epoch) => {
-        if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
-        // Small delay to ensure React can process state updates
+        if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch, { totalBatches });
         await tf.nextFrame();
+      },
+      onBatchEnd: async (batch, logs) => {
+        if (callbacks.onBatchEnd) callbacks.onBatchEnd(batch, { ...logs, totalBatches });
+        // Yield every few batches to keep UI responsive without too much overhead
+        if (batch % 5 === 0) {
+          await tf.nextFrame();
+        }
       },
       onEpochEnd: async (epoch, logs) => {
         if (callbacks.onEpochEnd) callbacks.onEpochEnd(epoch, logs);
-        // Allow React to re-render after state update
         await tf.nextFrame();
       },
       onTrainEnd: () => {
