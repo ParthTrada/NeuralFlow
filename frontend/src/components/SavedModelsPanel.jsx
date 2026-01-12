@@ -77,7 +77,9 @@ export const SavedModelsPanel = ({
   onLoadModel, 
   currentNodes, 
   currentEdges,
-  trainedWeights  // Base64 encoded weights from training
+  trainedWeights,  // Base64 encoded weights from training
+  trainingData,    // Training history and config
+  onModelSaved     // Callback when model is saved (receives modelId)
 }) => {
   const { user } = useAuth();
   const [models, setModels] = useState([]);
