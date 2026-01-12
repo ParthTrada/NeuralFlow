@@ -1199,12 +1199,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
       console.log('Model compiled, starting training...');
       console.log('Training data shapes - X:', xTrain?.shape, 'Y:', yTrain?.shape);
 
+      // Calculate total batches for progress tracking
+      const numSamples = xTrain?.shape?.[0] || 0;
+      const totalBatches = Math.ceil(numSamples * (1 - 0.2) / batchSize); // accounting for validation split
+      console.log(`Starting training: ${numSamples} samples, ${totalBatches} batches per epoch, ${epochs} epochs`);
+
       await trainModel(modelRef.current, xTrain, yTrain, {
         epochs,
         batchSize,
         validationSplit: 0.2,
       }, {
+        onBatchEnd: (batch, logs) => {
+          // Log every 10 batches to avoid console spam
+          if (batch % 10 === 0) {
+            console.log(`Batch ${batch}/${totalBatches} - loss: ${logs?.loss?.toFixed(4)}`);
+          }
+        },
         onEpochEnd: (epoch, logs) => {
+          console.log(`Epoch ${epoch + 1}/${epochs} completed - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
           if (stopTrainingRef.current) {
             modelRef.current.stopTraining = true;
             return;
