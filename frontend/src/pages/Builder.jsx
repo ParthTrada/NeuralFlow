@@ -39,7 +39,7 @@ let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
 
 export default function Builder() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const reactFlowRef = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
