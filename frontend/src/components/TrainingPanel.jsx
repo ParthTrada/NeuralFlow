@@ -181,6 +181,8 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
   const [totalBatches, setTotalBatches] = useState(0);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [trainingStartTime, setTrainingStartTime] = useState(null);
+  const [trainingDuration, setTrainingDuration] = useState(0);
   
   // Prediction state
   const [predictionInput, setPredictionInput] = useState('');
