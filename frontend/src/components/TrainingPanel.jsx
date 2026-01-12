@@ -1181,15 +1181,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         validationSplit: validationSplit,
       }, {
         onEpochBegin: (epoch) => {
-          // Only update epoch at the start, not batch (to reduce state updates)
-          setCurrentEpoch(epoch + 1);
+          console.log(`>>> Epoch ${epoch + 1}/${epochs} beginning...`);
+          setCurrentBatch(0);
         },
         onBatchEnd: (batch, logs) => {
-          // Throttle batch updates - only update every 5 batches to prevent React overflow
-          if (batch % 5 === 0 || batch === calculatedTotalBatches - 1) {
-            setCurrentBatch(batch + 1);
-          }
-          // Check for stop request
+          setCurrentBatch(batch + 1);
           if (stopTrainingRef.current && modelRef.current) {
             modelRef.current.stopTraining = true;
           }
@@ -1203,8 +1199,7 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
             return;
           }
           
-          // Reset batch counter and update history
-          setCurrentBatch(0);
+          setCurrentEpoch(epoch + 1);
           setTrainingHistory(prev => [...prev, {
             epoch: epoch + 1,
             loss: logs.loss != null ? Number(logs.loss.toFixed(4)) : null,
@@ -1220,7 +1215,6 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
           setIsTraining(false);
           setStatus('complete');
           setCurrentEpoch(epochs);
-          setCurrentBatch(0);
           toast.success('Training complete!');
           
           // Export weights in background
