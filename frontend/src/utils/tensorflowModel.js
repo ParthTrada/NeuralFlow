@@ -352,7 +352,7 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'batch',
+    yieldEvery: 'epoch',
     callbacks: {
       onTrainBegin: () => {
         console.log('>>> TRAINING STARTED <<<');
