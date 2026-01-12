@@ -860,8 +860,10 @@ class PositionalEncoding(layers.Layer):
         
     def build(self, input_shape):
         self.pos_embedding = self.add_weight(
-            "pos_embedding", shape=[self.max_len, self.d_model],
-            initializer="uniform", trainable=True
+            name="pos_embedding", 
+            shape=[self.max_len, self.d_model],
+            initializer="uniform", 
+            trainable=True
         )
         self.dropout = layers.Dropout(self.dropout_rate)
         
