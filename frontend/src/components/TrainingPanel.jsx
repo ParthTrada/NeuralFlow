@@ -504,17 +504,24 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
     setErrorMessage('');
 
     try {
+      // Check if model has Conv2D layers
+      const modelHasConv2D = nodes.some(n => n.data.layerType === 'Conv2D');
+      
       const imageData = await processImageFolder(files, {
         targetSize: [28, 28],
-        grayscale: true
+        grayscale: true,
+        forCNN: modelHasConv2D
       });
       
       setProcessedData({
         ...imageData,
-        type: 'images'
+        type: 'images',
+        isImageData: true
       });
       setStatus('ready');
-      toast.success(`Loaded ${imageData.imageCount} images with ${imageData.numClasses} classes`);
+      
+      const shapeInfo = modelHasConv2D ? '4D for CNN' : '2D for MLP';
+      toast.success(`Loaded ${imageData.imageCount} images (${shapeInfo}) with ${imageData.numClasses} classes`);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message);
