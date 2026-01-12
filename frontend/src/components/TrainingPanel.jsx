@@ -2537,6 +2537,15 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         />
                       </LineChart>
                     </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm border border-dashed border-border rounded-lg">
+                        <div className="text-center">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+                          <p>Training in progress...</p>
+                          <p className="text-xs mt-1">Graph will appear after first epoch</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Latest metrics */}
