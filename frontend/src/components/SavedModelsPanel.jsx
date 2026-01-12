@@ -401,6 +401,16 @@ export const SavedModelsPanel = ({
                                 <span>•</span>
                                 <span>{model.nodes?.length || 0} layers</span>
                               </div>
+                              {/* Training Summary */}
+                              {model.training_data?.finalMetrics && (
+                                <div className="flex items-center gap-3 text-[10px] mt-1.5 text-muted-foreground">
+                                  <span className="text-green-400">Acc: {model.training_data.finalMetrics.accuracy}</span>
+                                  <span className="text-red-400">Loss: {model.training_data.finalMetrics.loss}</span>
+                                  {model.training_data.datasetName && (
+                                    <span>on {model.training_data.datasetName}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             
                             <div className="flex items-center gap-1">
