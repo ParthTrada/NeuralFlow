@@ -372,6 +372,11 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
         setStatus(savedTrainingData.trainingHistory?.length > 0 ? 'complete' : 'idle');
         setCurrentEpoch(savedTrainingData.trainingHistory?.length || 0);
         
+        // Restore training duration
+        if (savedTrainingData.trainingDuration != null) {
+          setTrainingDuration(savedTrainingData.trainingDuration);
+        }
+        
         // Store labels from training data for prediction
         if (savedTrainingData.uniqueLabels || savedTrainingData.uniqueTargets) {
           setProcessedData({
