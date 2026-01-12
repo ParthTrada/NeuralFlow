@@ -29,7 +29,6 @@ import {
   Settings,
   ChevronDown,
   ChevronUp,
-  Gauge,
   Target,
   Timer,
   TrendingDown,
