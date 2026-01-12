@@ -345,34 +345,25 @@ export const trainModel = async (model, xTrain, yTrain, options = {}, callbacks 
     validationSplit = 0.2,
   } = options;
 
-  // Calculate total batches per epoch for progress tracking
-  const numSamples = xTrain.shape[0];
-  const trainSamples = Math.floor(numSamples * (1 - validationSplit));
-  const totalBatches = Math.ceil(trainSamples / batchSize);
-
   const history = await model.fit(xTrain, yTrain, {
     epochs,
     batchSize,
     validationSplit,
     shuffle: true,
-    yieldEvery: 'batch', // Yield every batch for smooth UI updates
+    yieldEvery: 'epoch',
     callbacks: {
       onEpochBegin: async (epoch) => {
-        if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch, { totalBatches });
+        console.log(`[TF] Epoch ${epoch + 1} starting...`);
+        if (callbacks.onEpochBegin) callbacks.onEpochBegin(epoch);
         await tf.nextFrame();
       },
-      onBatchEnd: async (batch, logs) => {
-        if (callbacks.onBatchEnd) callbacks.onBatchEnd(batch, { ...logs, totalBatches });
-        // Yield every few batches to keep UI responsive without too much overhead
-        if (batch % 5 === 0) {
-          await tf.nextFrame();
-        }
-      },
       onEpochEnd: async (epoch, logs) => {
+        console.log(`[TF] Epoch ${epoch + 1} ended - loss: ${logs?.loss?.toFixed(4)}, acc: ${logs?.acc?.toFixed(4)}`);
         if (callbacks.onEpochEnd) callbacks.onEpochEnd(epoch, logs);
         await tf.nextFrame();
       },
       onTrainEnd: () => {
+        console.log('[TF] Training complete');
         if (callbacks.onTrainEnd) callbacks.onTrainEnd();
       }
     }
