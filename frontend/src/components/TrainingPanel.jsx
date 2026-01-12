@@ -2970,11 +2970,14 @@ export const TrainingPanel = ({ nodes, edges, isOpen, onClose, onWeightsTrained,
                         
                         {/* Not authenticated - prompt to sign in */}
                         {!isAuthenticated && (
-                          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <p className="text-xs text-amber-400 text-center">
-                              🔐 Sign in to save your trained model
-                            </p>
-                          </div>
+                          <Button
+                            onClick={onLogin}
+                            className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30"
+                            variant="outline"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Sign in to save your model
+                          </Button>
                         )}
                       </div>
                     )}
