@@ -580,7 +580,7 @@ export const loadImage = async (file) => {
 };
 
 // Process image for model input
-export const processImage = async (img, targetSize = [28, 28], grayscale = true, keepShape = false) => {
+export const processImage = async (img, targetSize = [28, 28], grayscale = true) => {
   let tensor = tf.browser.fromPixels(img);
   
   // Convert to grayscale if needed
@@ -594,18 +594,15 @@ export const processImage = async (img, targetSize = [28, 28], grayscale = true,
   // Normalize to [0, 1]
   tensor = tensor.div(255.0);
   
-  // Keep 3D shape [height, width, channels] for CNN, or flatten for MLP
-  if (keepShape) {
-    return tensor; // [height, width, channels]
-  } else {
-    const flattened = tensor.reshape([targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)]);
-    return flattened;
-  }
+  // Flatten if needed
+  const flattened = tensor.reshape([targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)]);
+  
+  return flattened;
 };
 
 // Process multiple images with labels from folder structure
 export const processImageFolder = async (files, options = {}) => {
-  const { targetSize = [28, 28], grayscale = true, forCNN = false } = options;
+  const { targetSize = [28, 28], grayscale = true } = options;
   
   const images = [];
   const labels = [];
@@ -626,7 +623,7 @@ export const processImageFolder = async (files, options = {}) => {
     
     try {
       const img = await loadImage(file);
-      const tensor = await processImage(img, targetSize, grayscale, forCNN);
+      const tensor = await processImage(img, targetSize, grayscale);
       images.push(tensor);
       
       const pathParts = file.webkitRelativePath?.split('/') || file.name.split('_');
@@ -643,25 +640,14 @@ export const processImageFolder = async (files, options = {}) => {
 
   const xTensor = tf.stack(images);
   const yTensor = tf.oneHot(tf.tensor1d(labels, 'int32'), uniqueLabels.length);
-  
-  const channels = grayscale ? 1 : 3;
-  const inputShape = forCNN 
-    ? [targetSize[0], targetSize[1], channels]  // [height, width, channels] for CNN
-    : [targetSize[0] * targetSize[1] * channels]; // [flattened] for MLP
 
   return {
     xTrain: xTensor,
     yTrain: yTensor,
-    inputShape,
+    inputShape: [targetSize[0] * targetSize[1] * (grayscale ? 1 : 3)],
     numClasses: uniqueLabels.length,
     uniqueLabels,
     imageCount: images.length,
-    imageConfig: {
-      height: targetSize[0],
-      width: targetSize[1],
-      channels
-    },
-    forCNN
   };
 };
 
