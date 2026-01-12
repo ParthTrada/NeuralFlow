@@ -397,7 +397,7 @@ const Guide = () => {
             >
               <ScreenshotCard 
                 src={SCREENSHOTS.code} 
-                alt="Generated PyTorch code with copy and download options"
+                alt="Generated PyTorch and Keras code with copy and download options"
                 isDark={isDark}
               />
             </motion.div>
