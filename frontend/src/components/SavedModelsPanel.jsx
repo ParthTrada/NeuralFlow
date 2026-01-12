@@ -384,7 +384,7 @@ export const SavedModelsPanel = ({
                                 <Badge variant="outline" className="text-xs">
                                   v{model.version || 1}
                                 </Badge>
-                                {model.trained_weights && (
+                                {(model.trained_weights || model.training_data) && (
                                   <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
                                     Trained
                                   </Badge>
